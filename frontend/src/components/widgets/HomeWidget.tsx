@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Play, Pause, SkipBack, SkipForward, Music, Power, Wind, Droplets, Sun, Thermometer,
   ArrowDown, ArrowUp, Headphones, Speaker, Settings, GripVertical, X, Plus,
-  ChevronRight, ChevronDown, Minus, WashingMachine, Columns2, Square,
+  ChevronRight, ChevronDown, ChevronUp, Minus, WashingMachine, Columns2, Square,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -1008,6 +1008,8 @@ const MOBILE_HEIGHT: Record<WidgetId, number> = {
 export function HomeWidget({ editMode }: { editMode: boolean }) {
   const isMobile = useIsMobile()
   const [layout, setLayout] = useLocalStorage<HomeLayout>('home-layout', DEFAULT_LAYOUT)
+  const [mobileOrder,   setMobileOrder]   = useLocalStorage<WidgetId[]>('mobile-widget-order', [])
+  const [mobileHeights, setMobileHeights] = useLocalStorage<Partial<Record<WidgetId, number>>>('mobile-widget-heights', {})
 
   const [dragId,  setDragId]  = useState<WidgetId | null>(null)
   const [dragCol, setDragCol] = useState<Column | null>(null)
@@ -1268,11 +1270,73 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   // ── Mobile layout: single scrollable column ──────────────────────────────────
   if (isMobile) {
     const allWidgets = [...layout.left, ...layout.middle, ...layout.right]
+    // Merge stored order with current layout (add new widgets at end, remove gone ones)
+    const base = mobileOrder.length > 0 ? mobileOrder : allWidgets
+    const visibleInOrder = [
+      ...base.filter(id => allWidgets.includes(id)),
+      ...allWidgets.filter(id => !base.includes(id)),
+    ]
+
+    function getMobileHeight(id: WidgetId) {
+      return mobileHeights[id] ?? MOBILE_HEIGHT[id]
+    }
+    function adjustMobileHeight(id: WidgetId, delta: number) {
+      setMobileHeights(h => ({ ...h, [id]: Math.max(120, Math.min(600, getMobileHeight(id) + delta)) }))
+    }
+    function moveWidget(id: WidgetId, direction: -1 | 1) {
+      const cur = [...visibleInOrder]
+      const idx = cur.indexOf(id)
+      const newIdx = idx + direction
+      if (newIdx < 0 || newIdx >= cur.length) return
+      ;[cur[idx], cur[newIdx]] = [cur[newIdx], cur[idx]]
+      setMobileOrder(cur)
+    }
+
     return (
-      <div className="h-full overflow-y-auto space-y-3 pb-3">
-        {allWidgets.map(id => (
-          <div key={id} style={{ height: MOBILE_HEIGHT[id] }}>
+      <div className="h-full overflow-y-auto pb-3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {visibleInOrder.map((id, idx) => (
+          <div key={id} className="relative overflow-hidden rounded-2xl shrink-0" style={{ height: getMobileHeight(id) }}>
             {renderWidget(id)}
+
+            {editMode && (
+              <div className="absolute inset-0 rounded-2xl pointer-events-none">
+                {/* Up / Down to reorder */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1 pointer-events-auto z-10">
+                  <button
+                    onClick={() => moveWidget(id, -1)}
+                    disabled={idx === 0}
+                    className="rounded-lg bg-black/70 p-1.5 text-zinc-300 disabled:opacity-30"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => moveWidget(id, 1)}
+                    disabled={idx === visibleInOrder.length - 1}
+                    className="rounded-lg bg-black/70 p-1.5 text-zinc-300 disabled:opacity-30"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+                {/* Height controls */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-lg bg-black/70 px-1.5 py-0.5 pointer-events-auto z-10">
+                  <button
+                    onClick={() => adjustMobileHeight(id, -30)}
+                    disabled={getMobileHeight(id) <= 120}
+                    className="text-zinc-400 hover:text-fg transition-colors disabled:opacity-30 p-0.5"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </button>
+                  <span className="text-xs text-zinc-400 w-20 text-center">{WIDGET_META[id].label}</span>
+                  <button
+                    onClick={() => adjustMobileHeight(id, 30)}
+                    disabled={getMobileHeight(id) >= 600}
+                    className="text-zinc-400 hover:text-fg transition-colors disabled:opacity-30 p-0.5"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
