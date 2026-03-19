@@ -43,7 +43,7 @@ export function SystemWidget() {
     <div className="h-full overflow-y-auto space-y-4 pb-2">
 
       {/* ── Gauges row ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <GaugeCard
           label="CPU"
           value={data.cpuLoad}
@@ -72,7 +72,7 @@ export function SystemWidget() {
       </div>
 
       {/* ── Bottom row ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* Storage */}
         <div className="rounded-3xl bg-card p-5 space-y-3">

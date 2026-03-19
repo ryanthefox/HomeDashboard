@@ -480,8 +480,8 @@ export function WeatherWidget() {
         <ExtraInfoBlock data={data} />
       </div>
 
-      {/* Right column: radar */}
-      <div className="flex flex-col overflow-hidden rounded-3xl bg-card" style={{ flex: colFlex.right, minWidth: 0 }}>
+      {/* Right column: radar — hidden on mobile */}
+      <div className="hidden sm:flex flex-col overflow-hidden rounded-3xl bg-card" style={{ flex: colFlex.right, minWidth: 0 }}>
         {/* Header with resize controls */}
         <div className="flex items-center justify-between px-4 py-3 shrink-0">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Neerslag radar</p>
