@@ -517,7 +517,7 @@ function MiniHue() {
     <div ref={ref} className="h-full rounded-2xl bg-card2 flex flex-col overflow-hidden">
       {/* Room selector tabs */}
       {rooms && rooms.length > 1 && (
-        <div className="flex gap-1 p-3 pb-0 shrink-0 overflow-x-auto">
+        <div className="flex gap-1 p-3 pb-0 shrink-0 overflow-x-auto scrollbar-hide">
           {rooms.map(r => (
             <button key={r.id} onClick={() => setSelectedId(r.id)}
               className={cn(
