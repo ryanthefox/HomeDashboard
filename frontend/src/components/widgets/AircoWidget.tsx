@@ -145,24 +145,23 @@ export function AircoWidget() {
   if (isLoading) return <div className="flex h-64 items-center justify-center text-zinc-500">Laden…</div>
 
   if (devices.length === 0) return (
-    <div className="h-full overflow-y-auto">
-    <div className="mx-auto max-w-xl space-y-4 pb-4">
-      <AircoSetupPrompt />
-      <WasherSection washers={washers} />
-    </div>
+    <div className="h-full overflow-y-auto scrollbar-hide">
+      <div className="mx-auto max-w-xl space-y-4 pb-4">
+        <AircoSetupPrompt />
+        <WasherSection washers={washers} />
+      </div>
     </div>
   )
 
   return (
-    <div className="h-full overflow-y-auto">
-    <div className="mx-auto max-w-xl space-y-4 pb-4">
+    <div className="h-full flex flex-col w-full">
 
-      {/* Device selector */}
+      {/* Device selector — horizontally scrollable, stays fixed */}
       {devices.length > 1 && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide shrink-0 pb-3">
           {devices.map(d => (
             <button key={d.deviceId} onClick={() => setSelectedId(d.deviceId)}
-              className={cn('flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition-all',
+              className={cn('rounded-2xl px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap shrink-0',
                 (device?.deviceId === d.deviceId) ? 'bg-white text-black' : 'bg-card text-zinc-400 hover:text-zinc-200')}>
               {d.name}
             </button>
@@ -170,10 +169,14 @@ export function AircoWidget() {
         </div>
       )}
 
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="mx-auto max-w-xl space-y-4 pb-4">
+
       {device && (
         <>
           {/* Main card */}
-          <div className={cn('rounded-3xl p-8 transition-colors', device.isOn ? 'bg-card' : 'bg-[#141414]')}>
+          <div className={cn('rounded-3xl p-5 sm:p-8 transition-colors', device.isOn ? 'bg-card' : 'bg-[#141414]')}>
             <div className="flex items-start justify-between mb-8">
               <div>
                 <p className="text-sm text-zinc-500">{device.name}</p>
@@ -271,7 +274,8 @@ export function AircoWidget() {
       )}
 
       <WasherSection washers={washers} />
-    </div>
+      </div>
+      </div>
     </div>
   )
 }

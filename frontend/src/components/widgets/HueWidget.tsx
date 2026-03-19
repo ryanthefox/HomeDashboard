@@ -318,7 +318,7 @@ export function HueWidget() {
   if (!rooms || rooms.length === 0) return <div className="flex h-48 items-center justify-center text-zinc-500">Geen lampen gevonden</div>
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto scrollbar-hide">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 p-1">
         {rooms.map(room => (
           <RoomCard

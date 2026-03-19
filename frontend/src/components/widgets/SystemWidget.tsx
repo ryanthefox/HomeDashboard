@@ -40,7 +40,7 @@ export function SystemWidget() {
   const diskLabel = mainDisk ? `${formatGb(mainDisk.usedGb)} / ${formatGb(mainDisk.totalGb)}` : undefined
 
   return (
-    <div className="h-full overflow-y-auto space-y-4 pb-2">
+    <div className="h-full overflow-y-auto scrollbar-hide space-y-4 pb-2">
 
       {/* ── Gauges row ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

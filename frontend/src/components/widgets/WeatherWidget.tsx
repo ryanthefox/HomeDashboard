@@ -429,7 +429,7 @@ export function WeatherWidget() {
     <div className="h-full flex gap-4">
 
       {/* Left column: info */}
-      <div className="flex flex-col gap-3 min-h-0 min-w-0 overflow-y-auto" style={{ flex: colFlex.left }}>
+      <div className="flex flex-col gap-3 min-h-0 min-w-0 overflow-y-auto scrollbar-hide" style={{ flex: colFlex.left }}>
 
         {/* Hero card */}
         <div className="relative overflow-hidden rounded-3xl bg-card shrink-0">
@@ -460,7 +460,7 @@ export function WeatherWidget() {
         {data.hourly.length > 0 && (
           <div className="rounded-3xl bg-card p-4 shrink-0">
             <p className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Per uur</p>
-            <div className="flex gap-4 overflow-x-auto pb-1">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
               {data.hourly.map(h => <HourlyItem key={h.time} item={h} />)}
             </div>
           </div>

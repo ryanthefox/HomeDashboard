@@ -35,6 +35,8 @@ html[data-theme="light"] {
 
 /* ── Semantic utility classes (themed) ─────────────────────────────────────── */
 @layer utilities {
+  .scrollbar-hide { scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
   .bg-surface  { background-color: var(--c-bg); }
   .bg-card     { background-color: var(--c-card); }
   .bg-card2    { background-color: var(--c-card2); }

@@ -99,7 +99,7 @@ export function Dashboard() {
         </div>
 
         {/* Mobile nav: horizontally scrollable, hidden on desktop */}
-        <nav className="sm:hidden mt-2 flex gap-1 rounded-2xl bg-card3 p-1 overflow-x-auto">
+        <nav className="sm:hidden mt-2 flex gap-1 rounded-2xl bg-card3 p-1 overflow-x-auto scrollbar-hide">
           {TABS.map(tab => (
             <button
               key={tab.id}

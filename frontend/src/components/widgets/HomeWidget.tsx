@@ -1293,7 +1293,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     }
 
     return (
-      <div className="h-full overflow-y-auto pb-3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="h-full overflow-y-auto scrollbar-hide pb-3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {visibleInOrder.map((id, idx) => (
           <div key={id} className="relative overflow-hidden rounded-2xl shrink-0" style={{ height: getMobileHeight(id) }}>
             {renderWidget(id)}
