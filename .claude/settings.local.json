@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c publish.bat)",
+      "Bash(cmd /c \"publish.bat > publish_out.txt 2>&1\")",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(robocopy \"C:\\\\Ryan\\\\Dashboard\\\\HomeDashboard\\\\frontend\\\\dist\" \"C:\\\\Ryan\\\\Dashboard\\\\HomeDashboard\\\\release\\\\frontend\\\\dist\" /E /NFL /NDL /NJH /NJS)",
+      "Bash(exit 0)",
+      "Bash(cmd.exe /c 'robocopy \"C:\\\\Ryan\\\\Dashboard\\\\HomeDashboard\\\\frontend\\\\dist\" \"C:\\\\Ryan\\\\Dashboard\\\\HomeDashboard\\\\release\\\\frontend\\\\dist\" /E /NFL /NDL /NJH /NJS')",
+      "Bash(echo \"robocopy exit: $?\")",
+      "Bash(cp:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i -e 's/bg-\\\\[#0f0f0f\\\\]/bg-surface/g' -e 's/bg-\\\\[#1a1a1a\\\\]/bg-card/g' -e 's/bg-\\\\[#161616\\\\]/bg-card2/g' -e 's/bg-\\\\[#1c1c1c\\\\]/bg-card3/g' -e 's/bg-\\\\[#1e1e1e\\\\]/bg-card4/g' -e 's/bg-\\\\[#242424\\\\]/bg-elev/g' -e 's/bg-\\\\[#2a2a2a\\\\]/bg-elev2/g' \"$f\")",
+      "Bash(done)",
+      "Bash(cd:*)",
+      "Bash(sed -i 's/bg-orange-500 text-fg/bg-orange-500 text-white/g' \"$f\")",
+      "Bash(sed -i 's/bg-orange-400 text-fg/bg-orange-400 text-white/g' \"$f\")",
+      "Bash(node:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:community.home-assistant.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:thinq.developer.lge.com)",
+      "Bash(curl:*)",
+      "Bash(xargs grep:*)",
+      "Bash(\"C:\\\\Ryan\\\\Dashboard\\\\HomeDashboard\\\\HomeDashboard.Api\\\\HomeDashboard.Api.csproj\":*)"
+    ]
+  }
+}

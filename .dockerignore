@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+frontend/dist/
+frontend/.vite/
+.git/
+.vs/
+**/*.user
+**/*.suo
+.env
+appsettings.json
+appsettings.Development.json

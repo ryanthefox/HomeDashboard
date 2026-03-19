@@ -1,0 +1,19 @@
+services:
+  dashboard:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # Hue
+      - HueBridge__BridgeIp=${HUE_BRIDGE_IP}
+      - HueBridge__ApiKey=${HUE_API_KEY}
+      # LG ThinQ
+      - LgThinq__PersonalAccessToken=${LGTHINQ_PAT}
+      - LgThinq__ClientId=${LGTHINQ_CLIENT_ID}
+      - LgThinq__CountryCode=${LGTHINQ_COUNTRY:-NL}
+      - LgThinq__BaseUrl=${LGTHINQ_BASE_URL:-https://api-eic.lgthinq.com}
+      # Weather (optioneel — defaults zijn Veenendaal)
+      - Weather__Latitude=${WEATHER_LAT:-52.0259}
+      - Weather__Longitude=${WEATHER_LON:-5.5553}
+      - Weather__Timezone=${WEATHER_TZ:-Europe/Amsterdam}

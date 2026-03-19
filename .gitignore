@@ -1,0 +1,21 @@
+## .NET
+bin/
+obj/
+*.user
+.vs/
+*.suo
+*.rsuser
+
+## Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+## Secrets / local overrides — nooit naar Git pushen
+appsettings.json
+appsettings.*.json
+.env
+
+## OS
+.DS_Store
+Thumbs.db
