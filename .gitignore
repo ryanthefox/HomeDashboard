@@ -14,6 +14,7 @@ frontend/.vite/
 ## Secrets / local overrides — nooit naar Git pushen
 appsettings.json
 appsettings.*.json
+!appsettings.example.json
 .env
 
 ## OS
