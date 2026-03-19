@@ -145,14 +145,17 @@ export function AircoWidget() {
   if (isLoading) return <div className="flex h-64 items-center justify-center text-zinc-500">Laden…</div>
 
   if (devices.length === 0) return (
-    <div className="mx-auto max-w-xl space-y-4">
+    <div className="h-full overflow-y-auto">
+    <div className="mx-auto max-w-xl space-y-4 pb-4">
       <AircoSetupPrompt />
       <WasherSection washers={washers} />
+    </div>
     </div>
   )
 
   return (
-    <div className="mx-auto max-w-xl space-y-4">
+    <div className="h-full overflow-y-auto">
+    <div className="mx-auto max-w-xl space-y-4 pb-4">
 
       {/* Device selector */}
       {devices.length > 1 && (
@@ -268,6 +271,7 @@ export function AircoWidget() {
       )}
 
       <WasherSection washers={washers} />
+    </div>
     </div>
   )
 }
