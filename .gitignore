@@ -1,3 +1,6 @@
+## Build output / release
+release/
+
 ## .NET
 bin/
 obj/
