@@ -48,6 +48,17 @@ const WIDGET_META: Record<WidgetId, { label: string; flex: number }> = {
   washer:   { label: 'Wasmachine',  flex: 1 },
 }
 
+// ── useIsMobile ─────────────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
+}
+
 // ── useContainerSize ────────────────────────────────────────────────────────────
 function useContainerSize(ref: React.RefObject<HTMLDivElement | null>) {
   const [size, setSize] = useState({ w: 0, h: 0 })
@@ -985,7 +996,17 @@ function renderWidget(id: WidgetId) {
 }
 
 // ── HomeWidget ─────────────────────────────────────────────────────────────────
+const MOBILE_HEIGHT: Record<WidgetId, number> = {
+  weather:  200,
+  music:    250,
+  lighting: 300,
+  system:   270,
+  airco:    280,
+  washer:   180,
+}
+
 export function HomeWidget({ editMode }: { editMode: boolean }) {
+  const isMobile = useIsMobile()
   const [layout, setLayout] = useLocalStorage<HomeLayout>('home-layout', DEFAULT_LAYOUT)
 
   const [dragId,  setDragId]  = useState<WidgetId | null>(null)
@@ -1240,6 +1261,20 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
             </div>
           )}
         </div>
+      </div>
+    )
+  }
+
+  // ── Mobile layout: single scrollable column ──────────────────────────────────
+  if (isMobile) {
+    const allWidgets = [...layout.left, ...layout.middle, ...layout.right]
+    return (
+      <div className="h-full overflow-y-auto space-y-3 pb-3">
+        {allWidgets.map(id => (
+          <div key={id} style={{ height: MOBILE_HEIGHT[id] }}>
+            {renderWidget(id)}
+          </div>
+        ))}
       </div>
     )
   }
