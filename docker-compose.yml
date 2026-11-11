@@ -2,8 +2,9 @@ services:
   dashboard:
     build: .
     restart: unless-stopped
-    ports:
-      - "5000:5000"
+    # Host-netwerk: nodig zodat Wake-on-LAN-broadcasts je LAN bereiken.
+    # Het dashboard blijft gewoon op poort 5000 bereikbaar.
+    network_mode: host
     environment:
       # Hue
       - HueBridge__BridgeIp=${HUE_BRIDGE_IP}
@@ -18,9 +19,13 @@ services:
       - Weather__Longitude=${WEATHER_LON:-5.5553}
       - Weather__Timezone=${WEATHER_TZ:-Europe/Amsterdam}
       # Plex (draait Plex op dezelfde machine, laat de default staan)
-      - Plex__ServerUrl=${PLEX_SERVER_URL:-http://host.docker.internal:32400}
+      - Plex__ServerUrl=${PLEX_SERVER_URL:-http://localhost:32400}
       - Plex__Token=${PLEX_TOKEN}
       # Afvalkalender: standaard het meegeleverde HomeDashboard.Api/data/afval.ics, of een iCal-link
       - Afval__ICalUrl=${AFVAL_ICAL_URL:-data/afval.ics}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # PC: stats + aan/uit (zie HomeDashboard.Agent/install-agent.ps1)
+      - Pc__Name=${PC_NAME:-PC}
+      - Pc__AgentUrl=${PC_AGENT_URL}
+      - Pc__AgentKey=${PC_AGENT_KEY}
+      - Pc__MacAddress=${PC_MAC}
+      - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}

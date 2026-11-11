@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { ArrowDown, ArrowUp, HardDrive, Thermometer, Wifi } from 'lucide-react'
-import { systemApi, type SystemStats, type DiskDriveInfo } from '@/lib/api'
+import { ArrowDown, ArrowUp, Clock, HardDrive, Monitor, Server, Thermometer, Wifi } from 'lucide-react'
+import type { DiskDriveInfo } from '@/lib/api'
+import { useSystemSource, formatUptime } from '@/lib/pc'
+import { SourceToggle, PcPowerButton, PcOfflineNote } from './system/PcControls'
 import { formatBps, formatGb } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Panel, Label, Skeleton } from '@/components/ui/motion'
@@ -28,7 +29,32 @@ function Bar({ pct, color, delay = 0 }: { pct: number; color: string; delay?: nu
 }
 
 export function SystemWidget() {
-  const { data, isLoading } = useQuery<SystemStats>({ queryKey: ['system'], queryFn: systemApi.getStats, refetchInterval: 3_000 })
+  const { data, isLoading, pc, pcAvailable, preferred, setPreferred, source, sourceLabel } = useSystemSource()
+
+  const header = pc?.configured ? (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card3 text-fg2">
+          {source === 'pc' ? <Monitor className="h-4 w-4" /> : <Server className="h-4 w-4" />}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold leading-tight tracking-tight text-fg">{sourceLabel}</p>
+          <p className="flex items-center gap-1.5 text-[11px] text-fg3">
+            <span className={pc.state === 'online' ? 'h-1.5 w-1.5 rounded-full bg-emerald-400' : 'h-1.5 w-1.5 rounded-full bg-fg3'} />
+            {pc.name} {pc.state === 'online' ? 'aan' : pc.state === 'waking' ? 'start op' : pc.state === 'stopping' ? 'gaat uit' : 'uit'}
+            {pc.state === 'online' && formatUptime(pc.uptimeSeconds) && (
+              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatUptime(pc.uptimeSeconds)}</span>
+            )}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {pcAvailable && <SourceToggle value={preferred} onChange={setPreferred} pcName={pc.name} />}
+        <PcPowerButton pc={pc} />
+      </div>
+      {pcAvailable && preferred === 'pc' && source === 'server' && <div className="w-full"><PcOfflineNote pc={pc} /></div>}
+    </div>
+  ) : null
 
   if (isLoading || !data) {
     return (
@@ -38,7 +64,7 @@ export function SystemWidget() {
     )
   }
 
-  const memLabel  = data.memoryTotalGb > 0 ? `${data.memoryUsedGb.toFixed(1)} / ${data.memoryTotalGb.toFixed(0)} GB` : undefined
+  const memLabel  = data.memoryTotalGb > 0 ? `${data.memoryUsedGb.toFixed(1)} / ${Math.ceil(data.memoryTotalGb)} GB` : undefined
   const mainDisk  = data.disks[0]
   const diskLabel = mainDisk ? `${formatGb(mainDisk.usedGb)} / ${formatGb(mainDisk.totalGb)}` : undefined
 
@@ -51,9 +77,10 @@ export function SystemWidget() {
 
   return (
     <div className="h-full space-y-4 overflow-y-auto pb-2 scrollbar-hide">
+      {header}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {gauges.map((g, i) => (
-          <Panel key={g.label} index={i} className="relative flex flex-col items-center justify-center gap-2 overflow-hidden p-5">
+          <Panel key={`${source}-${g.label}`} index={i} className="relative flex flex-col items-center justify-center gap-2 overflow-hidden p-5">
             <div className="pointer-events-none absolute -bottom-1/2 left-1/2 h-full w-full -translate-x-1/2 rounded-full blur-3xl"
               style={{ background: g.color, opacity: 0.06 + g.value / 1200 }} />
             <ArcGauge label={g.label} value={g.value} color={g.color} sublabel={g.sublabel} size="xl" />

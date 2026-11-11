@@ -42,10 +42,10 @@
     "semantic_hash": "8beee1a030f37420286199dcdd0d455f"
   },
   "HomeDashboard.Api/Controllers/PlexController.cs": {
-    "mtime": 1794394341.0825374,
-    "seen": 1794395115.4604576,
-    "ast_hash": "8823e4025e2aa5ac4e413626742e28ca",
-    "semantic_hash": "8823e4025e2aa5ac4e413626742e28ca"
+    "mtime": 1794397211.409442,
+    "seen": 1794397429.8132668,
+    "ast_hash": "aa3338493035c481d2173b8fccd0c716",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/SystemController.cs": {
     "mtime": 1773866883.9041996,
@@ -108,16 +108,16 @@
     "semantic_hash": "9b1cb7bcbf25f64d7e38b57864b9a023"
   },
   "HomeDashboard.Api/Models/PlexItem.cs": {
-    "mtime": 1774012654.8111663,
-    "seen": 1794395115.460465,
-    "ast_hash": "6e4ac26033d29d01c63603f15ef4c83d",
-    "semantic_hash": "6e4ac26033d29d01c63603f15ef4c83d"
+    "mtime": 1794397151.150582,
+    "seen": 1794397429.813278,
+    "ast_hash": "43b8eba039ddd6dfbec3d6d0440c16f2",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Models/PlexSession.cs": {
-    "mtime": 1774018278.7204947,
-    "seen": 1794395115.4604654,
-    "ast_hash": "f0f9bdbe80d4630ab6b3a470d76efca1",
-    "semantic_hash": "f0f9bdbe80d4630ab6b3a470d76efca1"
+    "mtime": 1794397151.169153,
+    "seen": 1794397429.8132787,
+    "ast_hash": "ab71e626b92bd278b73fe7f0db883814",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Models/SystemStats.cs": {
     "mtime": 1773879056.5553176,
@@ -192,10 +192,10 @@
     "semantic_hash": "50ce79e5f299d59cfc6c1fd5065fb008"
   },
   "HomeDashboard.Api/Services/PlexService.cs": {
-    "mtime": 1794394351.324473,
-    "seen": 1794395115.460474,
-    "ast_hash": "986ff7f48851ca07651ac31bf36d53e4",
-    "semantic_hash": "986ff7f48851ca07651ac31bf36d53e4"
+    "mtime": 1794397211.4084406,
+    "seen": 1794397429.8132977,
+    "ast_hash": "0e8957f91868730364e79a77549453bb",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/SystemMonitorService.cs": {
     "mtime": 1773941216.1932268,
@@ -318,10 +318,10 @@
     "semantic_hash": "275394bdc23909cbcb165dfa86cb69b9"
   },
   "frontend/src/components/widgets/PlexWidget.tsx": {
-    "mtime": 1794394245.1571207,
-    "seen": 1794395115.4604878,
-    "ast_hash": "39541a4ce832e1db24834de7a41e0d1a",
-    "semantic_hash": "39541a4ce832e1db24834de7a41e0d1a"
+    "mtime": 1794397386.7470322,
+    "seen": 1794397429.813316,
+    "ast_hash": "e2245b991a647fb61739b4537f915a08",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/SystemWidget.tsx": {
     "mtime": 1794394244.6933503,
@@ -360,10 +360,10 @@
     "semantic_hash": "aa16862f1fffe3d6e20bb1d056ac911f"
   },
   "frontend/src/components/widgets/home/MiniPlex.tsx": {
-    "mtime": 1794394030.70872,
-    "seen": 1794395115.4604924,
-    "ast_hash": "28cd48b89c8a3488d95803a115d6bf2a",
-    "semantic_hash": "28cd48b89c8a3488d95803a115d6bf2a"
+    "mtime": 1794397330.8894217,
+    "seen": 1794397429.8133218,
+    "ast_hash": "4721c8e5f39e687e9f6d2c5889d30d97",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniSystem.tsx": {
     "mtime": 1794393975.628008,
@@ -414,10 +414,10 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794393619.724077,
-    "seen": 1794395115.4604976,
-    "ast_hash": "52181f5dbf48b97ec3caa3a35cd18716",
-    "semantic_hash": "52181f5dbf48b97ec3caa3a35cd18716"
+    "mtime": 1794397277.9712932,
+    "seen": 1794397429.8133304,
+    "ast_hash": "3cc187df06270f2eeb9f6d12f33e05f6",
+    "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
     "mtime": 1794393811.0254114,
@@ -432,10 +432,10 @@
     "semantic_hash": "d1673c1279df1d60ade5cc68dfd5f505"
   },
   "frontend/src/lib/plex.ts": {
-    "mtime": 1794393811.056508,
-    "seen": 1794395115.4604998,
-    "ast_hash": "cfd9ec5cb722f8060d9091e2d6d2d173",
-    "semantic_hash": "cfd9ec5cb722f8060d9091e2d6d2d173"
+    "mtime": 1794397278.0061314,
+    "seen": 1794397429.8133333,
+    "ast_hash": "fc7c3edb5b358059a033cee245b38a83",
+    "semantic_hash": ""
   },
   "frontend/src/lib/queryClient.ts": {
     "mtime": 1773863658.5048103,
@@ -537,6 +537,18 @@
     "mtime": 1794393739.6289265,
     "seen": 1794395435.3042097,
     "ast_hash": "f631a2b7d3b8f96972b667c4a7afb07f",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Models/PlexStats.cs": {
+    "mtime": 1794397151.1887226,
+    "seen": 1794397429.8132803,
+    "ast_hash": "2bc34fa7135b0428866d87b81a987afb",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/plex/shared.tsx": {
+    "mtime": 1794397330.945636,
+    "seen": 1794397429.8133252,
+    "ast_hash": "2eb9c0e24645885f77158f1a153b474f",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

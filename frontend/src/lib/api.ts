@@ -116,6 +116,31 @@ export const systemApi = {
   getStats: () => json<SystemStats>(`${BASE}/system`),
 }
 
+// ── PC (agent + Wake-on-LAN) ─────────────────────────────────────────────────
+export type PcState = 'online' | 'offline' | 'waking' | 'stopping'
+export interface PcStatus {
+  configured: boolean
+  hasAgent: boolean
+  canWake: boolean
+  state: PcState
+  name: string
+  hostname: string | null
+  uptimeSeconds: number | null
+}
+export type PcPowerCommand = 'shutdown' | 'sleep' | 'restart'
+
+export const pcApi = {
+  getStatus: () => json<PcStatus>(`${BASE}/pc/status`),
+  getStats:  async (): Promise<SystemStats | null> => {
+    const res = await fetch(`${BASE}/pc/stats`)
+    if (res.status === 204) return null
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+    return res.json() as Promise<SystemStats>
+  },
+  wake:  () => send(`${BASE}/pc/wake`, 'POST'),
+  power: (command: PcPowerCommand) => send(`${BASE}/pc/power/${command}`, 'POST'),
+}
+
 // ── Audio ──────────────────────────────────────────────────────────────────────
 export const audioApi = {
   getOutputs: () => json<AudioOutputDevice[]>(`${BASE}/audio/outputs`),

@@ -1,16 +1,17 @@
 import { useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Cpu } from 'lucide-react'
-import { systemApi, type SystemStats } from '@/lib/api'
+import { ArrowDown, ArrowUp, Cpu, Monitor } from 'lucide-react'
+import { useSystemSource } from '@/lib/pc'
 import { formatBps } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Skeleton } from '@/components/ui/motion'
 import { useContainerSize, TileHeader } from './shared'
+import { SourceToggle, PcPowerButton, PcOfflineNote } from '../system/PcControls'
 
 export function MiniSystem() {
   const ref = useRef<HTMLDivElement>(null)
   const { h, w } = useContainerSize(ref)
-  const { data } = useQuery<SystemStats>({ queryKey: ['system'], queryFn: systemApi.getStats, refetchInterval: 3_000 })
+  const { data, pc, pcAvailable, preferred, setPreferred, source, sourceLabel } = useSystemSource()
+  const showOfflineNote = pcAvailable && preferred === 'pc' && source === 'server' && pc && h > 200
 
   const layout: 'row' | 'grid' | 'col' = w >= 480 ? 'row' : w >= 260 ? 'grid' : 'col'
   const gaugeSize = layout === 'row'
@@ -22,13 +23,20 @@ export function MiniSystem() {
   const gauges = !data ? [] : [
     { label: 'CPU',  value: data.cpuLoad,       color: '#38bdf8', sublabel: data.cpuTemp > 0 ? `${Math.round(data.cpuTemp)}°C` : undefined },
     { label: 'GPU',  value: data.gpuLoad,       color: '#a78bfa', sublabel: data.gpuTemp > 0 ? `${Math.round(data.gpuTemp)}°C` : undefined },
-    { label: 'RAM',  value: data.memoryPercent, color: '#2dd4bf', sublabel: `${data.memoryUsedGb.toFixed(1)} GB` },
+    { label: 'RAM',  value: data.memoryPercent, color: '#2dd4bf', sublabel: data.memoryTotalGb > 0 ? `${data.memoryUsedGb.toFixed(1)}/${Math.ceil(data.memoryTotalGb)} GB` : `${data.memoryUsedGb.toFixed(1)} GB` },
     { label: 'Disk', value: data.diskPercent,   color: data.diskPercent > 85 ? '#f87171' : '#fbbf24', sublabel: undefined },
   ]
 
   return (
     <div ref={ref} className="flex h-full flex-col p-5">
-      <TileHeader icon={<Cpu />} title="Systeem" />
+      <TileHeader icon={source === 'pc' ? <Monitor /> : <Cpu />} title={pcAvailable ? sourceLabel : 'Systeem'}
+        right={pc?.configured && (
+          <div className="flex items-center gap-1.5">
+            {pcAvailable && <SourceToggle size="xs" value={preferred} onChange={setPreferred} pcName={pc.name} />}
+            <PcPowerButton pc={pc} compact />
+          </div>
+        )} />
+      {showOfflineNote && <div className="-mt-1 mb-2"><PcOfflineNote pc={pc} compact /></div>}
       {!data ? (
         <div className="flex flex-1 items-center justify-around">{[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-16 rounded-full" />)}</div>
       ) : (
