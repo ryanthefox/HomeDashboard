@@ -306,10 +306,10 @@
     "semantic_hash": "0524b82920cfdb2f72aac501755c0b6b"
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
-    "mtime": 1794394766.0361056,
-    "seen": 1794395115.4604867,
-    "ast_hash": "6e3f18729c8a863383eea6f69207f5fa",
-    "semantic_hash": "6e3f18729c8a863383eea6f69207f5fa"
+    "mtime": 1794395417.434631,
+    "seen": 1794395435.3041768,
+    "ast_hash": "464bb92f9ac4854fcde4dc5c9f87b61a",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/MusicWidget.tsx": {
     "mtime": 1794394155.4805994,
@@ -348,10 +348,10 @@
     "semantic_hash": "2dfbbedf6183a8b13fced4c10e2b5b92"
   },
   "frontend/src/components/widgets/home/MiniHue.tsx": {
-    "mtime": 1794394774.0789683,
-    "seen": 1794395115.460491,
-    "ast_hash": "6c1d1a1b04a7f99c638c0159acf0fddc",
-    "semantic_hash": "6c1d1a1b04a7f99c638c0159acf0fddc"
+    "mtime": 1794395417.4336317,
+    "seen": 1794395435.3041828,
+    "ast_hash": "798af915e60dd78ce3875229d4a2babe",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniMusic.tsx": {
     "mtime": 1794393935.768921,
@@ -520,5 +520,29 @@
     "seen": 1794395115.4605093,
     "ast_hash": "be61f4a7b401a308f16d9193eb389a66",
     "semantic_hash": "be61f4a7b401a308f16d9193eb389a66"
+  },
+  ".claude/settings.json": {
+    "mtime": 1794395257.5503254,
+    "seen": 1794395435.3041205,
+    "ast_hash": "e03ef3195595fdb145167357af44b87a",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1794395263.0964024,
+    "seen": 1794395435.3042088,
+    "ast_hash": "e9f455e94a584d2f239e55d49810fd6e",
+    "semantic_hash": ""
+  },
+  "frontend/index.html": {
+    "mtime": 1794393739.6289265,
+    "seen": 1794395435.3042097,
+    "ast_hash": "f631a2b7d3b8f96972b667c4a7afb07f",
+    "semantic_hash": ""
+  },
+  "frontend/package-lock.json": {
+    "mtime": 1794393500.9397008,
+    "seen": 1794395435.3042104,
+    "ast_hash": "01eb3bdf65dc25187c2891ce72525c29",
+    "semantic_hash": ""
   }
 }

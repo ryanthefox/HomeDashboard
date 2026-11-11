@@ -8,6 +8,7 @@ public sealed class AfvalService
     private readonly IHttpClientFactory    _http;
     private readonly IConfiguration        _config;
     private readonly ILogger<AfvalService> _log;
+    private readonly IHostEnvironment      _env;
 
     private List<AfvalItem>? _cache;
     private DateTime          _cacheExpiry = DateTime.MinValue;
@@ -45,8 +46,9 @@ public sealed class AfvalService
         ("kerstboom",  "kerstbomen"),
     ];
 
-    public AfvalService(IHttpClientFactory http, IConfiguration config, ILogger<AfvalService> log)
+    public AfvalService(IHttpClientFactory http, IConfiguration config, ILogger<AfvalService> log, IHostEnvironment env)
     {
+        _env    = env;
         _http   = http;
         _config = config;
         _log    = log;
@@ -63,8 +65,7 @@ public sealed class AfvalService
 
         try
         {
-            var client   = _http.CreateClient();
-            var response = await client.GetStringAsync(icalUrl);
+            var response = await LoadICalAsync(icalUrl);
             var items    = ParseICal(response);
 
             _cache       = items;
@@ -76,6 +77,29 @@ public sealed class AfvalService
             _log.LogWarning(ex, "Afval: failed to fetch iCal from {Url}", icalUrl);
             return [];
         }
+    }
+
+    /// <summary>
+    /// Loads the calendar from an http(s) URL, or from a local .ics file
+    /// (absolute path, or relative to the app/project folder, e.g. "data/afval.ics").
+    /// </summary>
+    private async Task<string> LoadICalAsync(string source)
+    {
+        if (Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            return await _http.CreateClient().GetStringAsync(uri);
+        }
+
+        var path = uri is { IsFile: true } ? uri.LocalPath : source;
+        if (!Path.IsPathRooted(path))
+        {
+            // Project folder (dotnet run / Docker /app) first, then the folder of the exe
+            var fromContentRoot = Path.Combine(_env.ContentRootPath, path);
+            path = File.Exists(fromContentRoot) ? fromContentRoot : Path.Combine(AppContext.BaseDirectory, path);
+        }
+
+        return await File.ReadAllTextAsync(path);
     }
 
     private List<AfvalItem> ParseICal(string ical)

@@ -1,15 +1,11 @@
 {
-  "1": "HomeDashboard.Api.Models",
+  "1": "DashboardBackgroundService",
   "9": "IPolicyConfig",
-  "10": "IActionResult",
+  "10": "Task",
+  "11": "HueService",
   "12": "HomeDashboard.Api.Services",
-  "17": "PlexController",
-  "19": "AudioService.cs",
+  "17": "HueLight.cs",
+  "19": "ControllerBase",
   "26": "MusicService.GetCurrentMediaAsync",
-  "27": "ERole",
-  "28": "LgThinqOptions",
-  "29": "LgThinqClient.cs",
-  "30": "MusicService.cs",
-  "31": "CLAUDE.md",
-  "32": "SetDefaultRequest"
+  "31": "CLAUDE.md"
 }

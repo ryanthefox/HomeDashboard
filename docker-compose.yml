@@ -17,3 +17,10 @@ services:
       - Weather__Latitude=${WEATHER_LAT:-52.0259}
       - Weather__Longitude=${WEATHER_LON:-5.5553}
       - Weather__Timezone=${WEATHER_TZ:-Europe/Amsterdam}
+      # Plex (draait Plex op dezelfde machine, laat de default staan)
+      - Plex__ServerUrl=${PLEX_SERVER_URL:-http://host.docker.internal:32400}
+      - Plex__Token=${PLEX_TOKEN}
+      # Afvalkalender: standaard het meegeleverde HomeDashboard.Api/data/afval.ics, of een iCal-link
+      - Afval__ICalUrl=${AFVAL_ICAL_URL:-data/afval.ics}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
