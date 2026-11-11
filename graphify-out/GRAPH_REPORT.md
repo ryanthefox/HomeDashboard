@@ -1,18 +1,18 @@
 # Graph Report - HomeDashboard  (2026-11-11)
 
 ## Corpus Check
-- 145 files · ~70,949 words
+- 151 files · ~77,338 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 41 file(s) not represented in the graph (top: .dll 23, (none) 7, .bat 2)
-- WARNING: 41 of 188 files seen (22%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
+- WARNING: 41 of 194 files seen (21%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
 
 ## Summary
-- 1386 nodes · 4045 edges · 67 communities (49 shown, 18 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 111 edges (avg confidence: 0.85)
+- 1447 nodes · 4258 edges · 72 communities (51 shown, 21 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 112 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e876a4f2`
+- Built from commit: `0bb8657f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -41,16 +41,16 @@
 - TS Root Config
 - HttpGet
 - FrankEnergieService
-- AircoDevice.cs
-- WasherService
+- AircoService
+- SpotifyService.cs
 - CLAUDE.md
 - HomeWidget.tsx
 - HomeDashboard.Agent/Program.cs
-- LgThinqClient
+- JsonElement
 - HttpPost
 - PcService.cs
 - react
-- AircoService
+- useSignalR.ts
 - MusicService
 - PlexWidget.tsx
 - cn
@@ -65,71 +65,74 @@
 - EmptyState
 - JsonElement
 - ServerStatusService
-- TravelService.cs
+- App.tsx
 - dependencies
 - HomeWidget
 - CalendarService
 - AfvalService
-- StationRef
-- AuthController
+- spotifyPlayer.ts
+- HttpPost
 - main.tsx
 - PcService.GetMediaAsync
 - vite.config.ts
+- LoginScreen.tsx
 - scripts
-- leaflet
+- homeScreens.ts
+- apiFetch
+- SystemStats
+- swipe.ts
+- @tanstack/react-query-devtools
+- SetDefaultRequest
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 100 edges
-2. `useLocalStorage()` - 52 edges
-3. `react` - 50 edges
-4. `TravelService` - 48 edges
-5. `Skeleton()` - 47 edges
-6. `Panel` - 44 edges
-7. `HomeDashboard.Api.Services` - 42 edges
-8. `SpotifyService` - 42 edges
-9. `lucide-react` - 39 edges
-10. `EmptyState()` - 37 edges
+1. `cn()` - 109 edges
+2. `useLocalStorage()` - 56 edges
+3. `react` - 55 edges
+4. `SpotifyService` - 48 edges
+5. `TravelService` - 48 edges
+6. `Skeleton()` - 47 edges
+7. `Panel` - 45 edges
+8. `lucide-react` - 43 edges
+9. `HomeDashboard.Api.Services` - 42 edges
+10. `EmptyState()` - 38 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `CalendarController` --references--> `CalendarService`  [EXTRACTED]
-  HomeDashboard.Api/Controllers/CalendarController.cs → HomeDashboard.Api/Services/CalendarService.cs
-- `ServerController` --references--> `ServerStatusService`  [EXTRACTED]
-  HomeDashboard.Api/Controllers/ServerController.cs → HomeDashboard.Api/Services/ServerStatusService.cs
 - `SpotifyController` --references--> `SpotifyService`  [EXTRACTED]
   HomeDashboard.Api/Controllers/SpotifyController.cs → HomeDashboard.Api/Services/SpotifyService.cs
-- `TravelController` --references--> `TravelService`  [EXTRACTED]
-  HomeDashboard.Api/Controllers/TravelController.cs → HomeDashboard.Api/Services/TravelService.cs
+- `ConnectionDot()` --calls--> `useConnectionState()`  [EXTRACTED]
+  frontend/src/components/Dashboard.tsx → frontend/src/hooks/useSignalR.ts
 - `NavTabs()` --calls--> `cn()`  [EXTRACTED]
   frontend/src/components/Dashboard.tsx → frontend/src/lib/utils.ts
+- `AuthGate()` --calls--> `Dashboard()`  [EXTRACTED]
+  frontend/src/App.tsx → frontend/src/components/Dashboard.tsx
+- `Dashboard()` --calls--> `HomeWidget()`  [EXTRACTED]
+  frontend/src/components/Dashboard.tsx → frontend/src/components/widgets/HomeWidget.tsx
 
 ## Import Cycles
-- None detected.
+- 2-file cycle: `frontend/src/components/widgets/home/MiniMusic.tsx -> frontend/src/components/widgets/music/MiniSpotify.tsx -> frontend/src/components/widgets/home/MiniMusic.tsx`
+- 3-file cycle: `frontend/src/components/widgets/home/MiniMusic.tsx -> frontend/src/components/widgets/music/MiniSpotify.tsx -> frontend/src/components/widgets/music/SpotifyView.tsx -> frontend/src/components/widgets/home/MiniMusic.tsx`
 
-## Communities (67 total, 18 thin omitted)
+## Communities (72 total, 21 thin omitted)
 
 ### Community 0 - "EnergyWidget.tsx"
-Cohesion: 0.23
-Nodes (27): Bar, BarChart(), EnergyWidget(), priceBars(), PriceChart(), Stat(), usageBars(), UsageSection() (+19 more)
+Cohesion: 0.26
+Nodes (25): Bar, BarChart(), EnergyWidget(), priceBars(), PriceChart(), Stat(), usageBars(), UsageSection() (+17 more)
 
 ### Community 1 - "PcService"
-Cohesion: 0.08
-Nodes (13): AudioController, PcController, AudioService, AgentPing, MediaCommandResult, PcService, AgentKey, AgentUrl (+5 more)
+Cohesion: 0.07
+Nodes (15): AudioController, PcController, AudioOutputDevice, PcStatus, AudioService, AgentPing, MediaCommandResult, PcService (+7 more)
 
 ### Community 2 - "frontend/package.json"
 Cohesion: 0.14
 Nodes (19): devDependencies, autoprefixer@^10.4.20, postcss@^8.4.45, tailwindcss@^3.4.11, @types/node@^20.0.0, @types/react@^18.3.5, @types/react-dom@^18.3.0, typescript@^5.5.3 (+11 more)
 
 ### Community 3 - "Dashboard.tsx"
-Cohesion: 0.06
-Nodes (63): App(), AuthGate(), AfvalWidget, AircoWidget, AmbientBackground, CalendarWidget, Clock(), ConnectionDot() (+55 more)
+Cohesion: 0.12
+Nodes (29): AfvalWidget, AircoWidget, CalendarWidget, Clock(), ConnectionDot(), Dashboard(), EnergyWidget, fsDoc (+21 more)
 
 ### Community 4 - "PlexService"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (6): PlexItem, PlexSession, PlexStats, PlexService, ServerUrl, Token
-
-### Community 5 - "WeatherService"
-Cohesion: 0.16
-Nodes (3): DiskDriveInfo, SystemStats, SystemMonitorService
 
 ### Community 6 - "server.mjs"
 Cohesion: 0.09
@@ -141,7 +144,7 @@ Nodes (7): DashboardAuth, Required, Stamp, GoogleHomeService, ClientId, ClientSe
 
 ### Community 8 - "SystemWidget.tsx"
 Cohesion: 0.11
-Nodes (37): ArcGauge(), ArcGaugeProps, SIZES, AnimatedNumber(), Skeleton(), GAUGE_PX, GaugeSize, MiniSystem() (+29 more)
+Nodes (36): ArcGauge(), ArcGaugeProps, SIZES, AnimatedNumber(), GAUGE_PX, GaugeSize, MiniSystem(), pickLayout() (+28 more)
 
 ### Community 9 - "IPolicyConfig"
 Cohesion: 0.11
@@ -149,15 +152,11 @@ Nodes (5): ERole, eCommunications, eConsole, eMultimedia, IPolicyConfig
 
 ### Community 10 - "WeatherWidget.tsx"
 Cohesion: 0.14
-Nodes (24): CloudShape(), effectiveIcon(), RAIN, skyGradient(), SNOW, STARS, WeatherFx, WeatherIcon() (+16 more)
+Nodes (23): CloudShape(), effectiveIcon(), RAIN, skyGradient(), SNOW, STARS, WeatherFx, WeatherIcon() (+15 more)
 
 ### Community 11 - "HueService"
-Cohesion: 0.15
-Nodes (7): HueGroupActionRequest, HueLight, HueLightStateRequest, HueRoom, HueScene, HueService, BaseUrl
-
-### Community 12 - "HomeDashboard.Api.Services"
-Cohesion: 0.24
-Nodes (3): HomeDashboard.Api.Services, HomeDashboard.Api.Controllers, SetDefaultRequest
+Cohesion: 0.11
+Nodes (8): HueController, HueGroupActionRequest, HueLight, HueLightStateRequest, HueRoom, HueScene, HueService, BaseUrl
 
 ### Community 13 - "DashboardBackgroundService.cs"
 Cohesion: 0.24
@@ -175,10 +174,6 @@ Nodes (16): compilerOptions, allowImportingTsExtensions, isolatedModules, lib, m
 Cohesion: 0.22
 Nodes (4): b64url(), exchange_code(), get_gateway(), main()
 
-### Community 17 - "DashboardBackgroundService"
-Cohesion: 0.15
-Nodes (4): DashboardBackgroundService, RingEventListener, RingService, BridgeUrl
-
 ### Community 20 - "HomeDashboard.Api"
 Cohesion: 0.14
 Nodes (12): net8.0-windows10.0.19041.0, HomeDashboard.Agent, net8.0-windows10.0.19041.0, LibreHardwareMonitorLib (0.9.4), NAudio (2.2.1), Microsoft.NET.Sdk.Web, Ical.Net (4.3.1), LibreHardwareMonitorLib (0.9.4) (+4 more)
@@ -188,108 +183,112 @@ Cohesion: 0.06
 Nodes (30): build, environment, network_mode, profiles, restart, volumes, build, environment (+22 more)
 
 ### Community 27 - "HttpGet"
-Cohesion: 0.06
-Nodes (10): AfvalController, CalendarController, EnergyController, HueController, PlexController, ServerController, SystemController, TravelController (+2 more)
+Cohesion: 0.08
+Nodes (8): AfvalController, CalendarController, EnergyController, PlexController, ServerController, SystemController, TravelController, WeatherController
 
 ### Community 28 - "FrankEnergieService"
 Cohesion: 0.10
 Nodes (11): EnergyMonthSummary, EnergyPrice, EnergyPrices, EnergyUsage, EnergyUsagePoint, DayData, FrankApiException, IsAuthError (+3 more)
 
-### Community 29 - "AircoDevice.cs"
-Cohesion: 0.22
-Nodes (4): SetFanSpeedRequest, SetModeRequest, SetPowerRequest, SetTemperatureRequest
+### Community 29 - "AircoService"
+Cohesion: 0.11
+Nodes (7): AircoController, AircoDevice, SetFanSpeedRequest, SetModeRequest, SetPowerRequest, SetTemperatureRequest, AircoService
 
-### Community 30 - "WasherService"
-Cohesion: 0.19
-Nodes (3): AircoDevice, WasherDevice, WasherService
+### Community 30 - "SpotifyService.cs"
+Cohesion: 0.17
+Nodes (5): SpotifyDevice, SpotifyItem, SpotifyPlayback, SpotifyStatus, SpotifyTrack
 
 ### Community 32 - "HomeWidget.tsx"
-Cohesion: 0.10
-Nodes (33): fadeUp, AIRCO_VISIBLE_KEY, AircoTileConfig(), CalendarTileConfig(), ENERGY_ITEMS, EnergyTileConfig(), HUE_VISIBLE_KEY, HueTileConfig() (+25 more)
+Cohesion: 0.09
+Nodes (35): fadeUp, softSpring, AIRCO_VISIBLE_KEY, AircoTileConfig(), CalendarTileConfig(), ENERGY_ITEMS, ENERGY_VISIBLE_KEY, EnergyItem (+27 more)
 
-### Community 34 - "LgThinqClient"
-Cohesion: 0.19
-Nodes (6): LgThinqClient, LgThinqOptions, BaseUrl, ClientId, CountryCode, PersonalAccessToken
-
-### Community 36 - "PcService.cs"
-Cohesion: 0.12
-Nodes (3): HomeDashboard.Api.Models, AudioOutputDevice, PcStatus
+### Community 34 - "JsonElement"
+Cohesion: 0.11
+Nodes (9): WasherController, WasherDevice, LgThinqClient, LgThinqOptions, BaseUrl, ClientId, CountryCode, PersonalAccessToken (+1 more)
 
 ### Community 37 - "react"
-Cohesion: 0.10
-Nodes (39): MiniRing(), DoorbellAlert(), playChime(), EventRow(), RingDetail(), RingSnapshot(), RingLogin(), dayHeading() (+31 more)
+Cohesion: 0.11
+Nodes (37): Dialog(), Label(), MiniRing(), DoorbellAlert(), playChime(), EventRow(), RingDetail(), RingSnapshot() (+29 more)
+
+### Community 38 - "useSignalR.ts"
+Cohesion: 0.22
+Nodes (14): @microsoft/signalr@^8.0.7, useConnectionState(), useSignalR(), MediaInfo, WeatherData, emitRingEvent(), connection, getConnectionState() (+6 more)
 
 ### Community 40 - "PlexWidget.tsx"
-Cohesion: 0.20
-Nodes (26): easeOutExpo, itemSubtitle(), itemTitle(), LiveCard(), MiniPlex(), PosterRow(), addedAgo(), PlexLink() (+18 more)
+Cohesion: 0.22
+Nodes (24): itemSubtitle(), itemTitle(), LiveCard(), MiniPlex(), PosterRow(), addedAgo(), PlexLink(), PlexPoster() (+16 more)
 
 ### Community 41 - "cn"
-Cohesion: 0.22
-Nodes (18): BrightnessSlider(), Toggle(), BulbBadge(), HUE_FAVORITE_KEY, MiniHue(), SceneChips(), pickVisible(), HueWidget() (+10 more)
+Cohesion: 0.19
+Nodes (21): BrightnessSlider(), Toggle(), BulbBadge(), HUE_FAVORITE_KEY, MiniHue(), SceneChips(), HueWidget(), LightRow() (+13 more)
 
 ### Community 42 - "cn"
-Cohesion: 0.17
-Nodes (27): Dialog(), Panel, ArtBackdrop(), DeviceIcon(), Equalizer(), MiniMusic(), shortDeviceName(), useMusicControls() (+19 more)
+Cohesion: 0.13
+Nodes (44): Press, spring, ArtBackdrop(), DeviceIcon(), Equalizer(), MiniMusic(), MiniPcMusic(), MusicSourceSwitch() (+36 more)
 
 ### Community 44 - "MiniAirco.tsx"
-Cohesion: 0.25
-Nodes (20): Press, softSpring, spring, ThermostatRing(), AircoSetupPrompt(), AircoWidget(), MiniAirco(), PowerButton() (+12 more)
+Cohesion: 0.28
+Nodes (17): ThermostatRing(), AircoSetupPrompt(), AircoWidget(), MiniAirco(), PowerButton(), TempStepper(), pickVisible(), AIRCO_MODES (+9 more)
 
 ### Community 45 - "api.ts"
 Cohesion: 0.08
-Nodes (25): CalendarData, CalendarInfo, CarRoute, DiskDriveInfo, energyApi, EnergyPrices, EnergyUsage, EnergyUsagePoint (+17 more)
+Nodes (23): CalendarData, CalendarInfo, CarRoute, DiskDriveInfo, energyApi, EnergyPrices, EnergyUsage, EnergyUsagePoint (+15 more)
 
 ### Community 46 - "MiniWeather.tsx"
-Cohesion: 0.35
-Nodes (9): MiniAfval(), MiniWeather(), uvColor(), uvLabel(), TileHeader(), useCompactColumns(), useContainerSize(), useIsMobile() (+1 more)
+Cohesion: 0.22
+Nodes (15): Skeleton(), WeatherIllustration(), MiniAfval(), MiniWeather(), uvColor(), uvLabel(), goToTab(), NAVIGATE_EVENT (+7 more)
 
 ### Community 47 - "Task"
-Cohesion: 0.10
-Nodes (13): SpotifyDevice, SpotifyException, Status, SpotifyItem, SpotifyPlayback, SpotifyService, ClientId, ClientSecret (+5 more)
+Cohesion: 0.09
+Nodes (13): SpotifyException, Status, SpotifyService, CanStream, ClientId, ClientSecret, Configured, GrantedScope (+5 more)
 
 ### Community 48 - "IActionResult"
-Cohesion: 0.09
-Nodes (5): AircoController, CodeBody, PlayBody, SpotifyController, TransferBody
+Cohesion: 0.12
+Nodes (4): CodeBody, PlayBody, SpotifyController, TransferBody
 
 ### Community 49 - "CalendarWidget.tsx"
-Cohesion: 0.13
-Nodes (39): AfvalWidget(), CalendarView(), ListView(), NextCollection(), View, CalendarWidget(), EventRow(), ListView() (+31 more)
+Cohesion: 0.14
+Nodes (40): Panel, AfvalWidget(), CalendarView(), ListView(), NextCollection(), View, CalendarWidget(), EventRow() (+32 more)
 
 ### Community 50 - "TravelService"
-Cohesion: 0.11
-Nodes (16): CarRoute, TravelService, CarCacheFor, CarConfigured, EnvHomeStation, EnvWorkStation, GoogleKey, Home (+8 more)
+Cohesion: 0.07
+Nodes (24): StationsBody, CarRoute, StationRef, StationSettings, TrainLeg, TrainTrip, TravelResponse, TravelService (+16 more)
 
 ### Community 51 - "EmptyState"
-Cohesion: 0.26
-Nodes (19): EmptyState(), Label(), Segmented(), MiniTravel(), TrainRow(), CarPanel(), crowdLabel, TrainPanel() (+11 more)
+Cohesion: 0.27
+Nodes (18): EmptyState(), Segmented(), MiniTravel(), TrainRow(), CarPanel(), crowdLabel, TrainPanel(), TravelWidget() (+10 more)
 
 ### Community 52 - "JsonElement"
-Cohesion: 0.20
+Cohesion: 0.22
 Nodes (4): DailyForecastItem, HourlyForecastItem, WeatherData, WeatherService
 
 ### Community 53 - "ServerStatusService"
 Cohesion: 0.21
 Nodes (6): ContainerInfo, DockerInfo, ServerStatus, ServerStatusService, Docker, SocketPath
 
-### Community 54 - "TravelService.cs"
-Cohesion: 0.18
-Nodes (3): TrainLeg, TrainTrip, TravelResponse
+### Community 54 - "App.tsx"
+Cohesion: 0.25
+Nodes (11): App(), AuthGate(), KEY, useAuth(), authApi, AuthStatus, onAuthRequired(), UnauthorizedError (+3 more)
 
 ### Community 55 - "dependencies"
-Cohesion: 0.12
-Nodes (16): dependencies, class-variance-authority@^0.7.0, clsx@^2.1.1, lucide-react@^0.441.0, @microsoft/signalr@^8.0.7, motion@^14.12.0, react@^18.3.1, tailwind-merge@^2.5.2 (+8 more)
+Cohesion: 0.13
+Nodes (15): dependencies, class-variance-authority@^0.7.0, clsx@^2.1.1, leaflet@^1.9.4, lucide-react@^0.441.0, motion@^14.12.0, react@^18.3.1, tailwind-merge@^2.5.2 (+7 more)
 
 ### Community 56 - "HomeWidget"
-Cohesion: 0.23
-Nodes (16): ConfigSheet(), DragOverlay(), HomeWidget(), buildRows(), computeCompactDrop(), computeDrop(), moveWidget(), renderCell() (+8 more)
+Cohesion: 0.20
+Nodes (18): entranceInitial(), ConfigSheet(), DragOverlay(), HomeWidget(), buildRows(), computeCompactDrop(), computeDrop(), moveWidget() (+10 more)
 
 ### Community 57 - "CalendarService"
-Cohesion: 0.23
-Nodes (5): CalendarEventDto, CalendarInfo, CalendarResponse, CalendarService, Urls
+Cohesion: 0.17
+Nodes (7): CalendarEventDto, CalendarInfo, CalendarResponse, CalendarService, Urls, RingService, BridgeUrl
 
-### Community 59 - "StationRef"
-Cohesion: 0.24
-Nodes (5): StationsBody, StationRef, StationSettings, Stations, TravelSettingsDto
+### Community 59 - "spotifyPlayer.ts"
+Cohesion: 0.15
+Nodes (10): browserPlaybackBlocker(), BrowserPlayerState, BrowserPlayerStatus, deviceName(), listeners, loadSdk(), SdkPlayer, startBrowserPlayer() (+2 more)
+
+### Community 60 - "HttpPost"
+Cohesion: 0.19
+Nodes (3): AuthController, LoginRequest, MusicController
 
 ### Community 61 - "main.tsx"
 Cohesion: 0.29
@@ -299,29 +298,45 @@ Nodes (5): @fontsource-variable/inter@^5.3.0, react-dom@^18.3.1, blockTouchConte
 Cohesion: 0.33
 Nodes (4): vite@^5.4.2, @vitejs/plugin-react@^4.3.1, vite, @vitejs/plugin-react
 
+### Community 64 - "LoginScreen.tsx"
+Cohesion: 0.27
+Nodes (9): AmbientBackground, LoginScreen(), submit(), easeOutExpo, login(), Theme, ThemeCtx, ThemeCtxValue (+1 more)
+
 ### Community 65 - "scripts"
 Cohesion: 0.50
 Nodes (4): scripts, build, dev, preview
 
+### Community 66 - "homeScreens.ts"
+Cohesion: 0.29
+Nodes (7): deleteScreenStorage(), EMPTY_SCREEN_LAYOUT, MAX_SCREENS, PER_SCREEN, SCREEN_KEY, screenKey(), SCREENS_KEY
+
+### Community 67 - "apiFetch"
+Cohesion: 0.33
+Nodes (6): apiFetch(), json(), ringJson(), send(), spotifyCall(), notifyAuthRequired()
+
+### Community 69 - "swipe.ts"
+Cohesion: 0.67
+Nodes (3): handlesHorizontal(), SwipeOptions, useSwipeNavigation()
+
 ## Knowledge Gaps
-- **53 isolated node(s):** `net8.0-windows10.0.19041.0`, `Ical.Net (4.3.1)`, `Microsoft.AspNetCore.OpenApi (8.0.0)`, `Swashbuckle.AspNetCore (6.6.2)`, `LibreHardwareMonitorLib (0.9.4)` (+48 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 346 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **57 isolated node(s):** `ClientId`, `ClientSecret`, `RedirectUri`, `Configured`, `HttpsUrl` (+52 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 365 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TravelService` connect `TravelService` to `HttpPost`, `PlexService`, `WeatherService`, `HttpGet`, `DashboardBackgroundService`, `TravelService.cs`, `CalendarService`, `AfvalService`, `StationRef`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **What connects `net8.0-windows10.0.19041.0`, `Ical.Net (4.3.1)`, `Microsoft.AspNetCore.OpenApi (8.0.0)` to the rest of the system?**
-  _53 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `PcService` be split into smaller, more focused modules?**
-  _Cohesion score 0.08076923076923077 - nodes in this community are weakly interconnected._
-- **Why does `HomeDashboard.Api.Services` connect `HomeDashboard.Api.Services` to `HomeDashboard.Agent/Program.cs`, `LgThinqClient`, `PcService.cs`, `IPolicyConfig`, `DashboardBackgroundService.cs`, `AuthController.cs`, `ServerStatusService`, `TravelService.cs`, `CalendarService`, `MusicService.cs`?**
+- **Why does `HomeDashboard.Api.Services` connect `HomeDashboard.Api.Services` to `HomeDashboard.Agent/Program.cs`, `JsonElement`, `PcService.cs`, `IPolicyConfig`, `DashboardBackgroundService.cs`, `AuthController.cs`, `TravelService`, `ServerStatusService`, `CalendarService`, `MusicService.cs`, `SpotifyService.cs`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
+- **What connects `ClientId`, `ClientSecret`, `RedirectUri` to the rest of the system?**
+  _57 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `PcService` be split into smaller, more focused modules?**
+  _Cohesion score 0.06859903381642513 - nodes in this community are weakly interconnected._
+- **Why does `TravelService` connect `TravelService` to `PcService`, `HttpPost`, `PlexService`, `WeatherService`, `DashboardBackgroundService`, `CalendarService`, `AfvalService`, `HttpGet`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Should `frontend/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.1368421052631579 - nodes in this community are weakly interconnected._
-- **Why does `FrankEnergieService` connect `FrankEnergieService` to `PcService.cs`, `GoogleHomeService`, `DashboardBackgroundService`, `CalendarService`, `AfvalService`, `HttpGet`?**
+- **Why does `react` connect `react` to `EnergyWidget.tsx`, `frontend/package.json`, `Dashboard.tsx`, `SystemWidget.tsx`, `WeatherWidget.tsx`, `HomeWidget.tsx`, `useSignalR.ts`, `PlexWidget.tsx`, `cn`, `cn`, `MiniAirco.tsx`, `MiniWeather.tsx`, `CalendarWidget.tsx`, `EmptyState`, `App.tsx`, `dependencies`, `spotifyPlayer.ts`, `main.tsx`, `LoginScreen.tsx`, `swipe.ts`?**
   _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Should `Dashboard.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.05745814307458143 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11724137931034483 - nodes in this community are weakly interconnected._
