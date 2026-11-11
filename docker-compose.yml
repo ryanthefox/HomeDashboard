@@ -40,6 +40,10 @@ services:
       - Pc__MacAddress=${PC_MAC}
       - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}
       - Pc__MediaUrl=${PC_MEDIA_URL:-}
+      # Google Home (optioneel): pc aan/uit via "Hey Google" — zie .env.example
+      - Google__ClientId=${GOOGLE_CLIENT_ID:-}
+      - Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
+      - Google__DeviceName=${GOOGLE_DEVICE_NAME:-}
 
   # ── HTTPS via DuckDNS (optioneel) ─────────────────────────────────────────────
   # Aanzetten met COMPOSE_PROFILES=https in .env, plus DUCKDNS_DOMAIN en DUCKDNS_TOKEN.

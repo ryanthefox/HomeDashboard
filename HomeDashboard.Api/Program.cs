@@ -101,6 +101,7 @@ builder.Services.AddSingleton<WasherService>();
 builder.Services.AddSingleton<AfvalService>();
 builder.Services.AddSingleton<PlexService>();
 builder.Services.AddSingleton<PcService>();
+builder.Services.AddSingleton<GoogleHomeService>();
 
 builder.Services.AddHostedService<DashboardBackgroundService>();
 
