@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { Play, Pause, SkipBack, SkipForward, Music, Headphones, Speaker, Settings2, Check } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Music, Headphones, Speaker, Settings2, Check, Monitor } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { musicApi, audioApi, type MediaInfo, type AudioOutputDevice } from '@/lib/api'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { queryClient as qc } from '@/lib/queryClient'
 import { Press, spring } from '@/components/ui/motion'
 import { useContainerSize } from './shared'
+import { MiniSpotify } from '../music/MiniSpotify'
 
 // ── Helpers (also used by the full Music tab) ────────────────────────────────
 export function DeviceIcon({ name, className }: { name: string; className?: string }) {
@@ -70,7 +71,38 @@ export function useMusicControls() {
 }
 
 // ── Tile ──────────────────────────────────────────────────────────────────────
+type Source = 'pc' | 'spotify'
+
+/** Spotify logo mark (three arcs), sized like a lucide icon. */
+function SpotifyMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21Zm4.8 15.15a.65.65 0 0 1-.9.22c-2.47-1.5-5.57-1.85-9.23-1.01a.65.65 0 1 1-.29-1.27c4-.92 7.44-.52 10.2 1.17.31.19.4.59.22.89Zm1.28-2.86a.82.82 0 0 1-1.12.27c-2.82-1.74-7.13-2.24-10.47-1.23a.82.82 0 1 1-.47-1.56c3.82-1.16 8.57-.6 11.8 1.4.38.23.5.74.26 1.12Zm.11-2.97C14.8 8.8 9.2 8.6 5.96 9.6a.98.98 0 1 1-.57-1.88c3.72-1.13 9.9-.91 13.8 1.4a.98.98 0 0 1-1 1.7Z" />
+    </svg>
+  )
+}
+
+/** Music tile: switch between this pc's media/audio outputs and Spotify (shared with the Muziek tab). */
 export function MiniMusic() {
+  const [source, setSource] = useLocalStorage<Source>('music-source', 'pc')
+  return (
+    <div className="relative h-full">
+      {source === 'spotify' ? <MiniSpotify /> : <MiniPcMusic />}
+      <div className="absolute right-3 top-3 z-20 flex gap-0.5 rounded-xl bg-black/30 p-0.5 backdrop-blur-md">
+        {([['pc', 'Media van deze pc', Monitor], ['spotify', 'Spotify', SpotifyMark]] as const).map(([id, title, Icon]) => (
+          <button key={id} onClick={() => setSource(id)} title={title} aria-pressed={source === id}
+            className={cn('relative rounded-lg p-1.5 transition-colors', source === id ? 'text-white' : 'text-fg3 hover:text-fg2')}>
+            {source === id && <motion.span layoutId="mini-music-source" transition={spring} className="absolute inset-0 rounded-lg"
+              style={{ background: id === 'spotify' ? '#1ed76040' : 'rgba(255,255,255,.14)' }} />}
+            <Icon className={cn('relative z-10 h-3.5 w-3.5', id === 'spotify' && source === id && 'text-[#1ed760]')} />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MiniPcMusic() {
   const ref = useRef<HTMLDivElement>(null)
   const { h } = useContainerSize(ref)
 
@@ -96,7 +128,7 @@ export function MiniMusic() {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col p-4">
         {/* Now playing */}
-        <div className={cn('flex shrink-0 items-center gap-3', compact ? 'mb-2' : 'mb-3')}>
+        <div className={cn('flex shrink-0 items-center gap-3 pr-[72px]', compact ? 'mb-2' : 'mb-3')}>
           <motion.div
             className="relative shrink-0 overflow-hidden rounded-2xl bg-card4"
             style={{ width: artSize, height: artSize, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)' }}
