@@ -12,10 +12,10 @@
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/AfvalController.cs": {
-    "mtime": 1774012753.2746892,
-    "seen": 1794395115.4604533,
-    "ast_hash": "a31250e5871a32276a18a81f02721c25",
-    "semantic_hash": "a31250e5871a32276a18a81f02721c25"
+    "mtime": 1794408147.4000635,
+    "seen": 1794408807.9967399,
+    "ast_hash": "251fe0cd6df60e7c2b6b3af43d994a9e",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/AircoController.cs": {
     "mtime": 1773922801.784009,
@@ -150,16 +150,16 @@
     "semantic_hash": "858ed332b3f72ef71d7112355164a330"
   },
   "HomeDashboard.Api/Services/AfvalService.cs": {
-    "mtime": 1794396143.45825,
-    "seen": 1794396308.6483858,
-    "ast_hash": "0d575d323a78d89917944a5e60ecdb07",
+    "mtime": 1794408147.4000635,
+    "seen": 1794408807.9967682,
+    "ast_hash": "ddec829e704e5ae966d013f6cceb9964",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/AircoService.cs": {
-    "mtime": 1773923993.3102272,
-    "seen": 1794395115.4604702,
-    "ast_hash": "dd20a744c4869fe3d7a34802ee5a0cc7",
-    "semantic_hash": "dd20a744c4869fe3d7a34802ee5a0cc7"
+    "mtime": 1794408132.093022,
+    "seen": 1794408807.996769,
+    "ast_hash": "03cfc74da554cf3bd4fd655214ce5f52",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/AudioService.cs": {
     "mtime": 1773941177.1131468,
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794401975.5126426,
-    "seen": 1794402158.0862672,
-    "ast_hash": "383ce9ba8cb5c7385de0a311723a12a1",
+    "mtime": 1794408476.4266975,
+    "seen": 1794408807.9967856,
+    "ast_hash": "54f08de6ecd88679628c3dac0a91e9f4",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
@@ -288,22 +288,22 @@
     "semantic_hash": "6f606e9ce46f34fc7da908eb266cab53"
   },
   "frontend/src/components/widgets/AfvalWidget.tsx": {
-    "mtime": 1794394245.0186317,
-    "seen": 1794395115.4604845,
-    "ast_hash": "3955e0504677e2ccc6fb80d47bc9dd91",
-    "semantic_hash": "3955e0504677e2ccc6fb80d47bc9dd91"
+    "mtime": 1794408211.6921906,
+    "seen": 1794408807.9967918,
+    "ast_hash": "2548e54efce495f8b0a2c75627e04946",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/AircoWidget.tsx": {
-    "mtime": 1794394244.8439217,
-    "seen": 1794395115.4604855,
-    "ast_hash": "d25ccf410fedff552f96469067d82f96",
-    "semantic_hash": "d25ccf410fedff552f96469067d82f96"
+    "mtime": 1794408661.9483864,
+    "seen": 1794408807.9967926,
+    "ast_hash": "2136ca96fe9e32c6386ac255fe7e9a81",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/HomeWidget.tsx": {
-    "mtime": 1794394100.1125953,
-    "seen": 1794395115.460486,
-    "ast_hash": "0524b82920cfdb2f72aac501755c0b6b",
-    "semantic_hash": "0524b82920cfdb2f72aac501755c0b6b"
+    "mtime": 1794408331.4554691,
+    "seen": 1794408807.996793,
+    "ast_hash": "6f1e0422b1d6de51e76eca7ac9ad73a0",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
     "mtime": 1794395417.434631,
@@ -342,15 +342,15 @@
     "semantic_hash": "bec031f0d9c61d917ac83e4b0ac042d0"
   },
   "frontend/src/components/widgets/home/MiniAirco.tsx": {
-    "mtime": 1794394030.4903786,
-    "seen": 1794395115.4604902,
-    "ast_hash": "2dfbbedf6183a8b13fced4c10e2b5b92",
-    "semantic_hash": "2dfbbedf6183a8b13fced4c10e2b5b92"
+    "mtime": 1794408285.595581,
+    "seen": 1794408807.9967988,
+    "ast_hash": "f41c0e1d86e45686ffbb6018b7df8766",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniHue.tsx": {
-    "mtime": 1794395417.4336317,
-    "seen": 1794395435.3041828,
-    "ast_hash": "798af915e60dd78ce3875229d4a2babe",
+    "mtime": 1794408265.57532,
+    "seen": 1794408807.9967995,
+    "ast_hash": "946b8dcd36f89f53147c4b4e122c0484",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniMusic.tsx": {
@@ -378,16 +378,16 @@
     "semantic_hash": "53a37a6b5857da5a138f10c259ef6419"
   },
   "frontend/src/components/widgets/home/shared.tsx": {
-    "mtime": 1794393935.6010292,
-    "seen": 1794395115.460494,
-    "ast_hash": "9d10dfd6e986573b5c99ddce07d37b43",
-    "semantic_hash": "9d10dfd6e986573b5c99ddce07d37b43"
+    "mtime": 1794408285.5965815,
+    "seen": 1794408807.9968052,
+    "ast_hash": "8ef5db88adda730a43900872f18aa237",
+    "semantic_hash": ""
   },
   "frontend/src/hooks/useLocalStorage.ts": {
-    "mtime": 1773867441.4852057,
-    "seen": 1794395115.4604945,
-    "ast_hash": "6faeb52001021ee7bb14460bd75dddbb",
-    "semantic_hash": "6faeb52001021ee7bb14460bd75dddbb"
+    "mtime": 1794408220.310351,
+    "seen": 1794408807.9968092,
+    "ast_hash": "ad65f0ca71458e3878f283f322a5a962",
+    "semantic_hash": ""
   },
   "frontend/src/hooks/useSignalR.ts": {
     "mtime": 1794394659.853688,
@@ -402,10 +402,10 @@
     "semantic_hash": "37e05f445dbc0110c6784b7d23287f50"
   },
   "frontend/src/lib/afval.ts": {
-    "mtime": 1794393811.040461,
-    "seen": 1794395115.4604964,
-    "ast_hash": "3d347a4efd243839b5913fb435917151",
-    "semantic_hash": "3d347a4efd243839b5913fb435917151"
+    "mtime": 1794408174.5049653,
+    "seen": 1794408807.9968119,
+    "ast_hash": "bd14ccddfc262a2e0f6b3c5e4ebd1858",
+    "semantic_hash": ""
   },
   "frontend/src/lib/airco.ts": {
     "mtime": 1794393764.9304898,
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794401937.6354418,
-    "seen": 1794402158.086295,
-    "ast_hash": "fcbacd599b87c7d2ff085c69655e8cee",
+    "mtime": 1794408157.3674088,
+    "seen": 1794408807.9968135,
+    "ast_hash": "ef3b757384ba9bfe903a7fe51f008a46",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -468,10 +468,10 @@
     "semantic_hash": "0352474ba2918efe13895edbc3780d94"
   },
   "frontend/tailwind.config.js": {
-    "mtime": 1773863653.910132,
-    "seen": 1794395115.4605038,
-    "ast_hash": "973b38ee969eec4af7d8b9e1edb9633d",
-    "semantic_hash": "973b38ee969eec4af7d8b9e1edb9633d"
+    "mtime": 1794408461.9722564,
+    "seen": 1794408807.9968238,
+    "ast_hash": "7756c4bf4263e51f52070660b08d9c1f",
+    "semantic_hash": ""
   },
   "frontend/tsconfig.app.json": {
     "mtime": 1773863644.5412984,
@@ -651,6 +651,12 @@
     "mtime": 1794403973.4589965,
     "seen": 1794404369.5384376,
     "ast_hash": "9a8afd2330dbc3830d178ddc52bb29a9",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/home/TileConfig.tsx": {
+    "mtime": 1794408238.3706121,
+    "seen": 1794408807.996804,
+    "ast_hash": "9c2a6fa36bdfc83f223115f4ec9ecced",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut,
+  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
@@ -110,6 +110,50 @@ function Clock() {
       </p>
       <p className="mt-1 whitespace-nowrap text-xs capitalize text-fg3 hidden sm:block short:hidden">{date}</p>
     </motion.div>
+  )
+}
+
+// ── Fullscreen toggle ─────────────────────────────────────────────────────────
+// Safari (iPad) still only has the webkit-prefixed API; iPhone has none at all.
+type FsDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => Promise<void> }
+type FsElement  = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }
+
+const fsDoc = document as FsDocument
+const fsSupported = !!(document.documentElement.requestFullscreen || (document.documentElement as FsElement).webkitRequestFullscreen)
+const isFullscreen = () => !!(fsDoc.fullscreenElement ?? fsDoc.webkitFullscreenElement)
+
+function FullscreenButton() {
+  const [active, setActive] = useState(isFullscreen)
+  useEffect(() => {
+    const update = () => setActive(isFullscreen())
+    document.addEventListener('fullscreenchange', update)
+    document.addEventListener('webkitfullscreenchange', update)
+    return () => {
+      document.removeEventListener('fullscreenchange', update)
+      document.removeEventListener('webkitfullscreenchange', update)
+    }
+  }, [])
+
+  if (!fsSupported) return null
+
+  const toggle = () => {
+    const el = document.documentElement as FsElement
+    const p = isFullscreen()
+      ? (fsDoc.exitFullscreen?.() ?? fsDoc.webkitExitFullscreen?.())
+      : (el.requestFullscreen?.({ navigationUI: 'hide' }) ?? el.webkitRequestFullscreen?.())
+    p?.catch(() => { /* refused by the browser */ })
+  }
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={toggle}
+      className="flex h-9 w-9 items-center justify-center rounded-xl bg-card3 text-fg2 hover:text-fg transition-colors"
+      title={active ? 'Volledig scherm sluiten' : 'Volledig scherm'}
+      aria-label={active ? 'Volledig scherm sluiten' : 'Volledig scherm'}
+    >
+      {active ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+    </motion.button>
   )
 }
 
@@ -238,6 +282,8 @@ export function Dashboard() {
                   </motion.button>
                 )}
               </AnimatePresence>
+
+              <FullscreenButton />
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
