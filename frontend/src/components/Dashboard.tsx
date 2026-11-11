@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut,
@@ -102,13 +102,13 @@ function Clock() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: easeOutExpo }}
-      className="min-w-0 shrink"
+      className="shrink-0"
     >
-      <p className="hidden sm:block label-caps mb-0.5">{greeting(now.getHours())}</p>
-      <p className="text-[28px] sm:text-[40px] font-semibold leading-none tracking-[-0.04em] text-fg tabular">
+      <p className="hidden sm:block short:hidden label-caps mb-0.5">{greeting(now.getHours())}</p>
+      <p className="whitespace-nowrap text-[28px] sm:text-[40px] short:text-[28px] font-semibold leading-none tracking-[-0.04em] text-fg tabular">
         {time.split('').map((ch, i) => <RollingChar key={i} ch={ch} />)}
       </p>
-      <p className="mt-1 text-xs capitalize text-fg3 hidden sm:block">{date}</p>
+      <p className="mt-1 whitespace-nowrap text-xs capitalize text-fg3 hidden sm:block short:hidden">{date}</p>
     </motion.div>
   )
 }
@@ -130,11 +130,20 @@ function ConnectionDot() {
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab) => void; mobile?: boolean }) {
+  // On the scrollable (phone) bar, keep the active tab in view
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!mobile) return
+    const el = navRef.current?.querySelector<HTMLElement>(`[data-tab="${active}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [active, mobile])
+
   return (
     <nav
+      ref={navRef}
       className={cn(
         'panel relative flex gap-0.5 rounded-2xl p-1',
-        mobile ? 'sm:hidden mt-3 overflow-x-auto scrollbar-hide' : 'hidden sm:flex',
+        mobile ? 'lg:hidden mt-3 short:mt-2 overflow-x-auto scrollbar-hide' : 'hidden lg:flex',
       )}
     >
       {TABS.map(tab => {
@@ -143,9 +152,11 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
         return (
           <button
             key={tab.id}
+            data-tab={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              'relative flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 lg:px-4 py-2 text-sm font-medium transition-colors duration-200',
+              'relative flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 short:py-1.5 text-sm font-medium transition-colors duration-200',
+              mobile ? 'shrink-0 sm:flex-1 sm:justify-center sm:px-2' : 'xl:px-4',
               isActive ? 'text-zinc-950' : 'text-fg2 hover:text-fg',
             )}
           >
@@ -193,9 +204,9 @@ export function Dashboard() {
   return (
     <>
       <AmbientBackground />
-      <div className="relative z-10 flex h-[100dvh] flex-col p-3 sm:p-5 overflow-hidden" style={{ colorScheme: theme }}>
+      <div className="relative z-10 flex h-[100dvh] flex-col p-3 sm:p-5 short:p-3 overflow-hidden" style={{ colorScheme: theme }}>
 
-        <header className="mb-3 sm:mb-5 shrink-0">
+        <header className="mb-3 sm:mb-5 short:mb-3 shrink-0">
           <div className="flex items-center justify-between gap-4">
             <Clock />
 

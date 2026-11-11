@@ -30,3 +30,24 @@ export function afvalDateLabel(dateStr: string): { label: string; urgent: boolea
   const d = new Date(dateStr)
   return { label: `${NL_DAYS[d.getDay()]} ${d.getDate()} ${NL_MONTHS[d.getMonth()]}`, urgent: false, days }
 }
+
+export const NL_MONTHS_LONG = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december']
+export const NL_WEEKDAYS_MON = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']
+
+/** Local calendar-day key (yyyy-mm-dd) for a Date or ISO string. */
+export function dayKey(d: Date | string): string {
+  const x = typeof d === 'string' ? new Date(d) : d
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+}
+
+/** Month index since year 0, handy for comparing/stepping months. */
+export const monthIndex = (d: Date) => d.getFullYear() * 12 + d.getMonth()
+
+/** The days to draw for a month grid: whole weeks, Monday first. */
+export function monthGrid(year: number, month: number): Date[] {
+  const first = new Date(year, month, 1)
+  const offset = (first.getDay() + 6) % 7 // days since Monday
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells = Math.ceil((offset + daysInMonth) / 7) * 7
+  return Array.from({ length: cells }, (_, i) => new Date(year, month, 1 - offset + i))
+}

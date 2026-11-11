@@ -55,9 +55,13 @@ public sealed class AfvalService
     }
 
     public async Task<List<AfvalItem>> GetUpcomingAsync()
+        => FilterUpcoming(await GetAllAsync());
+
+    /// <summary>Every collection in the calendar (for the month view), sorted by date.</summary>
+    public async Task<List<AfvalItem>> GetAllAsync()
     {
         if (_cache != null && DateTime.UtcNow < _cacheExpiry)
-            return FilterUpcoming(_cache);
+            return _cache;
 
         var icalUrl = _config["Afval:ICalUrl"] ?? "";
         if (string.IsNullOrWhiteSpace(icalUrl))
@@ -70,12 +74,12 @@ public sealed class AfvalService
 
             _cache       = items;
             _cacheExpiry = DateTime.UtcNow.Add(CacheTtl);
-            return FilterUpcoming(items);
+            return items;
         }
         catch (Exception ex)
         {
             _log.LogWarning(ex, "Afval: failed to fetch iCal from {Url}", icalUrl);
-            return [];
+            return _cache ?? [];
         }
     }
 

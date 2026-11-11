@@ -9,6 +9,7 @@ import { roomAccent, avgBrightnessPct, litLights, useHueActions } from '@/lib/hu
 import { Toggle, spring, EmptyState } from '@/components/ui/motion'
 import { BrightnessSlider } from '@/components/ui/BrightnessSlider'
 import { useContainerSize } from './shared'
+import { HUE_VISIBLE_KEY, pickVisible } from './TileConfig'
 
 export function SceneChips({ roomId, size = 'sm' }: { roomId: string; size?: 'sm' | 'md' }) {
   const { data: scenes } = useQuery<HueScene[]>({
@@ -69,6 +70,8 @@ export function MiniHue() {
   const { h } = useContainerSize(ref)
   const { data: rooms } = useQuery<HueRoom[]>({ queryKey: ['hue', 'rooms'], queryFn: hueApi.getRooms, staleTime: 10_000 })
   const [favoriteId, setFavoriteId] = useLocalStorage<string>(HUE_FAVORITE_KEY, '')
+  const [visibleIds] = useLocalStorage<string[]>(HUE_VISIBLE_KEY, [])
+  const shown = pickVisible(rooms, visibleIds, r => r.id)
   const [selectedId, setSelectedId] = useState<string>(favoriteId)
   const [expanded, setExpanded] = useState(false)
   const actions = useHueActions()
@@ -80,9 +83,9 @@ export function MiniHue() {
     return () => clearTimeout(t)
   }, [selectedId, favoriteId])
 
-  const room    = rooms?.find(r => r.id === selectedId)
-    ?? rooms?.find(r => r.id === favoriteId)
-    ?? rooms?.[0]
+  const room    = shown.find(r => r.id === selectedId)
+    ?? shown.find(r => r.id === favoriteId)
+    ?? shown[0]
   const isFavorite = !!room && room.id === favoriteId
   const accent  = room ? roomAccent(room, '#ffb35c') : '#ffb35c'
   const onCount = room ? litLights(room).length : 0
@@ -97,9 +100,9 @@ export function MiniHue() {
         transition={{ duration: 0.8 }}
       />
 
-      {rooms && rooms.length > 1 && (
+      {shown.length > 1 && (
         <div className="relative z-10 flex shrink-0 gap-1 overflow-x-auto p-3 pb-0 scrollbar-hide">
-          {rooms.map(r => {
+          {shown.map(r => {
             const active = r.id === room?.id
             return (
               <button key={r.id} onClick={() => setSelectedId(r.id)}

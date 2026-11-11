@@ -9,6 +9,7 @@ import { useAircoActions, AIRCO_MODES, FAN_SPEEDS, TEMP_MIN, TEMP_MAX, modeColor
 import { ThermostatRing } from '@/components/ui/ThermostatRing'
 import { Press, spring, EmptyState } from '@/components/ui/motion'
 import { useContainerSize, TileHeader } from './shared'
+import { AIRCO_VISIBLE_KEY, pickVisible } from './TileConfig'
 
 /** Power button that glows in the current mode's colour. */
 export function PowerButton({ on, color, onClick, disabled, size = 36 }: {
@@ -49,7 +50,9 @@ export function TempStepper({ device, onStep, size = 'md' }: {
 export function MiniAirco() {
   const ref = useRef<HTMLDivElement>(null)
   const { h, w } = useContainerSize(ref)
-  const { data: devices = [] } = useQuery<AircoDevice[]>({ queryKey: ['airco', 'devices'], queryFn: aircoApi.getDevices, staleTime: 30_000 })
+  const { data: allDevices } = useQuery<AircoDevice[]>({ queryKey: ['airco', 'devices'], queryFn: aircoApi.getDevices, staleTime: 30_000 })
+  const [visibleIds] = useLocalStorage<string[]>(AIRCO_VISIBLE_KEY, [])
+  const devices = pickVisible(allDevices, visibleIds, d => d.deviceId)
   const [selectedId, setSelectedId] = useLocalStorage<string>('home-ac-device', '')
   const device = devices.find(d => d.deviceId === selectedId) ?? devices[0]
   const act = useAircoActions(device)
@@ -63,7 +66,7 @@ export function MiniAirco() {
 
   return (
     <div ref={ref} className="flex h-full flex-col p-4">
-      <TileHeader icon={<AirVent />} title="Airco"
+      <TileHeader icon={<AirVent />} title={devices.length === 1 && device ? device.name : 'Airco'}
         right={device && <PowerButton on={device.isOn} color={color} onClick={() => act.setPower(!device.isOn)} disabled={!device.isOnline} size={34} />} />
 
       {!tiny && devices.length > 1 && (

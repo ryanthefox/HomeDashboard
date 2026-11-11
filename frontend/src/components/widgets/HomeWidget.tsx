@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { GripVertical, X, Plus, Minus, ChevronDown, ChevronUp, Columns2, Square, EyeOff } from 'lucide-react'
+import { GripVertical, X, Plus, Minus, ChevronDown, ChevronUp, Columns2, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
-import { useIsMobile } from './home/shared'
+import { useCompactColumns } from './home/shared'
+import { HueTileConfig, AircoTileConfig } from './home/TileConfig'
 import { MiniWeather } from './home/MiniWeather'
 import { MiniMusic } from './home/MiniMusic'
 import { MiniHue } from './home/MiniHue'
@@ -39,12 +40,17 @@ const DEFAULT_LAYOUT: HomeLayout = {
   colFlex: { left: 1, middle: 1.5, right: 1 },
 }
 
-const WIDGET_META: Record<WidgetId, { label: string; flex: number; mobileHeight: number; render: () => React.ReactNode }> = {
+const WIDGET_META: Record<WidgetId, {
+  label: string; flex: number; mobileHeight: number; render: () => React.ReactNode
+  config?: { title: string; render: () => React.ReactNode } // optional per-tile settings
+}> = {
   weather:  { label: 'Weer',          flex: 1, mobileHeight: 220, render: () => <MiniWeather /> },
   music:    { label: 'Muziek',        flex: 2, mobileHeight: 260, render: () => <MiniMusic /> },
-  lighting: { label: 'Verlichting',   flex: 1, mobileHeight: 300, render: () => <MiniHue /> },
+  lighting: { label: 'Verlichting',   flex: 1, mobileHeight: 300, render: () => <MiniHue />,
+              config: { title: 'Ruimtes', render: () => <HueTileConfig /> } },
   system:   { label: 'Systeem',       flex: 2, mobileHeight: 270, render: () => <MiniSystem /> },
-  airco:    { label: 'Airco',         flex: 1, mobileHeight: 300, render: () => <MiniAirco /> },
+  airco:    { label: 'Airco',         flex: 1, mobileHeight: 300, render: () => <MiniAirco />,
+              config: { title: "Airco's", render: () => <AircoTileConfig /> } },
   afval:    { label: 'Afvalkalender', flex: 1, mobileHeight: 220, render: () => <MiniAfval /> },
   plex:     { label: 'Plex',          flex: 2, mobileHeight: 280, render: () => <MiniPlex /> },
 }
@@ -83,8 +89,42 @@ function IconBtn({ onClick, disabled, title, children, className }: {
   )
 }
 
+/** Settings sheet that slides over a tile (e.g. which rooms the light tile shows). */
+function ConfigSheet({ id, onClose }: { id: WidgetId; onClose: () => void }) {
+  const cfg = WIDGET_META[id].config
+  if (!cfg) return null
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 z-30 flex flex-col overflow-hidden rounded-3xl bg-[var(--c-solid)]"
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-subtle px-4 py-3">
+        <p className="label-caps">{WIDGET_META[id].label} · {cfg.title}</p>
+        <motion.button whileTap={{ scale: 0.9 }} onClick={onClose}
+          className="rounded-lg bg-accent px-2.5 py-1 text-xs font-semibold">Klaar</motion.button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-hide">{cfg.render()}</div>
+    </motion.div>
+  )
+}
+
 export function HomeWidget({ editMode }: { editMode: boolean }) {
-  const isMobile = useIsMobile()
+  const compactCols = useCompactColumns()
+  const [configId, setConfigId] = useState<WidgetId | null>(null)
+  if (!editMode && configId) setConfigId(null)
+
+  const configButton = (id: WidgetId, className: string) => WIDGET_META[id].config && (
+    <motion.button
+      initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
+      whileTap={{ scale: 0.85 }}
+      onClick={() => setConfigId(c => c === id ? null : id)}
+      className={cn(chip, 'absolute top-2.5 p-1.5 hover:text-orange-300', className)}
+      title="Instellingen"
+    >
+      <SlidersHorizontal className="h-4 w-4" />
+    </motion.button>
+  )
   const [layoutRaw, setLayoutRaw] = useLocalStorage<HomeLayout>('home-layout', DEFAULT_LAYOUT)
   const layout = sanitize(layoutRaw)
   const setLayout = (fn: (prev: HomeLayout) => HomeLayout) => setLayoutRaw(prev => fn(sanitize(prev)))
@@ -210,6 +250,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               >
                 <X className="h-4 w-4" />
               </motion.button>
+              {configButton(id, 'right-12')}
               <motion.div
                 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={spring}
                 className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 px-1.5 py-0.5')}
@@ -224,6 +265,9 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               </motion.div>
             </motion.div>
           )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {editMode && configId === id && <ConfigSheet id={id} onClose={() => setConfigId(null)} />}
         </AnimatePresence>
       </motion.div>
     )
@@ -281,8 +325,41 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     )
   }
 
-  // ── Mobile: single scrollable column ─────────────────────────────────────────
-  if (isMobile) {
+  // ── Hidden widgets tray (edit mode) ──────────────────────────────────────────
+  const hiddenTray = (
+    <AnimatePresence>
+      {editMode && hiddenWidgets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+          transition={softSpring}
+          className="panel flex shrink-0 flex-col gap-3 rounded-3xl p-4 sm:flex-row sm:items-center sm:gap-4"
+        >
+          <p className="flex shrink-0 items-center gap-1.5 label-caps"><EyeOff className="h-3.5 w-3.5" />Verborgen</p>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {hiddenWidgets.map(id => (
+              <motion.div layout key={id} className="flex items-center gap-1.5 rounded-xl bg-card3 py-1 pl-3 pr-1">
+                <span className="text-xs font-medium text-fg">{WIDGET_META[id].label}</span>
+                {compactCols ? (
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, 'right')}
+                    className="rounded-lg px-2 py-1 text-[11px] text-fg2 transition-colors hover:bg-accent hover:text-white">
+                    + Toevoegen
+                  </motion.button>
+                ) : COLUMNS.map(col => (
+                  <motion.button key={col} whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, col)}
+                    className="rounded-lg px-2 py-1 text-[11px] text-fg2 transition-colors hover:bg-accent hover:text-white">
+                    + {COL_LABEL[col]}
+                  </motion.button>
+                ))}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
+  // ── Compact (phone, portrait tablet, landscape phone): scrollable masonry ────
+  if (compactCols) {
     const base = mobileOrder.length > 0 ? mobileOrder : allUsed
     const ordered = [...base.filter(id => allUsed.includes(id)), ...allUsed.filter(id => !base.includes(id))]
     const getH = (id: WidgetId) => mobileHeights[id] ?? WIDGET_META[id].mobileHeight
@@ -294,41 +371,74 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       ;[cur[idx], cur[to]] = [cur[to], cur[idx]]
       setMobileOrder(cur)
     }
+    const removeCompact = (id: WidgetId) => {
+      const col = COLUMNS.find(c => layout[c].includes(id))
+      if (col) removeWidget(id, col)
+    }
+
+    // Greedy masonry: each tile goes into the currently shortest column
+    const columns: WidgetId[][] = Array.from({ length: compactCols }, () => [])
+    const colH = Array<number>(compactCols).fill(0)
+    for (const id of ordered) {
+      const c = colH.indexOf(Math.min(...colH))
+      columns[c].push(id)
+      colH[c] += getH(id)
+    }
+
+    const renderCompactCell = (id: WidgetId) => {
+      const idx = ordered.indexOf(id)
+      return (
+        <motion.div
+          key={id}
+          layout
+          transition={softSpring}
+          variants={fadeUp} initial="hidden" animate="show" custom={idx}
+          className={cn('panel relative shrink-0 overflow-hidden rounded-3xl', editMode && 'ring-1 ring-orange-400/30')}
+          style={{ height: getH(id) }}
+        >
+          {WIDGET_META[id].render()}
+          <AnimatePresence>
+            {editMode && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="pointer-events-none absolute inset-0 z-20 bg-black/10">
+                <div className="absolute left-2.5 top-2.5 flex flex-col gap-1">
+                  <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, -1)} disabled={idx === 0} className={cn(chip, 'p-1.5 disabled:opacity-30')} title="Omhoog">
+                    <ChevronUp className="h-4 w-4" />
+                  </motion.button>
+                  <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, 1)} disabled={idx === ordered.length - 1} className={cn(chip, 'p-1.5 disabled:opacity-30')} title="Omlaag">
+                    <ChevronDown className="h-4 w-4" />
+                  </motion.button>
+                </div>
+                <motion.button whileTap={{ scale: 0.85 }} onClick={() => removeCompact(id)}
+                  className={cn(chip, 'absolute right-2.5 top-2.5 p-1.5 hover:text-red-400')} title="Verbergen">
+                  <X className="h-4 w-4" />
+                </motion.button>
+                {configButton(id, 'right-12')}
+                <div className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 px-1.5 py-0.5')}>
+                  <IconBtn onClick={() => adjustH(id, -30)} disabled={getH(id) <= 120} title="Lager"><Minus className="h-3 w-3" /></IconBtn>
+                  <span className="w-24 truncate text-center text-xs font-medium">{WIDGET_META[id].label}</span>
+                  <IconBtn onClick={() => adjustH(id, 30)} disabled={getH(id) >= 600} title="Hoger"><Plus className="h-3 w-3" /></IconBtn>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {editMode && configId === id && <ConfigSheet id={id} onClose={() => setConfigId(null)} />}
+          </AnimatePresence>
+        </motion.div>
+      )
+    }
 
     return (
       <div className="flex h-full flex-col gap-3 overflow-y-auto pb-6 scrollbar-hide">
-        {ordered.map((id, idx) => (
-          <motion.div
-            key={id}
-            layout
-            transition={softSpring}
-            variants={fadeUp} initial="hidden" animate="show" custom={idx}
-            className={cn('panel relative shrink-0 overflow-hidden rounded-3xl', editMode && 'ring-1 ring-orange-400/30')}
-            style={{ height: getH(id) }}
-          >
-            {WIDGET_META[id].render()}
-            <AnimatePresence>
-              {editMode && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="pointer-events-none absolute inset-0 z-20 bg-black/10">
-                  <div className="absolute left-2.5 top-2.5 flex flex-col gap-1">
-                    <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, -1)} disabled={idx === 0} className={cn(chip, 'p-1.5 disabled:opacity-30')}>
-                      <ChevronUp className="h-4 w-4" />
-                    </motion.button>
-                    <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, 1)} disabled={idx === ordered.length - 1} className={cn(chip, 'p-1.5 disabled:opacity-30')}>
-                      <ChevronDown className="h-4 w-4" />
-                    </motion.button>
-                  </div>
-                  <div className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 px-1.5 py-0.5')}>
-                    <IconBtn onClick={() => adjustH(id, -30)} disabled={getH(id) <= 120}><Minus className="h-3 w-3" /></IconBtn>
-                    <span className="w-24 truncate text-center text-xs font-medium">{WIDGET_META[id].label}</span>
-                    <IconBtn onClick={() => adjustH(id, 30)} disabled={getH(id) >= 600}><Plus className="h-3 w-3" /></IconBtn>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
+        {hiddenTray}
+        <div className="flex items-start gap-3">
+          {columns.map((ids, c) => (
+            <div key={c} className="flex min-w-0 flex-1 flex-col gap-3">
+              {ids.map(renderCompactCell)}
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -339,31 +449,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       <div className="flex min-h-0 flex-1 gap-3">
         {COLUMNS.map(renderColumn)}
       </div>
-
-      <AnimatePresence>
-        {editMode && hiddenWidgets.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            transition={softSpring}
-            className="panel flex shrink-0 items-center gap-4 rounded-3xl p-4"
-          >
-            <p className="flex shrink-0 items-center gap-1.5 label-caps"><EyeOff className="h-3.5 w-3.5" />Verborgen</p>
-            <div className="flex flex-wrap gap-3">
-              {hiddenWidgets.map(id => (
-                <motion.div layout key={id} className="flex items-center gap-1.5 rounded-xl bg-card3 py-1 pl-3 pr-1">
-                  <span className="text-xs font-medium text-fg">{WIDGET_META[id].label}</span>
-                  {COLUMNS.map(col => (
-                    <motion.button key={col} whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, col)}
-                      className="rounded-lg px-2 py-1 text-[11px] text-fg2 transition-colors hover:bg-accent hover:text-white">
-                      + {COL_LABEL[col]}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {hiddenTray}
     </div>
   )
 }

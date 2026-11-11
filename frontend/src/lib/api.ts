@@ -234,6 +234,7 @@ export interface MediaInfo {
 // ── Afval ─────────────────────────────────────────────────────────────────────
 export const afvalApi = {
   getUpcoming: () => json<AfvalItem[]>(`${BASE}/afval/upcoming`),
+  getAll:      () => json<AfvalItem[]>(`${BASE}/afval/all`),
 }
 export interface AfvalItem {
   type: string

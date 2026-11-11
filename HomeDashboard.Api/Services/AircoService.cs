@@ -92,6 +92,13 @@ public sealed class AircoService
             {
                 var id   = item.TryGetProperty("deviceId",   out var d) ? d.GetString()! : "";
                 var info = item.TryGetProperty("deviceInfo", out var i) ? i : default;
+
+                // The ThinQ account also holds washers etc.; only keep air conditioners
+                var deviceType = info.ValueKind != JsonValueKind.Undefined && info.TryGetProperty("deviceType", out var dt)
+                    ? (dt.GetString() ?? "") : "";
+                if (deviceType.Length > 0 && !deviceType.Contains("AIR_CONDITIONER", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var name = info.ValueKind != JsonValueKind.Undefined && info.TryGetProperty("alias", out var a)
                     ? a.GetString()! : id;
 

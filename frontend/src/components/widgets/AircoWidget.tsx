@@ -51,8 +51,8 @@ export function AircoWidget() {
   return (
     <div className="flex h-full w-full flex-col">
       {devices.length > 1 && (
-        <div className="mb-3 flex shrink-0 justify-center overflow-x-auto scrollbar-hide">
-          <Segmented layoutId="ac-device" value={device.deviceId} onChange={setSelectedId}
+        <div className="mb-3 shrink-0 overflow-x-auto scrollbar-hide">
+          <Segmented layoutId="ac-device" className="mx-auto w-max" value={device.deviceId} onChange={setSelectedId}
             items={devices.map(d => ({ id: d.deviceId, label: d.name }))} />
         </div>
       )}
@@ -104,7 +104,8 @@ export function AircoWidget() {
                           style={{ background: `${m.color}22`, boxShadow: `inset 0 0 0 1px ${m.color}66, 0 0 24px -6px ${m.color}` }} />
                       )}
                       <Icon className="relative z-10 h-5 w-5" style={{ color: active ? m.color : undefined }} />
-                      <span className="relative z-10">{m.label}</span>
+                      <span className="relative z-10 sm:hidden">{m.short}</span>
+                      <span className="relative z-10 hidden sm:inline">{m.label}</span>
                     </Press>
                   )
                 })}

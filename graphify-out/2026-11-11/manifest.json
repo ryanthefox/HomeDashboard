@@ -24,10 +24,10 @@
     "semantic_hash": "6ce601621d1e01be0126c7d0ce8392b7"
   },
   "HomeDashboard.Api/Controllers/AudioController.cs": {
-    "mtime": 1773868799.839008,
-    "seen": 1794395115.4604552,
-    "ast_hash": "b2787a943d2706574cd89e26201dcec5",
-    "semantic_hash": "b2787a943d2706574cd89e26201dcec5"
+    "mtime": 1794399587.6709461,
+    "seen": 1794399660.0029113,
+    "ast_hash": "b9c8f560a3d9c13d39efbe7898094480",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/HueController.cs": {
     "mtime": 1794394341.084539,
@@ -138,9 +138,9 @@
     "semantic_hash": "b440ee41c3a3df8428195d1555645360"
   },
   "HomeDashboard.Api/Program.cs": {
-    "mtime": 1794398135.8165975,
-    "seen": 1794398328.573029,
-    "ast_hash": "419fe8e7816c1a6fd5bb0ce72d29367c",
+    "mtime": 1794404286.5523205,
+    "seen": 1794404369.5383704,
+    "ast_hash": "4f366719397d602396593024ce2c068d",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Properties/launchSettings.json": {
@@ -216,9 +216,9 @@
     "semantic_hash": "2bbb46e6759eb687d0021a3fc359b85c"
   },
   "HomeDashboard.Api/appsettings.example.json": {
-    "mtime": 1794398135.8165975,
-    "seen": 1794398328.5730445,
-    "ast_hash": "6d24a8af378804a1b8caf6daac36083e",
+    "mtime": 1794401996.9597664,
+    "seen": 1794402158.0862617,
+    "ast_hash": "5b0031a8a3dc8f5f5dbfb87d2aa3f815",
     "semantic_hash": ""
   },
   "HomeDashboard.sln": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1794399281.8527026,
-    "seen": 1794399386.6659966,
-    "ast_hash": "c51602bcb759a2b726c04ec29dfbe93d",
+    "mtime": 1794404366.4228823,
+    "seen": 1794404369.5383873,
+    "ast_hash": "f7016fcfcb6698949b89f0c8d6f764cf",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -246,16 +246,16 @@
     "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
   },
   "frontend/src/App.tsx": {
-    "mtime": 1794393729.5100079,
-    "seen": 1794395115.4604797,
-    "ast_hash": "0af1d21b8d173a715e191a94b0584d62",
-    "semantic_hash": "0af1d21b8d173a715e191a94b0584d62"
+    "mtime": 1794401964.9298067,
+    "seen": 1794402158.0862663,
+    "ast_hash": "7a0c90c02bc112bc5d1ea660be213e91",
+    "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794394577.5282478,
-    "seen": 1794395115.4604805,
-    "ast_hash": "fae05eaa930ab6c2b167dd9ffbf149c5",
-    "semantic_hash": "fae05eaa930ab6c2b167dd9ffbf149c5"
+    "mtime": 1794401975.5126426,
+    "seen": 1794402158.0862672,
+    "ast_hash": "383ce9ba8cb5c7385de0a311723a12a1",
+    "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
     "mtime": 1794393689.2699373,
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794398248.0306282,
-    "seen": 1794398328.5730839,
-    "ast_hash": "ee5aeffa90d9294c511b417921512537",
+    "mtime": 1794401937.6354418,
+    "seen": 1794402158.086295,
+    "ast_hash": "fcbacd599b87c7d2ff085c69655e8cee",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -438,16 +438,16 @@
     "semantic_hash": ""
   },
   "frontend/src/lib/queryClient.ts": {
-    "mtime": 1773863658.5048103,
-    "seen": 1794395115.4605002,
-    "ast_hash": "cc3ae53d48b90fd897b36ab20dd4882a",
-    "semantic_hash": "cc3ae53d48b90fd897b36ab20dd4882a"
+    "mtime": 1794401964.4353235,
+    "seen": 1794402158.0863004,
+    "ast_hash": "5f31dfce12d9310ad088631aa2f959de",
+    "semantic_hash": ""
   },
   "frontend/src/lib/signalrClient.ts": {
-    "mtime": 1794393634.297912,
-    "seen": 1794395115.460501,
-    "ast_hash": "508b5911816c060b39be0db479cfccc6",
-    "semantic_hash": "508b5911816c060b39be0db479cfccc6"
+    "mtime": 1794401964.4968894,
+    "seen": 1794402158.086301,
+    "ast_hash": "4c44f6676c2f414938c42d6698d4a130",
+    "semantic_hash": ""
   },
   "frontend/src/lib/utils.ts": {
     "mtime": 1773863657.273945,
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "frontend/index.html": {
-    "mtime": 1794393739.6289265,
-    "seen": 1794395435.3042097,
-    "ast_hash": "f631a2b7d3b8f96972b667c4a7afb07f",
+    "mtime": 1794403981.343763,
+    "seen": 1794404369.5384371,
+    "ast_hash": "ada9c84561fa0fc110f3ceb9b3d311d4",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Models/PlexStats.cs": {
@@ -552,15 +552,15 @@
     "semantic_hash": ""
   },
   "HomeDashboard.Agent/HomeDashboard.Agent.csproj": {
-    "mtime": 1794399216.1595993,
-    "seen": 1794399386.6659496,
-    "ast_hash": "0daedb3dd70abce51749defe410d958e",
+    "mtime": 1794399587.6414309,
+    "seen": 1794399660.002901,
+    "ast_hash": "dfded1f52cec8e7da1dcf64bc1e4811f",
     "semantic_hash": ""
   },
   "HomeDashboard.Agent/Program.cs": {
-    "mtime": 1794399236.947398,
-    "seen": 1794399386.665952,
-    "ast_hash": "2ef825299b17f96e21557ff116c30efe",
+    "mtime": 1794399628.2684145,
+    "seen": 1794399660.0029032,
+    "ast_hash": "cccd116defd1eec8b3b32d6d62e79bd1",
     "semantic_hash": ""
   },
   "HomeDashboard.Agent/install-agent.ps1": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/PcService.cs": {
-    "mtime": 1794399281.8285954,
-    "seen": 1794399386.6659894,
-    "ast_hash": "c05db22d7789cc84eafb21fb798f642f",
+    "mtime": 1794399587.6709461,
+    "seen": 1794399660.0029416,
+    "ast_hash": "335cb183c2216f7c3e47425eaf08d8bc",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/system/PcControls.tsx": {
@@ -603,6 +603,54 @@
     "mtime": 1794398028.218344,
     "seen": 1794399386.6659536,
     "ast_hash": "e929a7fdcfee3c3707f69cfc6c87eeea",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/AuthController.cs": {
+    "mtime": 1794401912.0854983,
+    "seen": 1794402158.0862248,
+    "ast_hash": "7a51791e2f47724846e2eacce7764ec0",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/DashboardAuth.cs": {
+    "mtime": 1794401911.9208558,
+    "seen": 1794402158.0862527,
+    "ast_hash": "1ef7354ab6567f37ec67645331168278",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/LoginScreen.tsx": {
+    "mtime": 1794401964.7510893,
+    "seen": 1794402158.086268,
+    "ast_hash": "ca4e6963e61d3e0c2faccccaf553e06b",
+    "semantic_hash": ""
+  },
+  "frontend/src/hooks/useAuth.ts": {
+    "mtime": 1794401964.63641,
+    "seen": 1794402158.0862887,
+    "ast_hash": "a78f7c9f6fdda1ee32ebe2a3c19d24f0",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/auth.ts": {
+    "mtime": 1794401937.0640006,
+    "seen": 1794402158.0862958,
+    "ast_hash": "2fdcbfcf61efe6a9404bbc5b3f5cdbcd",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/GoogleHomeController.cs": {
+    "mtime": 1794404366.421879,
+    "seen": 1794404369.5383477,
+    "ast_hash": "8545f4b631d7632888866085180dd7da",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/GoogleHomeService.cs": {
+    "mtime": 1794404286.012762,
+    "seen": 1794404369.5383759,
+    "ast_hash": "411e1d4ad302ba95084b1846b401fbce",
+    "semantic_hash": ""
+  },
+  "frontend/public/favicon.svg": {
+    "mtime": 1794403973.4589965,
+    "seen": 1794404369.5384376,
+    "ast_hash": "9a8afd2330dbc3830d178ddc52bb29a9",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {
