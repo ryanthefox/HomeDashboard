@@ -13,17 +13,12 @@
        - "HomeDashboard Agent Media": wat er nu speelt + bediening, start bij het inloggen onder
          jouw account (Windows laat media alleen aan de ingelogde gebruiker zien), poort 5056
     4. -SetupWakeOnLan: zet "Snel opstarten" uit en Wake-on-LAN aan op je netwerkkaart
-    5. -LockAfterAutoLogon: taak "HomeDashboard Vergrendelen" die de PC vergrendelt na automatisch
-       aanmelden (Sysinternals Autologon). Windows en de agent starten gewoon op, maar het scherm
-       vraagt om je pincode. Alleen vlak na het opstarten, dus niet als je zelf opnieuw inlogt.
-       -LockAfterAutoLogon:$false haalt de taak weer weg.
-    6. Toont de regels die je in .env op de server zet
+    5. Toont de regels die je in .env op de server zet
 #>
 param(
     [int]    $Port = 5055,
     [string] $InstallDir = "$env:ProgramFiles\HomeDashboardAgent",
-    [switch] $SetupWakeOnLan,
-    [switch] $LockAfterAutoLogon
+    [switch] $SetupWakeOnLan
 )
 
 $ErrorActionPreference = 'Stop'
@@ -124,25 +119,11 @@ try {
     Write-Host "  Media-helper draait voor $user (speelt nu: $now)" -ForegroundColor Green
 } catch { Write-Host "  Media-helper reageert (nog) niet: $($_.Exception.Message)" -ForegroundColor Yellow }
 
-if ($PSBoundParameters.ContainsKey('LockAfterAutoLogon')) {
-    if ($LockAfterAutoLogon) {
-        # Lock right after the automatic logon at boot, so programs and the media helper are running
-        # but the screen asks for the PIN. Only within 5 minutes of boot: signing in yourself later
-        # (after signing out) doesn't lock you out again.
-        $lockCmd = 'if (((Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalMinutes -lt 5) { rundll32.exe user32.dll,LockWorkStation }'
-        $lockAction  = New-ScheduledTaskAction -Execute 'powershell.exe' `
-            -Argument "-NoProfile -NonInteractive -WindowStyle Hidden -Command `"$lockCmd`""
-        $lockTrigger = New-ScheduledTaskTrigger -AtLogOn -User $user
-        $lockTrigger.Delay = 'PT15S'   # give the media helper and startup apps a moment
-        $lockSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
-            -ExecutionTimeLimit (New-TimeSpan -Minutes 2)
-        Register-ScheduledTask -TaskName $LockTaskName -Action $lockAction -Trigger $lockTrigger `
-            -Principal $mediaPrincipal -Settings $lockSettings -Force | Out-Null
-        Write-Host "  PC vergrendelt na automatisch aanmelden (taak '$LockTaskName')" -ForegroundColor Green
-    } elseif (Get-ScheduledTask -TaskName $LockTaskName -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $LockTaskName -Confirm:$false
-        Write-Host "  Taak '$LockTaskName' verwijderd"
-    }
+# Remove the old lock-after-autologon task from earlier versions (not needed: the agent runs as
+# SYSTEM at boot, so stats work without anyone signing in)
+if (Get-ScheduledTask -TaskName $LockTaskName -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $LockTaskName -Confirm:$false
+    Write-Host "  Oude taak '$LockTaskName' verwijderd"
 }
 
 $nic = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' -and $_.MediaType -eq '802.3' } | Select-Object -First 1
