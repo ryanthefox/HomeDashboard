@@ -172,15 +172,15 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('skeleton', className)} />
 }
 
-export function EmptyState({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) {
+export function EmptyState({ icon, title, hint, compact }: { icon: React.ReactNode; title: string; hint?: string; compact?: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: easeOutExpo }}
-      className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center"
+      className={cn('flex flex-1 flex-col items-center justify-center text-center', compact ? 'gap-1 py-1' : 'gap-2 py-6')}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card3 text-fg3">{icon}</div>
+      {!compact && <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card3 text-fg3">{icon}</div>}
       <p className="text-sm font-medium text-fg2">{title}</p>
       {hint && <p className="max-w-[220px] text-xs text-fg3">{hint}</p>}
     </motion.div>

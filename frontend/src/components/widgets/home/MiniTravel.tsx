@@ -40,7 +40,7 @@ function TrainRow({ t, index }: { t: TrainTrip; index: number }) {
 
 export function MiniTravel() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
   const [dir, setDir] = useTravelDirection()
   const { data, isLoading } = useTravel(dir)
   const [items] = useLocalStorage<string[]>(TRAVEL_VISIBLE_KEY, [])
@@ -55,12 +55,12 @@ export function MiniTravel() {
     <div ref={ref} className="flex h-full flex-col overflow-hidden p-4">
       <TileHeader icon={<Route />} title="Reistijd"
         right={<Segmented size="sm" layoutId="travel-dir" value={dir} onChange={setDir}
-          items={[{ id: 'work', label: 'Naar werk' }, { id: 'home', label: 'Naar huis' }]} itemClassName="px-2 py-0.5 text-[11px]" />} />
+          items={[{ id: 'work', label: w > 0 && w < 320 ? 'Werk' : 'Naar werk' }, { id: 'home', label: w > 0 && w < 320 ? 'Huis' : 'Naar huis' }]} itemClassName="px-2 py-0.5 text-[11px]" />} />
 
       {isLoading ? (
         <div className="space-y-2"><Skeleton className="h-16" /><Skeleton className="h-10" /></div>
       ) : !data || (!data.carConfigured && !data.trainConfigured) ? (
-        <EmptyState icon={<Route className="h-5 w-5" />} title="Reistijd nog niet ingesteld" hint="Zie TRAVEL_… in .env" />
+        <EmptyState icon={<Route className="h-5 w-5" />} title="Reistijd nog niet ingesteld" hint="Zie TRAVEL_… in .env" compact={h < 200} />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           {showCar && (

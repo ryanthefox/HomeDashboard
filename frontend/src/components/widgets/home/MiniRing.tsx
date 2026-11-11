@@ -52,7 +52,7 @@ export function MiniRing() {
         <EmptyState icon={<BellRing className="h-5 w-5" />} title="Ring-koppeling draait niet" hint="Start de ring-container (docker compose up -d)" />
       ) : status.needsLogin ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-fg2">{status.error ?? 'Koppel je Ring-account om je deurbel hier te zien.'}</p>
+          <p className="line-clamp-3 text-sm text-fg2">{status.error ?? 'Koppel je Ring-account om je deurbel hier te zien.'}</p>
           <button onClick={() => setLoginOpen(true)} className="flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold">
             <Link2 className="h-4 w-4" /> Ring koppelen
           </button>

@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 import { spotifyApi, type SpotifyDevice, type SpotifyPlayback, type SpotifyStatus } from '@/lib/api'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Press, spring } from '@/components/ui/motion'
-import { useContainerSize } from '../home/shared'
-import { ArtBackdrop, Equalizer } from '../home/MiniMusic'
+import { useContainerSize, TileTitle } from '../home/shared'
+import { ArtBackdrop, Equalizer, MusicSourceSwitch } from '../home/MiniMusic'
 import { deviceIcon } from './SpotifyView'
 import { ThisDeviceRow } from './ThisDevice'
 import { useBrowserPlayer } from '@/lib/spotifyPlayer'
@@ -17,7 +17,7 @@ const GREEN = '#1ed760'
 /** Home tile: Spotify now playing + Spotify Connect device picker. */
 export function MiniSpotify() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
   const qc = useQueryClient()
   const [, setTab] = useLocalStorage<string>('active-tab', 'home')
   const [, setDeviceId] = useLocalStorage<string>('spotify-device', '')
@@ -37,8 +37,8 @@ export function MiniSpotify() {
   const track = pb?.track ?? null
   const playing = !!pb?.isPlaying
   const compact = h < 280
-  const iconOnly = h < 200
-  const artSize = compact ? 44 : Math.min(Math.max(h * 0.28, 64), 120)
+  const iconOnly = w > 0 && w < 190
+  const artSize = compact ? 44 : Math.min(Math.max(h * 0.28, 64), 120, w > 0 ? w * 0.3 : 120)
 
   const refresh = () => setTimeout(() => {
     void qc.invalidateQueries({ queryKey: ['spotify', 'player'] })
@@ -65,6 +65,7 @@ export function MiniSpotify() {
         <button onClick={() => setTab('muziek')} className="flex items-center gap-0.5 text-xs text-fg3 hover:text-fg">
           Koppelen in de Muziek-tab <ChevronRight className="h-3 w-3" />
         </button>
+        <div className="mt-1"><MusicSourceSwitch /></div>
       </div>
     )
   }
@@ -76,7 +77,7 @@ export function MiniSpotify() {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col p-4">
         {/* Now playing */}
-        <div className={cn('flex shrink-0 items-center gap-3 pr-[72px]', compact ? 'mb-2' : 'mb-3')}>
+        <div className={cn('flex shrink-0 items-center gap-3', compact ? 'mb-2' : 'mb-3')}>
           <motion.div className="relative shrink-0 overflow-hidden rounded-2xl bg-card4"
             style={{ width: artSize, height: artSize, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)' }}
             animate={{ scale: playing ? 1 : 0.94 }} transition={spring}>
@@ -93,7 +94,7 @@ export function MiniSpotify() {
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-1.5 label-caps">
                 <Equalizer playing={playing} color={playing ? GREEN : 'var(--c-fg3)'} />
-                {playing ? 'Spotify' : track ? 'Gepauzeerd' : 'Spotify'}
+                <TileTitle>{playing ? 'Spotify' : track ? 'Gepauzeerd' : 'Spotify'}</TileTitle>
               </div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={track?.id ?? 'none'} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.25 }}>
@@ -125,12 +126,15 @@ export function MiniSpotify() {
         {err && <p className="mb-1.5 line-clamp-2 shrink-0 text-center text-[11px] text-red-400">{err}</p>}
 
         {/* Spotify Connect devices */}
-        <div className="flex min-h-0 flex-1 flex-col border-t border-subtle pt-2.5">
-          <div className="mb-1.5 flex items-center justify-between">
-            <p className="label-caps">Afspelen op</p>
-            <button onClick={() => void refetchDevices()} className="rounded-md p-0.5 text-fg3 hover:text-fg2" title="Vernieuwen">
-              <RefreshCw className={cn('h-3.5 w-3.5', loadingDevices && 'animate-spin')} />
-            </button>
+        <div className="flex min-h-0 flex-1 flex-col border-t border-subtle pt-2">
+          <div className="mb-1.5 flex shrink-0 items-center justify-between gap-2">
+            <p className="truncate label-caps">Afspelen op</p>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => void refetchDevices()} className="rounded-md p-0.5 text-fg3 hover:text-fg2" title="Vernieuwen">
+                <RefreshCw className={cn('h-3.5 w-3.5', loadingDevices && 'animate-spin')} />
+              </button>
+              <MusicSourceSwitch />
+            </div>
           </div>
           <div className="flex flex-1 flex-col gap-1 overflow-y-auto scrollbar-hide">
             <ThisDeviceRow size="sm" activeId={pb?.device?.id} onPick={pick} />

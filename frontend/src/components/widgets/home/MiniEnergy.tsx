@@ -13,7 +13,8 @@ import { ENERGY_VISIBLE_KEY, type EnergyItem } from './TileConfig'
 
 export function MiniEnergy() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
+  const narrow = w > 0 && w < 300
   const { data: prices, isLoading, isError } = useEnergyPrices()
   const { data: usage } = useEnergyUsage()
   const [visible] = useLocalStorage<string[]>(ENERGY_VISIBLE_KEY, [])
@@ -33,7 +34,7 @@ export function MiniEnergy() {
   let free = h - 40
   const showPrice    = want('price') && !!cur
   const showCheapest = want('cheapest') && !!best
-  if (showPrice || showCheapest) free -= 56
+  if (showPrice || showCheapest) free -= showPrice && showCheapest && narrow ? 100 : 56
   const showGasRow   = want('gas') && !!gas && !showPrice // with the price row, gas sits in the header
   if (showGasRow) free -= 32
   const ext          = extremes(today)
@@ -58,17 +59,17 @@ export function MiniEnergy() {
       ) : (
         <>
           {(showPrice || showCheapest) && (
-            <div className="flex shrink-0 items-end justify-between gap-2">
+            <div className={cn('flex shrink-0 justify-between gap-2', narrow ? 'flex-col' : 'items-end')}>
               {showPrice && cur && (
                 <div className="min-w-0">
-                  <p className="text-3xl font-semibold tracking-[-0.03em] text-fg tabular">{formatPrice(cur.total)}</p>
+                  <p className={cn('font-semibold tracking-[-0.03em] text-fg tabular', narrow ? 'text-2xl' : 'text-3xl')}>{formatPrice(cur.total)}</p>
                   <p className={cn('truncate text-xs', cur.total <= avg ? 'text-emerald-400' : 'text-orange-400')}>
                     per kWh · {cur.total <= avg ? 'onder' : 'boven'} gem.
                   </p>
                 </div>
               )}
               {showCheapest && best && (
-                <div className={cn('shrink-0', showPrice ? 'text-right' : '')}>
+                <div className={cn('shrink-0', showPrice && !narrow ? 'text-right' : '')}>
                   <p className="label-caps">Goedkoopst (3 uur)</p>
                   <p className={cn('font-semibold text-fg tabular', showPrice ? 'text-sm' : 'text-2xl')}>
                     {hourLabel(best.start.from)}–{hourLabel(best.end.till)}

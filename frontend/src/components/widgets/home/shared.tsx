@@ -1,4 +1,5 @@
-import { useEffect, useState, type RefObject, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type RefObject, type ReactNode } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /** Live result of a CSS media query. */
@@ -46,17 +47,37 @@ export function useContainerSize(ref: RefObject<HTMLElement | null>) {
   return size
 }
 
+/** Dashboard tab a home tile belongs to (null in edit mode or outside the home grid). */
+export const TileTabContext = createContext<string | null>(null)
+export const NAVIGATE_EVENT = 'dashboard:navigate'
+/** Opens a dashboard tab (handled in Dashboard.tsx). */
+export const goToTab = (tab: string) => window.dispatchEvent(new CustomEvent(NAVIGATE_EVENT, { detail: tab }))
+export const useTileTab = () => useContext(TileTabContext)
+
+/** Tile title that opens the tile's own tab when clicked. */
+export function TileTitle({ children, className }: { children: ReactNode; className?: string }) {
+  const tab = useTileTab()
+  if (!tab) return <span className={cn('min-w-0 truncate', className)}>{children}</span>
+  return (
+    <button onClick={() => goToTab(tab)} title="Openen"
+      className={cn('group/title flex min-w-0 items-center gap-0.5 uppercase transition-colors hover:text-fg', className)}>
+      <span className="truncate">{children}</span>
+      <ChevronRight className="h-3 w-3 shrink-0 -translate-x-1 opacity-0 transition-all group-hover/title:translate-x-0 group-hover/title:opacity-100" />
+    </button>
+  )
+}
+
 /** Uppercase tile header with icon and optional right-hand slot. */
 export function TileHeader({ icon, title, right, className }: {
   icon: ReactNode; title: string; right?: ReactNode; className?: string
 }) {
   return (
     <div className={cn('relative z-10 mb-3 flex shrink-0 items-center justify-between gap-2', className)}>
-      <div className="flex items-center gap-2 label-caps">
-        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-card3 text-fg2 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
-        {title}
+      <div className="flex min-w-0 items-center gap-2 label-caps">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-card3 text-fg2 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+        <TileTitle>{title}</TileTitle>
       </div>
-      {right}
+      {right && <div className="flex shrink-0 items-center">{right}</div>}
     </div>
   )
 }

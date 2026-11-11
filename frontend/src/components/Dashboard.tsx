@@ -251,6 +251,19 @@ export function Dashboard() {
   const selectTab = (t: Tab) => { setUrlTab(null); setActiveTab(t) }
   const [editMode, setEditMode] = useState(false)
 
+  // Home tiles open their own tab when their title is clicked
+  useEffect(() => {
+    const onNav = (e: Event) => {
+      const t = (e as CustomEvent<string>).detail as Tab
+      if (!TABS.some(x => x.id === t)) return
+      setUrlTab(null); setActiveTab(t)
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('tab')) { params.delete('tab'); const qs = params.toString(); window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : '')) }
+    }
+    window.addEventListener('dashboard:navigate', onNav)
+    return () => window.removeEventListener('dashboard:navigate', onNav)
+  }, [setActiveTab])
+
   // Exit edit mode when switching tabs
   useEffect(() => { if (activeTab !== 'home') setEditMode(false) }, [activeTab])
 

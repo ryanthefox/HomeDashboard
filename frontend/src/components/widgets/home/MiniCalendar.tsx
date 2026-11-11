@@ -11,7 +11,7 @@ const ROW_H = 42, HEAD_H = 22
 
 export function MiniCalendar() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
   const { data, isLoading } = useCalendar()
   const [selected] = useLocalStorage<string[]>(CALENDAR_VISIBLE_KEY, [])
   const today = dayKey(new Date())
@@ -31,11 +31,11 @@ export function MiniCalendar() {
   return (
     <div ref={ref} className="flex h-full flex-col overflow-hidden p-4">
       <TileHeader icon={<CalendarDays />} title="Agenda"
-        right={<span className="text-[11px] capitalize text-fg3">{new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })}</span>} />
+        right={w >= 250 && <span className="text-[11px] capitalize text-fg3">{new Date().toLocaleDateString('nl-NL', w < 380 ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' })}</span>} />
       {isLoading ? (
         <div className="space-y-2">{[0, 1, 2].map(i => <Skeleton key={i} className="h-9" />)}</div>
       ) : !data?.configured ? (
-        <EmptyState icon={<CalendarDays className="h-5 w-5" />} title="Geen agenda gekoppeld" hint="Zie CALENDAR_ICS_URLS in .env" />
+        <EmptyState icon={<CalendarDays className="h-5 w-5" />} title="Geen agenda gekoppeld" hint="Zie CALENDAR_ICS_URLS in .env" compact={h < 200} />
       ) : shown.length === 0 ? (
         <EmptyState icon={<CalendarDays className="h-5 w-5" />} title="Niets gepland" />
       ) : (

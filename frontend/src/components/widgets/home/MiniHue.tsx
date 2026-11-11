@@ -67,7 +67,8 @@ const FAVORITE_REVERT_MS = 2 * 60_000
 
 export function MiniHue() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
+  const narrow = w > 0 && w < 270
   const { data: rooms } = useQuery<HueRoom[]>({ queryKey: ['hue', 'rooms'], queryFn: hueApi.getRooms, staleTime: 10_000 })
   const [favoriteId, setFavoriteId] = useLocalStorage<string>(HUE_FAVORITE_KEY, '')
   const [visibleIds] = useLocalStorage<string[]>(HUE_VISIBLE_KEY, [])
@@ -125,16 +126,16 @@ export function MiniHue() {
       ) : (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 scrollbar-hide">
           <div className="flex shrink-0 items-center gap-3">
-            <BulbBadge on={room.anyOn} accent={accent} />
+            {w >= 220 && <BulbBadge on={room.anyOn} accent={accent} />}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-fg">{room.name}</p>
-              <p className="text-xs text-fg3 tabular">{room.anyOn ? `${onCount} van ${room.lights.length} aan` : 'Uit'}</p>
+              <p className="truncate text-xs text-fg3 tabular">{room.anyOn ? (narrow ? `${onCount}/${room.lights.length} aan` : `${onCount} van ${room.lights.length} aan`) : 'Uit'}</p>
             </div>
-            <button onClick={() => setFavoriteId(isFavorite ? '' : room.id)}
+            {!narrow && <button onClick={() => setFavoriteId(isFavorite ? '' : room.id)}
               title={isFavorite ? 'Favoriet verwijderen' : 'Als favoriet instellen'}
               className={cn('shrink-0 rounded-lg p-1.5 transition-colors', isFavorite ? 'text-amber-400' : 'text-fg3 hover:text-fg2')}>
               <Star className={cn('h-4 w-4', isFavorite && 'fill-current')} />
-            </button>
+            </button>}
             <Toggle on={room.anyOn} accent={accent} onChange={v => actions.toggleRoom(room.id, v)} />
           </div>
 

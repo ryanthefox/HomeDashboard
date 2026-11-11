@@ -5,7 +5,7 @@ import { GripVertical, X, Plus, Minus, Columns2, Columns3, Square, EyeOff, Slide
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
-import { useCompactColumns } from './home/shared'
+import { useCompactColumns, useContainerSize, TileTabContext } from './home/shared'
 import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig, RingTileConfig, TravelTileConfig, CalendarTileConfig } from './home/TileConfig'
 import { MiniCalendar } from './home/MiniCalendar'
 import { MiniTravel } from './home/MiniTravel'
@@ -32,6 +32,8 @@ interface HomeLayout {
 }
 
 const MIN_COLS = 1, MAX_COLS = 6
+/** Narrowest a column may get; below this tiles can't show their content sensibly. */
+const MIN_COL_W = 240
 
 const DEFAULT_LAYOUT: HomeLayout = {
   cols:    [['weather', 'music'], ['lighting', 'system'], ['airco', 'afval', 'plex']],
@@ -42,25 +44,27 @@ const DEFAULT_LAYOUT: HomeLayout = {
 
 const WIDGET_META: Record<WidgetId, {
   label: string; flex: number; mobileHeight: number; render: () => React.ReactNode
+  tab: string    // dashboard tab opened by the tile title
+  minH: number   // smallest useful height (px)
   config?: { title: string; render: () => React.ReactNode } // optional per-tile settings
 }> = {
-  weather:  { label: 'Weer',          flex: 1, mobileHeight: 220, render: () => <MiniWeather /> },
-  music:    { label: 'Muziek',        flex: 2, mobileHeight: 260, render: () => <MiniMusic /> },
-  lighting: { label: 'Verlichting',   flex: 1, mobileHeight: 300, render: () => <MiniHue />,
+  weather:  { label: 'Weer',          flex: 1, mobileHeight: 220, tab: 'weer', minH: 130, render: () => <MiniWeather /> },
+  music:    { label: 'Muziek',        flex: 2, mobileHeight: 260, tab: 'muziek', minH: 170, render: () => <MiniMusic /> },
+  lighting: { label: 'Verlichting',   flex: 1, mobileHeight: 300, tab: 'verlichting', minH: 150, render: () => <MiniHue />,
               config: { title: 'Ruimtes', render: () => <HueTileConfig /> } },
-  system:   { label: 'Systeem',       flex: 2, mobileHeight: 270, render: () => <MiniSystem />,
+  system:   { label: 'Systeem',       flex: 2, mobileHeight: 270, tab: 'systeem', minH: 150, render: () => <MiniSystem />,
               config: { title: 'Onderdelen', render: () => <SystemTileConfig /> } },
-  airco:    { label: 'Airco',         flex: 1, mobileHeight: 300, render: () => <MiniAirco />,
+  airco:    { label: 'Airco',         flex: 1, mobileHeight: 300, tab: 'airco', minH: 160, render: () => <MiniAirco />,
               config: { title: "Airco's", render: () => <AircoTileConfig /> } },
-  afval:    { label: 'Afvalkalender', flex: 1, mobileHeight: 220, render: () => <MiniAfval /> },
-  plex:     { label: 'Plex',          flex: 2, mobileHeight: 280, render: () => <MiniPlex /> },
-  energy:   { label: 'Energie',       flex: 1, mobileHeight: 300, render: () => <MiniEnergy />,
+  afval:    { label: 'Afvalkalender', flex: 1, mobileHeight: 220, tab: 'afval', minH: 120, render: () => <MiniAfval /> },
+  plex:     { label: 'Plex',          flex: 2, mobileHeight: 280, tab: 'plex', minH: 130, render: () => <MiniPlex /> },
+  energy:   { label: 'Energie',       flex: 1, mobileHeight: 300, tab: 'energie', minH: 140, render: () => <MiniEnergy />,
               config: { title: 'Onderdelen', render: () => <EnergyTileConfig /> } },
-  ring:     { label: 'Deurbel',       flex: 2, mobileHeight: 280, render: () => <MiniRing />,
+  ring:     { label: 'Deurbel',       flex: 2, mobileHeight: 280, tab: 'deurbel', minH: 170, render: () => <MiniRing />,
               config: { title: 'Camera & meldingen', render: () => <RingTileConfig /> } },
-  calendar: { label: 'Agenda',        flex: 2, mobileHeight: 280, render: () => <MiniCalendar />,
+  calendar: { label: 'Agenda',        flex: 2, mobileHeight: 280, tab: 'agenda', minH: 140, render: () => <MiniCalendar />,
               config: { title: "Agenda's", render: () => <CalendarTileConfig /> } },
-  travel:   { label: 'Reistijd',      flex: 2, mobileHeight: 300, render: () => <MiniTravel />,
+  travel:   { label: 'Reistijd',      flex: 2, mobileHeight: 300, tab: 'reistijd', minH: 150, render: () => <MiniTravel />,
               config: { title: 'Onderdelen', render: () => <TravelTileConfig /> } },
 }
 const ALL_IDS = Object.keys(WIDGET_META) as WidgetId[]
@@ -210,6 +214,8 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   const colRefs = useRef<(HTMLDivElement | null)[]>([])
   const colWrapRefs = useRef<(HTMLDivElement | null)[]>([])
   const compactRef = useRef<HTMLDivElement | null>(null)
+  const gridRef = useRef<HTMLDivElement | null>(null)
+  const { w: gridW } = useContainerSize(gridRef)
 
   const COLUMNS: Column[] = layout.cols.map((_, i) => i)
   const allUsed       = layout.cols.flat()
@@ -304,20 +310,23 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   }
 
   // ── Desktop: drag the gap between two tiles to change their heights ─────────
+  const rowMinH = (items: WidgetId[]) => Math.max(...items.map(i => WIDGET_META[i].minH))
+
   function startRowResize(e: React.PointerEvent, col: Column, r: number) {
     const list = colRefs.current[col]
     if (!list) return
     const els = [...list.querySelectorAll<HTMLElement>(':scope > [data-row]')]
     const heights = els.map(el => el.getBoundingClientRect().height)
     const rows = buildRows(layout.cols[col])
-    const y0 = e.clientY, MIN = 90
+    const y0 = e.clientY
+    const minA = rowMinH(rows[r].items), minB = rowMinH(rows[r + 1].items)
     let hs = heights
     const toFlex = (h: number[]) => Object.fromEntries(rows.map((row, i) => [row.items.join('+'), Math.round(h[i]) / 100]))
     trackPointer(e, ev => {
       const dy = ev.clientY - y0
       let a = heights[r] + dy, b = heights[r + 1] - dy
-      if (a < MIN) { b -= MIN - a; a = MIN }
-      if (b < MIN) { a -= MIN - b; b = MIN }
+      if (a < minA) { b -= minA - a; a = minA }
+      if (b < minB) { a -= minB - b; b = minB }
       hs = [...heights]; hs[r] = a; hs[r + 1] = b
       setLiveRows(toFlex(hs))
     }, ev => {
@@ -336,7 +345,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   // ── Desktop: drag the gap between two columns to change their widths ────────
   function startColResize(e: React.PointerEvent, i: number) {
     const widths = COLUMNS.map(c => colWrapRefs.current[c]?.getBoundingClientRect().width ?? 0)
-    const x0 = e.clientX, MIN = 160
+    const x0 = e.clientX, MIN = MIN_COL_W
     let ws = widths
     const toFlex = (w: number[]) => w.map(x => Math.max(0.5, Math.round(x) / 100))
     trackPointer(e, ev => {
@@ -382,7 +391,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
           drag?.id === id && 'opacity-30',
         )}
       >
-        {WIDGET_META[id].render()}
+        <TileTabContext.Provider value={editMode ? null : WIDGET_META[id].tab}>{WIDGET_META[id].render()}</TileTabContext.Provider>
 
         <AnimatePresence>
           {editMode && (
@@ -446,13 +455,13 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     const rows     = buildRows(widgets)
 
     return (
-      <div key={col} ref={el => { colWrapRefs.current[col] = el }} className="flex min-h-0 min-w-0 flex-col"
+      <div key={col} ref={el => { colWrapRefs.current[col] = el }} className="flex min-h-0 min-w-[200px] flex-col"
         style={{ flex: getColFlex(col), transition: liveCols ? 'none' : 'flex .4s cubic-bezier(.16,1,.3,1)' }}>
-        <div ref={el => { colRefs.current[col] = el }} className="flex min-h-0 flex-1 flex-col">
+        <div ref={el => { colRefs.current[col] = el }} className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
           {rows.map(({ items, startIdx, rowFlex }, r) => (
             <React.Fragment key={items.join('+')}>
               {r > 0 && resizeGap('g', 'row', e => startRowResize(e, col, r - 1))}
-              <div data-row data-start={startIdx} className="flex min-h-0 gap-3" style={{ flex: liveRows?.[items.join('+')] ?? rowFlex }}>
+              <div data-row data-start={startIdx} className="flex min-h-0 gap-3" style={{ flex: liveRows?.[items.join('+')] ?? rowFlex, minHeight: rowMinH(items) }}>
                 {items.map(id => renderCell(id))}
               </div>
             </React.Fragment>
@@ -518,7 +527,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   if (compactCols) {
     const base = mobileOrder.length > 0 ? mobileOrder : allUsed
     const ordered = [...base.filter(id => allUsed.includes(id)), ...allUsed.filter(id => !base.includes(id))]
-    const getH = (id: WidgetId) => mobileHeights[id] ?? WIDGET_META[id].mobileHeight
+    const getH = (id: WidgetId) => Math.max(WIDGET_META[id].minH, mobileHeights[id] ?? WIDGET_META[id].mobileHeight)
     const shownH = (id: WidgetId) => (liveH?.id === id ? liveH.h : getH(id))
     const removeCompact = (id: WidgetId) => {
       removeWidget(id)
@@ -586,7 +595,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       let h = h0
       setLiveH({ id, h })
       trackPointer(e, ev => {
-        h = Math.max(120, Math.min(900, Math.round((h0 + ev.clientY - y0) / 10) * 10))
+        h = Math.max(WIDGET_META[id].minH, Math.min(900, Math.round((h0 + ev.clientY - y0) / 10) * 10))
         setLiveH({ id, h })
       }, ev => {
         if (ev) setMobileHeights(m => ({ ...m, [id]: h }))
@@ -615,7 +624,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
           className={cn('panel relative shrink-0 overflow-hidden rounded-3xl transition-opacity', editMode && 'ring-1 ring-orange-400/30', drag?.id === id && 'opacity-30')}
           style={{ height: shownH(id) }}
         >
-          {WIDGET_META[id].render()}
+          <TileTabContext.Provider value={editMode ? null : WIDGET_META[id].tab}>{WIDGET_META[id].render()}</TileTabContext.Provider>
           <AnimatePresence>
             {editMode && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -664,6 +673,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   }
 
   // ── Desktop: flexible columns (1–6) ──────────────────────────────────────────
+  const roomForColumn = gridW === 0 || (gridW - 12 * COLUMNS.length) / (COLUMNS.length + 1) >= MIN_COL_W
   const columnControls = (
     <AnimatePresence>
       {editMode && (
@@ -678,7 +688,8 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               <Minus className="h-4 w-4" />
             </motion.button>
             <span className="w-5 text-center text-sm font-semibold tabular text-fg">{COLUMNS.length}</span>
-            <motion.button whileTap={{ scale: 0.85 }} onClick={addColumn} disabled={COLUMNS.length >= MAX_COLS} title="Kolom toevoegen"
+            <motion.button whileTap={{ scale: 0.85 }} onClick={addColumn} disabled={COLUMNS.length >= MAX_COLS || !roomForColumn}
+              title={roomForColumn ? 'Kolom toevoegen' : 'Scherm te smal voor nog een kolom'}
               className="rounded-xl p-2 text-fg2 transition-colors hover:bg-card3 hover:text-fg disabled:opacity-30">
               <Plus className="h-4 w-4" />
             </motion.button>
@@ -691,7 +702,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   return (
     <div className="flex h-full flex-col gap-3">
       {columnControls}
-      <div className="flex min-h-0 flex-1">
+      <div ref={gridRef} className="flex min-h-0 flex-1 overflow-x-auto scrollbar-hide">
         {COLUMNS.map((col, i) => (
           <React.Fragment key={col}>
             {i > 0 && resizeGap('g', 'col', e => startColResize(e, i - 1))}

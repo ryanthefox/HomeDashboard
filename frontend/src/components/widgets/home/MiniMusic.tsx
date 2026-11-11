@@ -7,7 +7,7 @@ import { musicApi, audioApi, type MediaInfo, type AudioOutputDevice } from '@/li
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { queryClient as qc } from '@/lib/queryClient'
 import { Press, spring } from '@/components/ui/motion'
-import { useContainerSize } from './shared'
+import { useContainerSize, TileTitle } from './shared'
 import { MiniSpotify } from '../music/MiniSpotify'
 
 // ── Helpers (also used by the full Music tab) ────────────────────────────────
@@ -82,29 +82,32 @@ function SpotifyMark({ className }: { className?: string }) {
   )
 }
 
-/** Music tile: switch between this pc's media/audio outputs and Spotify (shared with the Muziek tab). */
-export function MiniMusic() {
+/** Small pc ⇄ Spotify switch (shared with the Muziek tab via localStorage). */
+export function MusicSourceSwitch() {
   const [source, setSource] = useLocalStorage<Source>('music-source', 'pc')
   return (
-    <div className="relative h-full">
-      {source === 'spotify' ? <MiniSpotify /> : <MiniPcMusic />}
-      <div className="absolute right-3 top-3 z-20 flex gap-0.5 rounded-xl bg-black/30 p-0.5 backdrop-blur-md">
-        {([['pc', 'Media van deze pc', Monitor], ['spotify', 'Spotify', SpotifyMark]] as const).map(([id, title, Icon]) => (
-          <button key={id} onClick={() => setSource(id)} title={title} aria-pressed={source === id}
-            className={cn('relative rounded-lg p-1.5 transition-colors', source === id ? 'text-white' : 'text-fg3 hover:text-fg2')}>
-            {source === id && <motion.span layoutId="mini-music-source" transition={spring} className="absolute inset-0 rounded-lg"
-              style={{ background: id === 'spotify' ? '#1ed76040' : 'rgba(255,255,255,.14)' }} />}
-            <Icon className={cn('relative z-10 h-3.5 w-3.5', id === 'spotify' && source === id && 'text-[#1ed760]')} />
-          </button>
-        ))}
-      </div>
+    <div className="flex shrink-0 gap-0.5 rounded-lg bg-card3 p-0.5">
+      {([['pc', 'Media van deze pc', Monitor], ['spotify', 'Spotify', SpotifyMark]] as const).map(([id, title, Icon]) => (
+        <button key={id} onClick={() => setSource(id)} title={title} aria-pressed={source === id}
+          className={cn('relative rounded-md px-1.5 py-1 transition-colors', source === id ? 'text-fg' : 'text-fg3 hover:text-fg2')}>
+          {source === id && <motion.span layoutId="mini-music-source" transition={spring} className="absolute inset-0 rounded-md"
+            style={{ background: id === 'spotify' ? '#1ed76033' : 'var(--c-card4, rgba(255,255,255,.12))' }} />}
+          <Icon className={cn('relative z-10 h-3.5 w-3.5', id === 'spotify' && source === id && 'text-[#1ed760]')} />
+        </button>
+      ))}
     </div>
   )
 }
 
+/** Music tile: this pc's media/audio outputs or Spotify. */
+export function MiniMusic() {
+  const [source] = useLocalStorage<Source>('music-source', 'pc')
+  return source === 'spotify' ? <MiniSpotify /> : <MiniPcMusic />
+}
+
 function MiniPcMusic() {
   const ref = useRef<HTMLDivElement>(null)
-  const { h } = useContainerSize(ref)
+  const { h, w } = useContainerSize(ref)
 
   const { data } = useQuery<MediaInfo>({ queryKey: ['music'], queryFn: musicApi.getCurrent, refetchInterval: 5_000 })
   const { data: outputs = [] } = useQuery<AudioOutputDevice[]>({ queryKey: ['audio', 'outputs'], queryFn: audioApi.getOutputs, staleTime: 30_000 })
@@ -118,8 +121,8 @@ function MiniPcMusic() {
   const trackKey    = `${data?.title}-${data?.artist}`
 
   const compact  = h < 280
-  const iconOnly = h < 200
-  const artSize  = compact ? 44 : Math.min(Math.max(h * 0.28, 64), 120)
+  const iconOnly = w > 0 && w < 190
+  const artSize  = compact ? 44 : Math.min(Math.max(h * 0.28, 64), 120, w > 0 ? w * 0.3 : 120)
 
   return (
     <div ref={ref} className="relative flex h-full flex-col overflow-hidden">
@@ -128,7 +131,7 @@ function MiniPcMusic() {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col p-4">
         {/* Now playing */}
-        <div className={cn('flex shrink-0 items-center gap-3 pr-[72px]', compact ? 'mb-2' : 'mb-3')}>
+        <div className={cn('flex shrink-0 items-center gap-3', compact ? 'mb-2' : 'mb-3')}>
           <motion.div
             className="relative shrink-0 overflow-hidden rounded-2xl bg-card4"
             style={{ width: artSize, height: artSize, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)' }}
@@ -150,7 +153,7 @@ function MiniPcMusic() {
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-1.5 label-caps">
                 <Equalizer playing={isPlaying} color={isPlaying ? '#34d399' : 'var(--c-fg3)'} />
-                {isPlaying ? 'Speelt nu' : data?.title ? 'Gepauzeerd' : 'Muziek'}
+                <TileTitle>{isPlaying ? 'Speelt nu' : data?.title ? 'Gepauzeerd' : 'Muziek'}</TileTitle>
               </div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={trackKey}
@@ -187,15 +190,19 @@ function MiniPcMusic() {
           </Press>
         </div>
 
-        {/* Audio outputs */}
+        {/* Audio outputs (+ source switch) */}
+        {outputs.length === 0 && <div className="mt-auto flex shrink-0 justify-end"><MusicSourceSwitch /></div>}
         {outputs.length > 0 && (
-          <div className="flex min-h-0 flex-1 flex-col border-t border-subtle pt-2.5">
-            <div className="mb-1.5 flex items-center justify-between">
-              <p className="label-caps">Uitvoer</p>
-              <button onClick={() => setEditOutputs(e => !e)}
-                className={cn('rounded-md p-0.5 transition-colors', editOutputs ? 'text-orange-400' : 'text-fg3 hover:text-fg2')}>
-                {editOutputs ? <Check className="h-3.5 w-3.5" /> : <Settings2 className="h-3.5 w-3.5" />}
-              </button>
+          <div className="flex min-h-0 flex-1 flex-col border-t border-subtle pt-2">
+            <div className="mb-1.5 flex shrink-0 items-center justify-between gap-2">
+              <p className="truncate label-caps">Uitvoer</p>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setEditOutputs(e => !e)} title="Uitvoer kiezen"
+                  className={cn('rounded-md p-0.5 transition-colors', editOutputs ? 'text-orange-400' : 'text-fg3 hover:text-fg2')}>
+                  {editOutputs ? <Check className="h-3.5 w-3.5" /> : <Settings2 className="h-3.5 w-3.5" />}
+                </button>
+                <MusicSourceSwitch />
+              </div>
             </div>
             <div className="flex flex-1 flex-col gap-1 overflow-y-auto scrollbar-hide">
               {editOutputs
