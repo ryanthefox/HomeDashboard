@@ -77,7 +77,7 @@ export function RingDetail({ camera, onLogout }: { camera: RingCamera; onLogout:
     queryFn: () => ringApi.getEvents(camera.id, 15),
     staleTime: 30_000,
   })
-  const list = Array.isArray(events) ? events : []
+  const list = events?.events ?? []
 
   return (
     <div>

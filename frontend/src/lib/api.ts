@@ -337,6 +337,8 @@ export interface RingStatus {
   cameras: RingCamera[]
 }
 export interface RingEventItem { id: string; kind: string; createdAt: string; answered: boolean; recorded: boolean }
+export interface RingEventPage { events: RingEventItem[]; next: string | null; error?: string }
+export type RingEventKind = 'ding' | 'motion' | 'on_demand'
 export interface RingLiveEvent { type: 'ding' | 'motion'; cameraId: string; cameraName: string; at: string }
 export interface RingLoginResult { ok?: boolean; needs2fa?: boolean; prompt?: string; wrongCode?: boolean; error?: string }
 
@@ -347,7 +349,18 @@ async function ringJson<T>(input: string, init?: RequestInit): Promise<T> {
 }
 export const ringApi = {
   getStatus:   () => ringJson<RingStatus>(`${BASE}/ring/status`),
-  getEvents:   (id: string, limit = 15) => ringJson<RingEventItem[] | { error: string }>(`${BASE}/ring/events/${encodeURIComponent(id)}?limit=${limit}`),
+  getEvents:   (id: string, limit = 15, kind?: RingEventKind, page?: string | null) => {
+    const q = new URLSearchParams({ limit: String(limit) })
+    if (kind) q.set('kind', kind)
+    if (page) q.set('page', page)
+    return ringJson<RingEventPage>(`${BASE}/ring/events/${encodeURIComponent(id)}?${q}`)
+  },
+  liveStart: (id: string, sdp: string) =>
+    ringJson<{ sessionId?: string; sdp?: string; error?: string }>(`${BASE}/ring/live/${encodeURIComponent(id)}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sdp }) }),
+  /** keepalive so it still reaches the server when the page is being closed */
+  liveEnd: (sessionId: string) =>
+    fetch(`${BASE}/ring/live-end/${encodeURIComponent(sessionId)}`, { method: 'POST', keepalive: true }).catch(() => {}),
   getRecording:(id: string, dingId: string) => ringJson<{ url?: string; error?: string }>(`${BASE}/ring/recording/${encodeURIComponent(id)}/${encodeURIComponent(dingId)}`),
   snapshotUrl: (id: string, t: number) => `${BASE}/ring/snapshot/${encodeURIComponent(id)}?t=${t}`,
   login: (body: { email: string; password: string; code?: string }) =>

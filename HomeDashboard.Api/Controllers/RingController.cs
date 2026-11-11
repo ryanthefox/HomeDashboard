@@ -22,7 +22,25 @@ public class RingController(RingService ring) : ControllerBase
     public Task<IActionResult> Snapshot(string id) => Forward($"/snapshot/{Uri.EscapeDataString(id)}", TimeSpan.FromSeconds(40));
 
     [HttpGet("events/{id}")]
-    public Task<IActionResult> Events(string id, [FromQuery] int limit = 10) => Forward($"/events/{Uri.EscapeDataString(id)}?limit={Math.Clamp(limit, 1, 50)}");
+    public Task<IActionResult> Events(string id, [FromQuery] int limit = 10, [FromQuery] string? kind = null, [FromQuery] string? page = null)
+    {
+        var q = $"?limit={Math.Clamp(limit, 1, 50)}";
+        if (kind is "ding" or "motion" or "on_demand") q += $"&kind={kind}";
+        if (!string.IsNullOrEmpty(page)) q += $"&page={Uri.EscapeDataString(page)}";
+        return Forward($"/events/{Uri.EscapeDataString(id)}{q}");
+    }
+
+    private ContentResult Json((System.Net.HttpStatusCode Status, string Body) r) =>
+        new() { StatusCode = (int)r.Status, Content = r.Body, ContentType = "application/json" };
+
+    /// <summary>Starts a live view: the browser sends its WebRTC offer, Ring answers. Video then flows straight from Ring to the browser.</summary>
+    [HttpPost("live/{id}")]
+    public async Task<IActionResult> LiveStart(string id, [FromBody] System.Text.Json.JsonElement body) =>
+        Json(await ring.PostAsync($"/live/{Uri.EscapeDataString(id)}", body.GetRawText()));
+
+    [HttpPost("live-end/{sessionId}")]
+    public async Task<IActionResult> LiveEnd(string sessionId) =>
+        Json(await ring.PostAsync($"/live-end/{Uri.EscapeDataString(sessionId)}", "{}"));
 
     [HttpGet("recording/{id}/{dingId}")]
     public Task<IActionResult> Recording(string id, string dingId) => Forward($"/recording/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(dingId)}");

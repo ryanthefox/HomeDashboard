@@ -5,7 +5,9 @@
 //   POST /login                  { email, password, code? }  → { ok } | { needs2fa, prompt }
 //   POST /logout
 //   GET  /snapshot/:id           latest snapshot (image/jpeg)
-//   GET  /events/:id?limit=10    recent dings / motion
+//   GET  /events/:id?limit=&kind=&page=  recent dings / motion → { events, next }
+//   POST /live/:id               { sdp } (browser WebRTC offer) → { sessionId, sdp }
+//   POST /live-end/:sessionId    stop a live view
 //   GET  /recording/:id/:dingId  { url } of a recorded clip (needs Ring Protect)
 //   GET  /stream                 Server-Sent Events: ding / motion as they happen
 //   POST /test                   { type } — sends a fake event, to try the popup
@@ -21,6 +23,7 @@ const PORT = Number(process.env.RING_PORT || 5057)
 const BIND = process.env.RING_BIND || '127.0.0.1'
 const TOKEN_FILE = path.join(DATA, 'ring.json')
 const SNAPSHOT_MAX_AGE_MS = 60_000
+const LIVE_MAX_MS = 10 * 60_000   // safety net: a forgotten live view never runs longer than this
 
 let api = null          // RingApi once logged in
 let cameras = []        // RingCamera[]
@@ -29,6 +32,7 @@ let pendingLogin = null // { email, password, client } while waiting for a 2FA c
 const snapshots = new Map() // cameraId -> { at, buf, pending }
 const lastEvent = new Map() // cameraId -> { kind, at }
 const listeners = new Set() // SSE responses
+const liveSessions = new Map() // sessionId -> { session, timer, camera }
 
 const log = (...a) => console.log(new Date().toISOString(), '[ring]', ...a)
 
@@ -66,7 +70,18 @@ async function connect(refreshToken) {
   }
 }
 
+async function endLive(sessionId) {
+  const live = liveSessions.get(sessionId)
+  if (!live) return
+  liveSessions.delete(sessionId)
+  clearTimeout(live.timer)
+  snapshots.delete(String(live.camera.id)) // the camera is awake now — next snapshot is fresh
+  try { await live.session.end() } catch (e) { log('live end failed', e.message) }
+  log('live view stopped', live.camera.name)
+}
+
 function disconnect() {
+  for (const id of liveSessions.keys()) void endLive(id)
   try { api?.disconnect() } catch { /* ignore */ }
   api = null
   cameras = []
@@ -127,9 +142,9 @@ function send(res, status, body, type = 'application/json') {
   res.end(type === 'application/json' ? JSON.stringify(body) : body)
 }
 
-async function readJson(req) {
+async function readJson(req, max = 10_000) {
   let raw = ''
-  for await (const chunk of req) { raw += chunk; if (raw.length > 10_000) throw new Error('too large') }
+  for await (const chunk of req) { raw += chunk; if (raw.length > max) throw new Error('too large') }
   return raw ? JSON.parse(raw) : {}
 }
 
@@ -195,14 +210,40 @@ const server = http.createServer(async (req, res) => {
       const cam = camById(parts[1])
       if (!cam) return send(res, 404, { error: 'Onbekende camera' })
       const limit = Math.min(50, Number(url.searchParams.get('limit')) || 10)
-      const { events } = await cam.getEvents({ limit })
-      return send(res, 200, events.map(e => ({
-        id: e.ding_id_str,
-        kind: e.kind,                 // 'ding' | 'motion' | 'on_demand' | ...
-        createdAt: e.created_at,
-        answered: e.state === 'completed' && e.kind === 'ding',
-        recorded: e.recording_status === 'ready',
-      })))
+      const kind = url.searchParams.get('kind') || undefined   // ding | motion | on_demand
+      const page = url.searchParams.get('page') || undefined
+      const { events, meta } = await cam.getEvents({ limit, kind, pagination_key: page })
+      return send(res, 200, {
+        events: events.map(e => ({
+          id: e.ding_id_str,
+          kind: e.kind,                 // 'ding' | 'motion' | 'on_demand' | ...
+          createdAt: e.created_at,
+          answered: e.state === 'completed' && e.kind === 'ding',
+          recorded: e.recording_status === 'ready',
+        })),
+        next: events.length >= limit ? meta?.pagination_key || null : null,
+      })
+    }
+
+    if (req.method === 'POST' && parts[0] === 'live' && parts[1]) {
+      const cam = camById(parts[1])
+      if (!cam) return send(res, 404, { error: 'Onbekende camera' })
+      const { sdp } = await readJson(req, 200_000)
+      if (!sdp) return send(res, 400, { error: 'SDP ontbreekt' })
+      const session = cam.createSimpleWebRtcSession()
+      let answer
+      try { answer = await session.start(sdp) }
+      catch (e) { log('live start failed', e.message); return send(res, 502, { error: `Live beeld starten mislukt: ${e.message}` }) }
+      const sessionId = session.sessionId
+      const timer = setTimeout(() => void endLive(sessionId), LIVE_MAX_MS)
+      liveSessions.set(sessionId, { session, timer, camera: cam })
+      log('live view started', cam.name)
+      return send(res, 200, { sessionId, sdp: answer })
+    }
+
+    if (req.method === 'POST' && parts[0] === 'live-end' && parts[1]) {
+      await endLive(parts[1])
+      return send(res, 200, { ok: true })
     }
 
     if (req.method === 'GET' && parts[0] === 'recording' && parts[1] && parts[2]) {
