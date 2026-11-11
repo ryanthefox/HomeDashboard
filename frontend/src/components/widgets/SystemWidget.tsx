@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Clock, HardDrive, Monitor, Server, Thermometer, Wif
 import type { DiskDriveInfo } from '@/lib/api'
 import { useSystemSource, formatUptime } from '@/lib/pc'
 import { SourceToggle, PcPowerButton, PcOfflineNote } from './system/PcControls'
-import { formatBps, formatGb } from '@/lib/format'
+import { formatBps, formatGb, diskTotals } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Panel, Label, Skeleton } from '@/components/ui/motion'
 
@@ -65,14 +65,15 @@ export function SystemWidget() {
   }
 
   const memLabel  = data.memoryTotalGb > 0 ? `${data.memoryUsedGb.toFixed(1)} / ${Math.ceil(data.memoryTotalGb)} GB` : undefined
-  const mainDisk  = data.disks[0]
-  const diskLabel = mainDisk ? `${formatGb(mainDisk.usedGb)} / ${formatGb(mainDisk.totalGb)}` : undefined
+  // The disk gauge covers all drives together, not just the first one
+  const disk      = diskTotals(data.disks, data.diskPercent)
+  const diskLabel = disk.hasDrives ? `${formatGb(disk.freeGb)} vrij` : undefined
 
   const gauges = [
     { label: 'CPU',      value: data.cpuLoad,       color: '#38bdf8', temp: data.cpuTemp },
     { label: 'GPU',      value: data.gpuLoad,       color: '#a78bfa', temp: data.gpuTemp },
     { label: 'Geheugen', value: data.memoryPercent, color: '#2dd4bf', sublabel: memLabel },
-    { label: 'Schijf',   value: mainDisk?.percent ?? data.diskPercent, color: data.diskPercent > 85 ? '#f87171' : '#fbbf24', sublabel: diskLabel },
+    { label: 'Schijf',   value: disk.percent, color: disk.percent > 85 ? '#f87171' : '#fbbf24', sublabel: diskLabel },
   ]
 
   return (

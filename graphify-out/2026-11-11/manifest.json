@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794408476.4266975,
-    "seen": 1794408807.9967856,
-    "ast_hash": "54f08de6ecd88679628c3dac0a91e9f4",
+    "mtime": 1794409328.644775,
+    "seen": 1794409385.0070522,
+    "ast_hash": "68a7017fb95400601cb8c6b90e985450",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "frontend/index.html": {
-    "mtime": 1794403981.343763,
-    "seen": 1794404369.5384371,
-    "ast_hash": "ada9c84561fa0fc110f3ceb9b3d311d4",
+    "mtime": 1794409328.645287,
+    "seen": 1794409385.0070999,
+    "ast_hash": "9dfe2c6a7e81177f9b13fa68cb863e41",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Models/PlexStats.cs": {

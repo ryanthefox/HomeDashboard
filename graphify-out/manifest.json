@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/SystemWidget.tsx": {
-    "mtime": 1794399176.4850059,
-    "seen": 1794399386.6660109,
-    "ast_hash": "c5c882f73ae4efd410a3a56dfd005d74",
+    "mtime": 1794409642.5736887,
+    "seen": 1794409653.5764647,
+    "ast_hash": "53e71b9cc77fe7a969e3274d7beb6a63",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/WeatherWidget.tsx": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniSystem.tsx": {
-    "mtime": 1794399176.5040157,
-    "seen": 1794399386.6660168,
-    "ast_hash": "66fab35332a0bde1b444aa1b924ea2d0",
+    "mtime": 1794409600.1822593,
+    "seen": 1794409653.576471,
+    "ast_hash": "a1d73711001bde78f2b34491ba3fa3ba",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniWeather.tsx": {
@@ -420,10 +420,10 @@
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
-    "mtime": 1794393811.0254114,
-    "seen": 1794395115.4604983,
-    "ast_hash": "e7464c1b2b2bebca882a7e9d26f1e544",
-    "semantic_hash": "e7464c1b2b2bebca882a7e9d26f1e544"
+    "mtime": 1794409600.057985,
+    "seen": 1794409653.5764832,
+    "ast_hash": "f5e206eb9265f76230bac37692377bdc",
+    "semantic_hash": ""
   },
   "frontend/src/lib/hue.ts": {
     "mtime": 1794394766.0265434,

@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { ArrowDown, ArrowUp, Cpu, Monitor } from 'lucide-react'
 import { useSystemSource } from '@/lib/pc'
-import { formatBps, formatGb } from '@/lib/format'
+import { formatBps, formatGb, diskTotals } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Skeleton } from '@/components/ui/motion'
 import { useContainerSize, TileHeader } from './shared'
@@ -20,11 +20,13 @@ export function MiniSystem() {
   const showNetwork  = h > 170
   const showDiskList = h > 350 && !!(data?.disks && data.disks.length > 1)
 
-  const gauges = !data ? [] : [
+  const disk = data ? diskTotals(data.disks, data.diskPercent) : null
+
+  const gauges = !data || !disk ? [] : [
     { label: 'CPU',  value: data.cpuLoad,       color: '#38bdf8', sublabel: data.cpuTemp > 0 ? `${Math.round(data.cpuTemp)}°C` : undefined },
     { label: 'GPU',  value: data.gpuLoad,       color: '#a78bfa', sublabel: data.gpuTemp > 0 ? `${Math.round(data.gpuTemp)}°C` : undefined },
     { label: 'RAM',  value: data.memoryPercent, color: '#2dd4bf', sublabel: data.memoryTotalGb > 0 ? `${data.memoryUsedGb.toFixed(1)}/${Math.ceil(data.memoryTotalGb)} GB` : `${data.memoryUsedGb.toFixed(1)} GB` },
-    { label: 'Disk', value: data.diskPercent,   color: data.diskPercent > 85 ? '#f87171' : '#fbbf24', sublabel: undefined },
+    { label: 'Disk', value: disk.percent,       color: disk.percent > 85 ? '#f87171' : '#fbbf24', sublabel: disk.hasDrives ? `${formatGb(disk.freeGb)} vrij` : undefined },
   ]
 
   return (
