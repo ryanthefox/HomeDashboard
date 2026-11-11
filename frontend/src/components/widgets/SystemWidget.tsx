@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Clock, HardDrive, Monitor, Server, Thermometer, Wif
 import type { DiskDriveInfo } from '@/lib/api'
 import { useSystemSource, formatUptime } from '@/lib/pc'
 import { SourceToggle, PcPowerButton, PcOfflineNote } from './system/PcControls'
+import { ServerStatusPanel } from './system/ServerStatus'
 import { formatBps, formatGb, diskTotals } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Panel, Label, Skeleton } from '@/components/ui/motion'
@@ -136,6 +137,8 @@ export function SystemWidget() {
           )}
         </div>
       </div>
+
+      {source === 'server' && <ServerStatusPanel />}
     </div>
   )
 }

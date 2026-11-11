@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing,
+  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing, CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
@@ -16,6 +16,7 @@ const AircoWidget   = lazy(() => import('./widgets/AircoWidget').then(m => ({ de
 const AfvalWidget   = lazy(() => import('./widgets/AfvalWidget').then(m => ({ default: m.AfvalWidget })))
 const PlexWidget    = lazy(() => import('./widgets/PlexWidget').then(m => ({ default: m.PlexWidget })))
 const EnergyWidget  = lazy(() => import('./widgets/EnergyWidget').then(m => ({ default: m.EnergyWidget })))
+const CalendarWidget = lazy(() => import('./widgets/CalendarWidget').then(m => ({ default: m.CalendarWidget })))
 const RingWidget    = lazy(() => import('./widgets/RingWidget').then(m => ({ default: m.RingWidget })))
 import { useSignalR, useConnectionState } from '@/hooks/useSignalR'
 import { useTheme } from '@/lib/ThemeContext'
@@ -23,7 +24,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useAuth, logout } from '@/hooks/useAuth'
 import { spring, easeOutExpo } from '@/components/ui/motion'
 
-type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'energie' | 'deurbel' | 'afval' | 'plex'
+type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'agenda' | 'energie' | 'deurbel' | 'afval' | 'plex'
 
 const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'home',        label: 'Home',        icon: Home },
@@ -32,6 +33,7 @@ const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'muziek',      label: 'Muziek',      icon: Music },
   { id: 'systeem',     label: 'Systeem',     icon: Cpu },
   { id: 'airco',       label: 'Airco',       icon: Wind },
+  { id: 'agenda',      label: 'Agenda',      icon: CalendarDays },
   { id: 'energie',     label: 'Energie',     icon: Zap },
   { id: 'deurbel',     label: 'Deurbel',     icon: BellRing },
   { id: 'afval',       label: 'Afval',       icon: Trash2 },
@@ -346,6 +348,7 @@ export function Dashboard() {
               {activeTab === 'muziek'      && <MusicWidget />}
               {activeTab === 'systeem'     && <SystemWidget />}
               {activeTab === 'airco'       && <AircoWidget />}
+              {activeTab === 'agenda'      && <CalendarWidget />}
               {activeTab === 'energie'     && <EnergyWidget />}
               {activeTab === 'deurbel'     && <RingWidget />}
               {activeTab === 'afval'       && <AfvalWidget />}

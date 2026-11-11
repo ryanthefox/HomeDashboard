@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
 import { useCompactColumns } from './home/shared'
-import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig, RingTileConfig } from './home/TileConfig'
+import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig, RingTileConfig, TravelTileConfig, CalendarTileConfig } from './home/TileConfig'
+import { MiniCalendar } from './home/MiniCalendar'
+import { MiniTravel } from './home/MiniTravel'
 import { MiniRing } from './home/MiniRing'
 import { MiniWeather } from './home/MiniWeather'
 import { MiniMusic } from './home/MiniMusic'
@@ -18,7 +20,7 @@ import { MiniEnergy } from './home/MiniEnergy'
 
 // ── Layout types ───────────────────────────────────────────────────────────────
 type Column     = 'left' | 'middle' | 'right'
-type WidgetId   = 'weather' | 'music' | 'lighting' | 'system' | 'airco' | 'afval' | 'plex' | 'energy' | 'ring'
+type WidgetId   = 'weather' | 'music' | 'lighting' | 'system' | 'airco' | 'afval' | 'plex' | 'energy' | 'ring' | 'calendar' | 'travel'
 type WidgetSpan = 'full' | 'half'
 
 interface HomeLayout {
@@ -60,6 +62,10 @@ const WIDGET_META: Record<WidgetId, {
               config: { title: 'Onderdelen', render: () => <EnergyTileConfig /> } },
   ring:     { label: 'Deurbel',       flex: 2, mobileHeight: 280, render: () => <MiniRing />,
               config: { title: 'Camera & meldingen', render: () => <RingTileConfig /> } },
+  calendar: { label: 'Agenda',        flex: 2, mobileHeight: 280, render: () => <MiniCalendar />,
+              config: { title: "Agenda's", render: () => <CalendarTileConfig /> } },
+  travel:   { label: 'Reistijd',      flex: 2, mobileHeight: 300, render: () => <MiniTravel />,
+              config: { title: 'Onderdelen', render: () => <TravelTileConfig /> } },
 }
 const ALL_IDS = Object.keys(WIDGET_META) as WidgetId[]
 

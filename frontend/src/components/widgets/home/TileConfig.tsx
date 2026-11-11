@@ -4,6 +4,7 @@ import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hueApi, aircoApi, ringApi, type HueRoom, type AircoDevice, type RingStatus } from '@/lib/api'
 import { RING_MOTION_ALERT_KEY } from '@/lib/ring'
+import { useCalendar, CALENDAR_VISIBLE_KEY } from '@/lib/calendar'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 // Which rooms / airco units a home tile shows. Empty list = show all.
@@ -22,6 +23,11 @@ export const SYSTEM_ITEMS = [
 export type SystemItem = typeof SYSTEM_ITEMS[number]['id']
 
 export const RING_VISIBLE_KEY = 'home-ring-cameras'
+export const TRAVEL_VISIBLE_KEY = 'home-travel-items'
+export const TRAVEL_ITEMS = [
+  { id: 'car',   label: 'Auto (Google Maps, met files)' },
+  { id: 'train', label: 'Trein (NS)' },
+] as const
 export const ENERGY_VISIBLE_KEY = 'home-energy-items'
 export const ENERGY_ITEMS = [
   { id: 'price',    label: 'Stroomprijs nu' },
@@ -107,6 +113,24 @@ export function EnergyTileConfig() {
     <ItemPicker hint="Kies wat de Energie-tegel toont. Verbruik en kosten werken alleen met je Frank-login."
       items={ENERGY_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
   )
+}
+
+export function TravelTileConfig() {
+  const [selected, setSelected] = useLocalStorage<string[]>(TRAVEL_VISIBLE_KEY, [])
+  return (
+    <ItemPicker hint="Kies wat de Reistijd-tegel toont. 's Ochtends toont hij de reis naar je werk, 's middags naar huis."
+      items={TRAVEL_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
+  )
+}
+
+export function CalendarTileConfig() {
+  const { data } = useCalendar()
+  const [selected, setSelected] = useLocalStorage<string[]>(CALENDAR_VISIBLE_KEY, [])
+  const cals = data?.calendars ?? []
+  return cals.length > 1
+    ? <ItemPicker hint="Kies welke agenda's je ziet (geldt ook voor de Agenda-tab)."
+        items={cals.map(c => ({ id: String(c.index), label: c.name }))} selected={selected} onChange={setSelected} />
+    : <p className="text-xs text-fg3">Je hebt één agenda gekoppeld. Voeg er meer toe in CALENDAR_ICS_URLS (komma-gescheiden) om hier te kunnen kiezen.</p>
 }
 
 export function RingTileConfig() {

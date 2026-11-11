@@ -368,3 +368,34 @@ export const ringApi = {
   logout: () => ringJson<{ ok: boolean }>(`${BASE}/ring/logout`, { method: 'POST' }),
   test:   (type: 'ding' | 'motion') => ringJson<{ ok?: boolean; error?: string }>(`${BASE}/ring/test?type=${type}`, { method: 'POST' }),
 }
+
+// ── Agenda ────────────────────────────────────────────────────────────────────
+export interface CalendarInfo { index: number; name: string; error: string | null }
+export interface CalendarEvent { id: string; calendar: number; title: string; start: string; end: string; allDay: boolean; location: string | null }
+export interface CalendarData { configured: boolean; calendars: CalendarInfo[]; events: CalendarEvent[] }
+export const calendarApi = {
+  get: (refresh = false) => json<CalendarData>(`${BASE}/calendar${refresh ? '?refresh=true' : ''}`),
+}
+
+// ── Server ────────────────────────────────────────────────────────────────────
+export interface ContainerInfo { name: string; image: string; state: string; status: string; health: string | null; project: string | null; created: string }
+export interface ServerStatus {
+  hostname: string; os: string | null; kernel: string | null; uptimeSeconds: number; load: number[]; cpuCount: number
+  docker: { available: boolean; error: string | null; version: string | null; running: number; stopped: number; containers: ContainerInfo[] }
+}
+export const serverApi = {
+  getStatus: () => json<ServerStatus>(`${BASE}/server/status`),
+}
+
+// ── Reistijd ──────────────────────────────────────────────────────────────────
+export type TravelDirection = 'work' | 'home'
+export interface CarRoute { minutes: number; typicalMinutes: number; delayMinutes: number; km: number; via: string | null; updatedAt: string }
+export interface TrainLeg { product: string; direction: string; from: string; to: string; departure: string; departureActual: string | null; arrival: string; arrivalActual: string | null; track: string | null; cancelled: boolean }
+export interface TrainTrip { departure: string; departureActual: string | null; arrival: string; arrivalActual: string | null; minutes: number; transfers: number; delayMinutes: number; cancelled: boolean; status: string; crowd: string | null; legs: TrainLeg[] }
+export interface TravelData {
+  direction: TravelDirection; fromName: string; toName: string; carConfigured: boolean; trainConfigured: boolean
+  car: CarRoute | null; carError: string | null; trains: TrainTrip[]; trainError: string | null
+}
+export const travelApi = {
+  get: (dir: TravelDirection, refresh = false) => json<TravelData>(`${BASE}/travel?dir=${dir}${refresh ? '&refresh=true' : ''}`),
+}
