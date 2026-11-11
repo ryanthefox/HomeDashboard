@@ -4,13 +4,14 @@ import { ChevronDown, Lightbulb, Power, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hueApi, type HueRoom, type HueLight } from '@/lib/api'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { roomAccent, avgBrightnessPct, litLights, useHueActions } from '@/lib/hue'
+import { roomAccent, lightColor, avgBrightnessPct, litLights, useHueActions } from '@/lib/hue'
 import { Toggle, Panel, Press, spring, EmptyState, Skeleton } from '@/components/ui/motion'
 import { BrightnessSlider } from '@/components/ui/BrightnessSlider'
 import { SceneChips, BulbBadge, HUE_FAVORITE_KEY } from './home/MiniHue'
 
-function LightRow({ light, accent }: { light: HueLight; accent: string }) {
+function LightRow({ light }: { light: HueLight }) {
   const { toggleLight, dimLight } = useHueActions()
+  const accent = lightColor(light)
   return (
     <div className="py-2.5">
       <div className="flex items-center gap-3">
@@ -100,7 +101,7 @@ function RoomCard({ room, expanded, onToggle, index, favorite, onFavorite }: {
             className="relative overflow-hidden border-t border-subtle"
           >
             <div className="divide-y divide-subtle px-5 pb-3">
-              {room.lights.map(light => <LightRow key={light.id} light={light} accent={accent} />)}
+              {room.lights.map(light => <LightRow key={light.id} light={light} />)}
             </div>
           </motion.div>
         )}

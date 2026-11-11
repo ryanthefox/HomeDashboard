@@ -1,26 +1,43 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { hueApi, type HueRoom } from '@/lib/api'
+import { hueApi, type HueRoom, type HueLight } from '@/lib/api'
 
 const ROOMS_KEY = ['hue', 'rooms'] as const
 
 // ── Colour helpers ────────────────────────────────────────────────────────────
-/** Representative accent colour for a room (from its lit lamps). */
+// Always return #rrggbb: callers append two hex digits for transparency (`${accent}55`),
+// which silently breaks with hsl()/rgb() strings.
+
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100; l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
+}
+
+/** White-ish colour for a colour temperature in mired (153 = cool … 500 = warm). */
+function tempColor(mired: number): string {
+  const t = (mired - 153) / (500 - 153)
+  return t < 0.3 ? '#9cc8ff' : t < 0.55 ? '#ffd59a' : '#ffb35c'
+}
+
+/** The colour a single lamp is shining in (hex). */
+export function lightColor(l: HueLight, offColor = '#6b6b6b'): string {
+  if (!l.isOn) return offColor
+  if (l.colorHue != null && (l.colorSat ?? 0) > 50)
+    return hslToHex(Math.round((l.colorHue / 65535) * 360), Math.round(((l.colorSat ?? 0) / 254) * 90), 60)
+  if (l.colorTemp != null) return tempColor(l.colorTemp)
+  return '#ffb35c'
+}
+
+/** Representative accent colour for a room (from its lit lamps, hex). */
 export function roomAccent(room: HueRoom, offColor = '#6b6b6b'): string {
   const on = room.lights.filter(l => l.isOn)
   if (on.length === 0) return offColor
   const c = on.find(l => l.colorHue != null && (l.colorSat ?? 0) > 50)
-  if (c && c.colorHue != null && c.colorSat != null) {
-    const h = Math.round((c.colorHue / 65535) * 360)
-    const s = Math.round((c.colorSat / 254) * 90)
-    return `hsl(${h},${s}%,60%)`
-  }
+  if (c) return lightColor(c)
   const ct = on.filter(l => l.colorTemp != null)
-  if (ct.length > 0) {
-    const avg = ct.reduce((s, l) => s + (l.colorTemp ?? 300), 0) / ct.length
-    const t = (avg - 153) / (500 - 153) // 0 = cool, 1 = warm
-    if (t < 0.3) return '#9cc8ff'
-    if (t < 0.55) return '#ffd59a'
-  }
+  if (ct.length > 0) return tempColor(ct.reduce((s, l) => s + (l.colorTemp ?? 300), 0) / ct.length)
   return '#ffb35c'
 }
 
