@@ -33,6 +33,9 @@ services:
       - Plex__Token=${PLEX_TOKEN}
       # Afvalkalender: standaard het meegeleverde HomeDashboard.Api/data/afval.ics, of een iCal-link
       - Afval__ICalUrl=${AFVAL_ICAL_URL:-data/afval.ics}
+      # Frank Energie: prijzen werken altijd, eigen verbruik/kosten met je Frank-login
+      - FrankEnergie__Email=${FRANK_EMAIL:-}
+      - FrankEnergie__Password=${FRANK_PASSWORD:-}
       # PC: stats + aan/uit (zie HomeDashboard.Agent/install-agent.ps1)
       - Pc__Name=${PC_NAME:-PC}
       - Pc__AgentUrl=${PC_AGENT_URL}

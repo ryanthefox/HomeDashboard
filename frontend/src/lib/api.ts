@@ -296,3 +296,30 @@ export interface PlexSession {
   local: boolean
   bandwidth: number | null  // kbps
 }
+
+// ── Energie (Frank Energie) ───────────────────────────────────────────────────
+export const energyApi = {
+  getPrices: () => json<EnergyPrices>(`${BASE}/energy/prices`),
+  getUsage:  () => json<EnergyUsage>(`${BASE}/energy/usage`),
+}
+export interface EnergyPrice {
+  from: string; till: string
+  total: number        // all-in €/unit incl. VAT and energy tax
+  market: number; marketTax: number; markup: number; energyTax: number
+}
+export interface EnergyPrices { electricity: EnergyPrice[]; gas: EnergyPrice[] }
+export interface EnergyUsagePoint {
+  date: string; from: string | null
+  electricityKwh: number; electricityCost: number
+  gasM3: number; gasCost: number
+  feedInKwh: number; feedInCost: number
+}
+export interface EnergyUsage {
+  configured: boolean
+  error: string | null
+  lastMeterReadingDate: string | null
+  month: { actualCosts: number; expectedCostsSoFar: number; expectedCosts: number; lastMeterReadingDate: string | null; gasExcluded: boolean } | null
+  days: EnergyUsagePoint[]
+  hours: EnergyUsagePoint[]
+  hoursDate: string | null
+}
