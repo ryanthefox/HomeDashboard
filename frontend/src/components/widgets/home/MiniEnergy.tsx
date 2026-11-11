@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
   useEnergyPrices, useEnergyUsage, ELEC_COLOR, formatEur, formatPrice, formatNum,
-  hourLabel, localDay, priceAt, pricesOfDay, cheapestWindow,
+  hourLabel, localDay, priceAt, pricesOfDay, cheapestWindow, extremes,
 } from '@/lib/energy'
 import { BarChart } from '@/components/ui/BarChart'
 import { EmptyState, Skeleton } from '@/components/ui/motion'
@@ -36,6 +36,9 @@ export function MiniEnergy() {
   if (showPrice || showCheapest) free -= 56
   const showGasRow   = want('gas') && !!gas && !showPrice // with the price row, gas sits in the header
   if (showGasRow) free -= 32
+  const ext          = extremes(today)
+  const showExtremes = want('extremes') && !!ext && free >= 40
+  if (showExtremes) free -= 40
   const showMonth    = want('month') && !!month && free >= 36
   if (showMonth) free -= 36
   const showUsage    = want('usage') && !!lastDay && free >= 36
@@ -79,6 +82,19 @@ export function MiniEnergy() {
             <div className="mt-2 flex shrink-0 items-baseline justify-between text-sm">
               <span className="text-fg3">Gas vandaag</span>
               <span className="font-semibold text-fg tabular">{formatPrice(gas.total)} <span className="text-xs font-normal text-fg3">/m³</span></span>
+            </div>
+          )}
+
+          {showExtremes && ext && (
+            <div className="mt-2 grid shrink-0 grid-cols-2 gap-1.5 text-xs tabular">
+              <div className="rounded-xl bg-card3 px-2.5 py-1.5">
+                <span className="text-emerald-400">▼</span> <span className="text-fg3">laagst</span>{' '}
+                <b className="text-fg">{hourLabel(ext.low.from)}</b>
+              </div>
+              <div className="rounded-xl bg-card3 px-2.5 py-1.5">
+                <span className="text-orange-400">▲</span> <span className="text-fg3">hoogst</span>{' '}
+                <b className="text-fg">{hourLabel(ext.high.from)}</b>
+              </div>
             </div>
           )}
 

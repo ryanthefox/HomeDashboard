@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Zap, Flame, Wallet, Clock, Info } from 'lucide-react'
+import { Zap, Flame, Wallet, Clock, Info, TrendingDown, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { EnergyPrice, EnergyUsagePoint } from '@/lib/api'
 import {
   useEnergyPrices, useEnergyUsage, ELEC_COLOR, GAS_COLOR, formatEur, formatPrice, formatNum,
-  hourLabel, dayLabel, localDay, priceAt, pricesOfDay, cheapestWindow,
+  hourLabel, dayLabel, localDay, priceAt, pricesOfDay, cheapestWindow, extremes,
 } from '@/lib/energy'
 import { BarChart, type Bar } from '@/components/ui/BarChart'
 import { Panel, Label, Segmented, Skeleton, EmptyState } from '@/components/ui/motion'
@@ -30,7 +30,9 @@ function Stat({ icon, color, label, value, sub, index }: {
 // ── Price chart ───────────────────────────────────────────────────────────────
 function priceBars(prices: EnergyPrice[], now: Date): Bar[] {
   const cur = priceAt(prices, now)
+  const ext = extremes(prices)
   return prices.map((p, i) => ({
+    marker: p === ext?.low ? 'laagst' : p === ext?.high ? 'hoogst' : undefined,
     key: p.from,
     value: p.total,
     tick: i % 3 === 0 ? hourLabel(p.from).slice(0, 2) : undefined,
@@ -54,8 +56,7 @@ function PriceChart({ elec }: { elec: EnergyPrice[] }) {
   const [day, setDay] = useState<'vandaag' | 'morgen'>('vandaag')
   const shown = pricesOfDay(elec, day === 'morgen' && hasTomorrow ? tomorrow : today)
   const avg = shown.length ? shown.reduce((s, p) => s + p.total, 0) / shown.length : 0
-  const low = shown.reduce<EnergyPrice | null>((m, p) => (!m || p.total < m.total ? p : m), null)
-  const high = shown.reduce<EnergyPrice | null>((m, p) => (!m || p.total > m.total ? p : m), null)
+  const ext = extremes(shown)
 
   return (
     <Panel index={4} className="p-4 sm:p-5">
@@ -67,12 +68,32 @@ function PriceChart({ elec }: { elec: EnergyPrice[] }) {
       <div className="pt-8">
         <BarChart bars={priceBars(shown, now)} color={ELEC_COLOR} height={180} yFormat={v => v.toFixed(2).replace('.', ',')} />
       </div>
-      {low && high && (
-        <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-subtle pt-3 text-xs text-fg2">
-          <span>Gemiddeld <b className="text-fg tabular">{formatPrice(avg)}</b></span>
-          <span>Laagst <b className="text-fg tabular">{formatPrice(low.total)}</b> om {hourLabel(low.from)}</span>
-          <span>Hoogst <b className="text-fg tabular">{formatPrice(high.total)}</b> om {hourLabel(high.from)}</span>
-          <span className="text-fg3">prijzen incl. btw, energiebelasting en inkoopvergoeding</span>
+      {ext && (
+        <div className="border-t border-subtle pt-3">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="flex items-center gap-3 rounded-2xl bg-card3 px-3 py-2.5">
+              <TrendingDown className="h-4 w-4 shrink-0 text-emerald-400" />
+              <div className="min-w-0">
+                <p className="label-caps">Goedkoopst</p>
+                <p className="text-sm text-fg tabular"><b>{hourLabel(ext.low.from)}–{hourLabel(ext.low.till)}</b> · {formatPrice(ext.low.total)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl bg-card3 px-3 py-2.5">
+              <TrendingUp className="h-4 w-4 shrink-0 text-orange-400" />
+              <div className="min-w-0">
+                <p className="label-caps">Duurst</p>
+                <p className="text-sm text-fg tabular"><b>{hourLabel(ext.high.from)}–{hourLabel(ext.high.till)}</b> · {formatPrice(ext.high.total)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl bg-card3 px-3 py-2.5">
+              <Zap className="h-4 w-4 shrink-0 text-fg3" />
+              <div className="min-w-0">
+                <p className="label-caps">Gemiddeld</p>
+                <p className="text-sm text-fg tabular"><b>{formatPrice(avg)}</b> /kWh</p>
+              </div>
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-fg3">Prijzen incl. btw, energiebelasting en inkoopvergoeding</p>
         </div>
       )}
     </Panel>

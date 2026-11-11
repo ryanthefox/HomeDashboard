@@ -24,6 +24,7 @@ export const ENERGY_VISIBLE_KEY = 'home-energy-items'
 export const ENERGY_ITEMS = [
   { id: 'price',    label: 'Stroomprijs nu' },
   { id: 'cheapest', label: 'Goedkoopste 3 uur' },
+  { id: 'extremes', label: 'Goedkoopste en duurste uur' },
   { id: 'gas',      label: 'Gasprijs' },
   { id: 'chart',    label: 'Prijsgrafiek vandaag' },
   { id: 'usage',    label: 'Verbruik laatste dag' },

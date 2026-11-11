@@ -138,9 +138,9 @@
     "semantic_hash": "b440ee41c3a3df8428195d1555645360"
   },
   "HomeDashboard.Api/Program.cs": {
-    "mtime": 1794404286.5523205,
-    "seen": 1794404369.5383704,
-    "ast_hash": "4f366719397d602396593024ce2c068d",
+    "mtime": 1794410441.4412367,
+    "seen": 1794411291.444264,
+    "ast_hash": "f2fbaf2a963d0cae15dcbae99a13228f",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Properties/launchSettings.json": {
@@ -216,9 +216,9 @@
     "semantic_hash": "2bbb46e6759eb687d0021a3fc359b85c"
   },
   "HomeDashboard.Api/appsettings.example.json": {
-    "mtime": 1794401996.9597664,
-    "seen": 1794402158.0862617,
-    "ast_hash": "5b0031a8a3dc8f5f5dbfb87d2aa3f815",
+    "mtime": 1794410441.442238,
+    "seen": 1794411291.4442785,
+    "ast_hash": "a926e1d6be58083c9c9c76c3e77b1cf9",
     "semantic_hash": ""
   },
   "HomeDashboard.sln": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1794404366.4228823,
-    "seen": 1794404369.5383873,
-    "ast_hash": "f7016fcfcb6698949b89f0c8d6f764cf",
+    "mtime": 1794410441.442238,
+    "seen": 1794411291.4442804,
+    "ast_hash": "dd8bb97b3e8617e684d00e1c823d733f",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794409328.644775,
-    "seen": 1794409385.0070522,
-    "ast_hash": "68a7017fb95400601cb8c6b90e985450",
+    "mtime": 1794411116.601769,
+    "seen": 1794411291.4442837,
+    "ast_hash": "f29400552809a3b710da68b24f384aa3",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HomeWidget.tsx": {
-    "mtime": 1794409737.1940944,
-    "seen": 1794409902.988082,
-    "ast_hash": "fadbc4d58b106a1f8382d3be54f13c7c",
+    "mtime": 1794411140.9147522,
+    "seen": 1794411291.4442923,
+    "ast_hash": "f25583542401d30f73054571d7426c39",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794408157.3674088,
-    "seen": 1794408807.9968135,
-    "ast_hash": "ef3b757384ba9bfe903a7fe51f008a46",
+    "mtime": 1794410465.4792893,
+    "seen": 1794411291.4443119,
+    "ast_hash": "41d375287e0a8ad0405afd815a930494",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -654,9 +654,51 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/TileConfig.tsx": {
-    "mtime": 1794409737.1940944,
-    "seen": 1794409902.9880936,
-    "ast_hash": "d951e6f8e1a6966d6570be466d03f71b",
+    "mtime": 1794411140.9137504,
+    "seen": 1794411291.4443035,
+    "ast_hash": "be2103357ad038497623402fe002821a",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/EnergyController.cs": {
+    "mtime": 1794410441.3297043,
+    "seen": 1794411291.444242,
+    "ast_hash": "9eee2697a5e8de3dae819c031d24ea63",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Models/Energy.cs": {
+    "mtime": 1794410365.0199068,
+    "seen": 1794411291.4442549,
+    "ast_hash": "9c1c140eee17198d34cd89a3f0850fad",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/FrankEnergieService.cs": {
+    "mtime": 1794410424.569215,
+    "seen": 1794411291.4442687,
+    "ast_hash": "2448a57bd82402d63b16dfc604500e20",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/ui/BarChart.tsx": {
+    "mtime": 1794410507.6081102,
+    "seen": 1794411291.444286,
+    "ast_hash": "c073d8260b4c095639735d0749099ed5",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/EnergyWidget.tsx": {
+    "mtime": 1794411238.5567505,
+    "seen": 1794411291.4442916,
+    "ast_hash": "28365b7c3bbe5deb192bf4dba416fa21",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/home/MiniEnergy.tsx": {
+    "mtime": 1794411238.5567505,
+    "seen": 1794411291.4442985,
+    "ast_hash": "aa8aa963fe522e5fd317a7029b7b1195",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/energy.ts": {
+    "mtime": 1794410477.190411,
+    "seen": 1794411291.4443135,
+    "ast_hash": "b2c2c7d6ce844b03ed758afb8c7b3397",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/TileConfig.tsx": {
-    "mtime": 1794411140.9137504,
-    "seen": 1794411291.4443035,
-    "ast_hash": "be2103357ad038497623402fe002821a",
+    "mtime": 1794411324.9969182,
+    "seen": 1794411374.6448274,
+    "ast_hash": "1d634bda485e3b065dbd71b709a5aee3",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/EnergyController.cs": {
@@ -678,27 +678,27 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/BarChart.tsx": {
-    "mtime": 1794410507.6081102,
-    "seen": 1794411291.444286,
-    "ast_hash": "c073d8260b4c095639735d0749099ed5",
+    "mtime": 1794411324.9959176,
+    "seen": 1794411374.6448083,
+    "ast_hash": "535021b3ca3703f2aa015c0a44ddb43b",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/EnergyWidget.tsx": {
-    "mtime": 1794411238.5567505,
-    "seen": 1794411291.4442916,
-    "ast_hash": "28365b7c3bbe5deb192bf4dba416fa21",
+    "mtime": 1794411324.9959176,
+    "seen": 1794411374.6448145,
+    "ast_hash": "8cbf8b1471283cac8693d155535c1ecb",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniEnergy.tsx": {
-    "mtime": 1794411238.5567505,
-    "seen": 1794411291.4442985,
-    "ast_hash": "aa8aa963fe522e5fd317a7029b7b1195",
+    "mtime": 1794411324.9969182,
+    "seen": 1794411374.6448224,
+    "ast_hash": "a9f6eae165ca12487621e42904e295fd",
     "semantic_hash": ""
   },
   "frontend/src/lib/energy.ts": {
-    "mtime": 1794410477.190411,
-    "seen": 1794411291.4443135,
-    "ast_hash": "b2c2c7d6ce844b03ed758afb8c7b3397",
+    "mtime": 1794411324.9959176,
+    "seen": 1794411374.6448386,
+    "ast_hash": "3e3ff6e8ff233ce2d8edcee2c079fa0b",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

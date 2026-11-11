@@ -1,23 +1,23 @@
 # Graph Report - HomeDashboard  (2026-11-11)
 
 ## Corpus Check
-- 108 files · ~42,736 words
+- 115 files · ~47,585 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 39 file(s) not represented in the graph (top: .dll 23, (none) 5, .bat 2)
-- WARNING: 39 of 149 files seen (26%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
+- WARNING: 39 of 156 files seen (25%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
 
 ## Summary
-- 898 nodes · 2350 edges · 46 communities (29 shown, 17 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 70 edges (avg confidence: 0.85)
+- 985 nodes · 2669 edges · 41 communities (27 shown, 14 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 77 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `99e5c3ed`
+- Built from commit: `c5e2808d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- MiniHue.tsx
+- EnergyWidget.tsx
 - PcService
 - package.json
 - Dashboard.tsx
@@ -42,59 +42,54 @@
 - TS Root Config
 - HomeDashboard.Api.Models
 - Task
-- ILogger
+- FrankEnergieService
 - AircoDevice.cs
 - AircoService
 - CLAUDE.md
-- cn
 - HomeDashboard.Agent/Program.cs
 - LgThinqOptions
-- ControllerBase
-- AfvalWidget.tsx
+- ILogger
 - AircoService
 - MusicService
-- MiniMusic.tsx
-- HomeWidget.tsx
-- Skeleton
+- cn
 - HueLight.cs
-- ILogger
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 67 edges
+1. `cn()` - 73 edges
 2. `PcService` - 34 edges
-3. `react` - 30 edges
-4. `PlexService` - 29 edges
-5. `HomeDashboard.Api.Services` - 29 edges
-6. `useLocalStorage()` - 28 edges
-7. `GoogleHomeService` - 26 edges
-8. `lucide-react` - 25 edges
-9. `Skeleton()` - 24 edges
-10. `motion` - 24 edges
+3. `react` - 33 edges
+4. `FrankEnergieService` - 32 edges
+5. `HomeDashboard.Api.Services` - 31 edges
+6. `useLocalStorage()` - 31 edges
+7. `PlexService` - 29 edges
+8. `Skeleton()` - 29 edges
+9. `lucide-react` - 27 edges
+10. `GoogleHomeService` - 26 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `HomeDashboard.Api` --references--> `net8.0-windows10.0.19041.0`  [EXTRACTED]
   HomeDashboard.Api/HomeDashboard.Api.csproj → HomeDashboard.Agent/HomeDashboard.Agent.csproj
 - `HomeDashboard.Api` --references--> `Microsoft.NET.Sdk.Web`  [EXTRACTED]
   HomeDashboard.Api/HomeDashboard.Api.csproj → HomeDashboard.Agent/HomeDashboard.Agent.csproj
-- `IconBtn()` --calls--> `cn()`  [EXTRACTED]
-  frontend/src/components/widgets/HomeWidget.tsx → frontend/src/lib/utils.ts
+- `EnergyController` --references--> `FrankEnergieService`  [EXTRACTED]
+  HomeDashboard.Api/Controllers/EnergyController.cs → HomeDashboard.Api/Services/FrankEnergieService.cs
+- `NavTabs()` --calls--> `cn()`  [EXTRACTED]
+  frontend/src/components/Dashboard.tsx → frontend/src/lib/utils.ts
 - `Dashboard()` --calls--> `HomeWidget()`  [EXTRACTED]
   frontend/src/components/Dashboard.tsx → frontend/src/components/widgets/HomeWidget.tsx
-- `HomeWidget()` --calls--> `useCompactColumns()`  [EXTRACTED]
-  frontend/src/components/widgets/HomeWidget.tsx → frontend/src/components/widgets/home/shared.tsx
 
 ## Import Cycles
 - None detected.
 
-## Communities (46 total, 17 thin omitted)
+## Communities (41 total, 14 thin omitted)
 
-### Community 0 - "MiniHue.tsx"
-Cohesion: 0.21
-Nodes (19): BrightnessSlider(), EmptyState(), Toggle(), BulbBadge(), HUE_FAVORITE_KEY, MiniHue(), SceneChips(), pickVisible() (+11 more)
+### Community 0 - "EnergyWidget.tsx"
+Cohesion: 0.26
+Nodes (25): Bar, BarChart(), EmptyState(), EnergyWidget(), priceBars(), PriceChart(), Stat(), usageBars() (+17 more)
 
 ### Community 1 - "PcService"
-Cohesion: 0.11
-Nodes (10): AgentPing, MediaCommandResult, PcService, AgentKey, AgentUrl, Broadcast, HasAgent, Mac (+2 more)
+Cohesion: 0.08
+Nodes (11): PcController, AgentPing, MediaCommandResult, PcService, AgentKey, AgentUrl, Broadcast, HasAgent (+3 more)
 
 ### Community 2 - "package.json"
 Cohesion: 0.05
@@ -113,31 +108,31 @@ Cohesion: 0.16
 Nodes (6): DiskDriveInfo, SystemStats, DailyForecastItem, HourlyForecastItem, WeatherData, WeatherService
 
 ### Community 6 - "PlexWidget.tsx"
-Cohesion: 0.23
-Nodes (23): easeOutExpo, itemSubtitle(), itemTitle(), LiveCard(), MiniPlex(), PosterRow(), addedAgo(), PlexLink() (+15 more)
+Cohesion: 0.22
+Nodes (24): itemSubtitle(), itemTitle(), LiveCard(), MiniPlex(), PosterRow(), addedAgo(), PlexLink(), PlexPoster() (+16 more)
 
 ### Community 7 - "GoogleHomeService"
 Cohesion: 0.10
 Nodes (7): DashboardAuth, Required, Stamp, GoogleHomeService, ClientId, ClientSecret, Enabled
 
 ### Community 8 - "SystemWidget.tsx"
-Cohesion: 0.09
-Nodes (43): ArcGauge(), ArcGaugeProps, SIZES, GAUGE_PX, GaugeSize, MiniSystem(), pickLayout(), SYSTEM_VISIBLE_KEY (+35 more)
+Cohesion: 0.08
+Nodes (46): ArcGauge(), ArcGaugeProps, SIZES, AnimatedNumber(), GAUGE_PX, GaugeSize, MiniSystem(), pickLayout() (+38 more)
 
 ### Community 9 - "IPolicyConfig"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (5): ERole, eCommunications, eConsole, eMultimedia, IPolicyConfig
 
 ### Community 10 - "WeatherWidget.tsx"
-Cohesion: 0.17
-Nodes (21): CloudShape(), effectiveIcon(), RAIN, skyGradient(), SNOW, STARS, WeatherFx, WeatherIcon() (+13 more)
+Cohesion: 0.15
+Nodes (24): CloudShape(), effectiveIcon(), RAIN, skyGradient(), SNOW, STARS, WeatherFx, WeatherIcon() (+16 more)
 
 ### Community 11 - "HueService"
-Cohesion: 0.17
+Cohesion: 0.16
 Nodes (4): HueController, HueLightStateRequest, HueService, BaseUrl
 
 ### Community 12 - "HomeDashboard.Api.Services"
-Cohesion: 0.30
+Cohesion: 0.29
 Nodes (3): HomeDashboard.Api.Services, HomeDashboard.Api.Controllers, SetDefaultRequest
 
 ### Community 14 - "TS App Config"
@@ -161,8 +156,16 @@ Cohesion: 0.08
 Nodes (23): build, environment, network_mode, profiles, restart, volumes, build, environment (+15 more)
 
 ### Community 26 - "HomeDashboard.Api.Models"
-Cohesion: 0.12
+Cohesion: 0.15
 Nodes (3): HomeDashboard.Api.Models, AudioOutputDevice, PcStatus
+
+### Community 27 - "Task"
+Cohesion: 0.15
+Nodes (3): EnergyController, PlexController, WasherController
+
+### Community 28 - "FrankEnergieService"
+Cohesion: 0.10
+Nodes (11): EnergyMonthSummary, EnergyPrice, EnergyPrices, EnergyUsage, EnergyUsagePoint, DayData, FrankApiException, IsAuthError (+3 more)
 
 ### Community 29 - "AircoDevice.cs"
 Cohesion: 0.18
@@ -172,57 +175,41 @@ Nodes (5): AircoDevice, SetFanSpeedRequest, SetModeRequest, SetPowerRequest, Set
 Cohesion: 0.19
 Nodes (3): WasherDevice, LgThinqClient, WasherService
 
-### Community 32 - "cn"
-Cohesion: 0.21
-Nodes (26): AnimatedNumber(), Label(), Press, Segmented(), softSpring, ThermostatRing(), AircoSetupPrompt(), AircoWidget() (+18 more)
-
 ### Community 34 - "LgThinqOptions"
 Cohesion: 0.33
 Nodes (5): LgThinqOptions, BaseUrl, ClientId, CountryCode, PersonalAccessToken
 
-### Community 35 - "ControllerBase"
-Cohesion: 0.14
-Nodes (5): AfvalController, AudioController, SystemController, WeatherController, AudioService
+### Community 35 - "ILogger"
+Cohesion: 0.08
+Nodes (8): AfvalController, AudioController, AuthController, LoginRequest, MusicController, SystemController, WeatherController, AudioService
 
-### Community 37 - "AfvalWidget.tsx"
-Cohesion: 0.20
-Nodes (19): Panel, AfvalWidget(), CalendarView(), ListView(), NextCollection(), View, AFVAL_COLORS, afvalColor() (+11 more)
-
-### Community 40 - "MiniMusic.tsx"
-Cohesion: 0.31
-Nodes (13): spring, ArtBackdrop(), DeviceIcon(), Equalizer(), MiniMusic(), shortDeviceName(), useMusicControls(), MusicWidget() (+5 more)
-
-### Community 41 - "HomeWidget.tsx"
-Cohesion: 0.12
-Nodes (27): fadeUp, AIRCO_VISIBLE_KEY, AircoTileConfig(), HUE_VISIBLE_KEY, HueTileConfig(), ItemPicker(), SYSTEM_ITEMS, SystemTileConfig() (+19 more)
-
-### Community 42 - "Skeleton"
-Cohesion: 0.33
-Nodes (10): Skeleton(), MiniAfval(), MiniWeather(), uvColor(), uvLabel(), TileHeader(), useCompactColumns(), useContainerSize() (+2 more)
+### Community 41 - "cn"
+Cohesion: 0.05
+Nodes (115): BrightnessSlider(), easeOutExpo, fadeUp, Label(), Panel, Press, Segmented(), Skeleton() (+107 more)
 
 ### Community 44 - "HueLight.cs"
 Cohesion: 0.25
 Nodes (4): HueGroupActionRequest, HueLight, HueRoom, HueScene
 
 ## Knowledge Gaps
-- **16 isolated node(s):** `HasAgent`, `BaseUrl`, `Microsoft.AspNetCore.OpenApi (8.0.0)`, `Swashbuckle.AspNetCore (6.6.2)`, `BaseUrl` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 250 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **19 isolated node(s):** `HasLogin`, `Today`, `IsAuthError`, `HasAgent`, `BaseUrl` (+14 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 262 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `HomeDashboard.Api.Services` connect `HomeDashboard.Api.Services` to `HomeDashboard.Agent/Program.cs`, `LgThinqOptions`, `PcService.cs`, `IPolicyConfig`, `AuthController.cs`, `HomeDashboard.Api.Models`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **What connects `HasAgent`, `BaseUrl`, `Microsoft.AspNetCore.OpenApi (8.0.0)` to the rest of the system?**
-  _16 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `HomeDashboard.Api.Services` connect `HomeDashboard.Api.Services` to `HomeDashboard.Agent/Program.cs`, `LgThinqOptions`, `PcService.cs`, `AuthController.cs`, `HomeDashboard.Api.Models`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **What connects `HasLogin`, `Today`, `IsAuthError` to the rest of the system?**
+  _19 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `PcService` be split into smaller, more focused modules?**
-  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._
-- **Why does `PcService` connect `PcService` to `ControllerBase`, `PlexService`, `PcService.cs`, `GoogleHomeService`, `HueService`, `ILogger`, `DashboardBackgroundService`, `ILogger`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _Cohesion score 0.08408408408408409 - nodes in this community are weakly interconnected._
+- **Why does `PcService` connect `PcService` to `ILogger`, `PcService.cs`, `PlexService`, `GoogleHomeService`, `HueService`, `DashboardBackgroundService`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Should `package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.05203619909502263 - nodes in this community are weakly interconnected._
-- **Why does `HomeDashboard.Api.Models` connect `HomeDashboard.Api.Models` to `PlexService`, `WeatherService`, `MusicService`, `IPolicyConfig`, `HomeDashboard.Api.Services`, `HueLight.cs`, `AircoDevice.cs`, `AircoService`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `HomeDashboard.Api.Models` connect `HomeDashboard.Api.Models` to `HomeDashboard.Agent/Program.cs`, `PlexService`, `WeatherService`, `MusicService`, `HomeDashboard.Api.Services`, `HueLight.cs`, `FrankEnergieService`, `AircoDevice.cs`, `AircoService`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Should `Dashboard.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06923076923076923 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06682692307692308 - nodes in this community are weakly interconnected._

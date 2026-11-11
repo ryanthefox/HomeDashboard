@@ -41,6 +41,14 @@ export function priceAt(prices: EnergyPrice[], at = new Date()): EnergyPrice | u
 /** Prices of one local calendar day. */
 export const pricesOfDay = (prices: EnergyPrice[], day: string) => prices.filter(p => localDay(p.from) === day)
 
+/** Cheapest and most expensive slot in a list of prices. */
+export function extremes(prices: EnergyPrice[]) {
+  if (prices.length === 0) return null
+  let low = prices[0], high = prices[0]
+  for (const p of prices) { if (p.total < low.total) low = p; if (p.total > high.total) high = p }
+  return { low, high }
+}
+
 /** Cheapest consecutive window of `hours` slots that hasn't ended yet. */
 export function cheapestWindow(prices: EnergyPrice[], hours = 3, now = new Date()) {
   const future = prices.filter(p => new Date(p.till).getTime() > now.getTime())

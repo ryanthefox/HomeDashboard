@@ -7,6 +7,7 @@ export interface Bar {
   tick?: string            // x-axis label (only some bars get one)
   tooltip: ReactNode
   tone?: 'normal' | 'muted' | 'current'
+  marker?: string          // small label at the end of the bar, e.g. "laagst"
 }
 
 /**
@@ -84,6 +85,16 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
                       boxShadow: b.tone === 'current' ? `0 0 0 2px var(--c-fg), 0 0 14px ${color}` : undefined,
                     }}
                   />
+                  {b.marker && !compact && (
+                    <span
+                      className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--c-solid)] px-1 text-[10px] font-semibold text-fg"
+                      style={neg
+                        ? { top: `calc(${zero + Math.max(h, 1.5)}% + 4px)` }
+                        : { bottom: `calc(${100 - zero + Math.max(h, 1.5)}% + 4px)` }}
+                    >
+                      {b.marker}
+                    </span>
+                  )}
                 </div>
               )
             })}
