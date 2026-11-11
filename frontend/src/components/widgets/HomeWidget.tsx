@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { GripVertical, X, Plus, Columns2, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
+import { GripVertical, X, Plus, Minus, Columns2, Columns3, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
@@ -20,29 +20,24 @@ import { MiniPlex } from './home/MiniPlex'
 import { MiniEnergy } from './home/MiniEnergy'
 
 // ── Layout types ───────────────────────────────────────────────────────────────
-type Column     = 'left' | 'middle' | 'right'
+type Column     = number // column index (0 = leftmost)
 type WidgetId   = 'weather' | 'music' | 'lighting' | 'system' | 'airco' | 'afval' | 'plex' | 'energy' | 'ring' | 'calendar' | 'travel'
 type WidgetSpan = 'full' | 'half'
 
 interface HomeLayout {
-  left:    WidgetId[]
-  middle:  WidgetId[]
-  right:   WidgetId[]
+  cols:    WidgetId[][]                          // widgets per column, left to right
+  colFlex: number[]                              // width weight per column
   flexMap: Partial<Record<WidgetId, number>>     // per-widget height weight
   spanMap: Partial<Record<WidgetId, WidgetSpan>> // per-widget width
-  colFlex: { left: number; middle: number; right: number }
 }
 
-const COLUMNS: Column[] = ['left', 'middle', 'right']
-const COL_LABEL: Record<Column, string> = { left: 'Links', middle: 'Midden', right: 'Rechts' }
+const MIN_COLS = 1, MAX_COLS = 6
 
 const DEFAULT_LAYOUT: HomeLayout = {
-  left:    ['weather', 'music'],
-  middle:  ['lighting', 'system'],
-  right:   ['airco', 'afval', 'plex'],
+  cols:    [['weather', 'music'], ['lighting', 'system'], ['airco', 'afval', 'plex']],
+  colFlex: [1, 1.5, 1],
   flexMap: {},
   spanMap: {},
-  colFlex: { left: 1, middle: 1.5, right: 1 },
 }
 
 const WIDGET_META: Record<WidgetId, {
@@ -70,8 +65,15 @@ const WIDGET_META: Record<WidgetId, {
 }
 const ALL_IDS = Object.keys(WIDGET_META) as WidgetId[]
 
-/** Repairs layouts saved by older versions (unknown ids, missing fields). */
-function sanitize(raw: Partial<HomeLayout> | null | undefined): HomeLayout {
+/** Layout as saved by versions with exactly three columns. */
+type LegacyLayout = Partial<HomeLayout> & {
+  left?: WidgetId[]; middle?: WidgetId[]; right?: WidgetId[]
+  colFlex?: number[] | { left?: number; middle?: number; right?: number }
+}
+
+/** Repairs layouts saved by older versions (unknown ids, missing fields, fixed three columns). */
+function sanitize(input: HomeLayout | LegacyLayout | null | undefined): HomeLayout {
+  const raw = (input ?? {}) as LegacyLayout
   const seen = new Set<WidgetId>()
   const clean = (ids: unknown): WidgetId[] =>
     (Array.isArray(ids) ? ids : []).filter((id): id is WidgetId => {
@@ -79,13 +81,24 @@ function sanitize(raw: Partial<HomeLayout> | null | undefined): HomeLayout {
       seen.add(id as WidgetId)
       return true
     })
+  let cols: WidgetId[][]
+  let flex: unknown[]
+  if (Array.isArray(raw.cols) && raw.cols.length > 0) {
+    cols = raw.cols.slice(0, MAX_COLS).map(clean)
+    flex = Array.isArray(raw.colFlex) ? raw.colFlex : []
+  } else if (raw.left || raw.middle || raw.right) {
+    cols = [clean(raw.left), clean(raw.middle), clean(raw.right)]
+    const f = (raw.colFlex && !Array.isArray(raw.colFlex) ? raw.colFlex : {}) as { left?: number; middle?: number; right?: number }
+    flex = [f.left, f.middle, f.right]
+  } else {
+    cols = DEFAULT_LAYOUT.cols.map(clean)
+    flex = DEFAULT_LAYOUT.colFlex
+  }
   return {
-    left:    clean(raw?.left ?? DEFAULT_LAYOUT.left),
-    middle:  clean(raw?.middle ?? DEFAULT_LAYOUT.middle),
-    right:   clean(raw?.right ?? DEFAULT_LAYOUT.right),
-    flexMap: raw?.flexMap ?? {},
-    spanMap: raw?.spanMap ?? {},
-    colFlex: { ...DEFAULT_LAYOUT.colFlex, ...(raw?.colFlex ?? {}) },
+    cols,
+    colFlex: cols.map((_, i) => (typeof flex[i] === 'number' && (flex[i] as number) > 0 ? flex[i] as number : 1)),
+    flexMap: raw.flexMap ?? {},
+    spanMap: raw.spanMap ?? {},
   }
 }
 
@@ -178,7 +191,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       <SlidersHorizontal className="h-4 w-4" />
     </motion.button>
   )
-  const [layoutRaw, setLayoutRaw] = useLocalStorage<HomeLayout>('home-layout', DEFAULT_LAYOUT)
+  const [layoutRaw, setLayoutRaw] = useLocalStorage<HomeLayout | LegacyLayout>('home-layout', DEFAULT_LAYOUT)
   const layout = sanitize(layoutRaw)
   const setLayout = (fn: (prev: HomeLayout) => HomeLayout) => setLayoutRaw(prev => fn(sanitize(prev)))
 
@@ -190,37 +203,51 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   const [dropLine, setDropLine] = useState<DropLine | null>(null)
   // Live sizes while resizing (committed to storage on release)
   const [liveRows, setLiveRows] = useState<Record<string, number> | null>(null)
-  const [liveCols, setLiveCols] = useState<HomeLayout['colFlex'] | null>(null)
+  const [liveCols, setLiveCols] = useState<number[] | null>(null)
   const [liveH, setLiveH] = useState<{ id: WidgetId; h: number } | null>(null)
   const resizing = !!(liveRows || liveCols || liveH)
 
-  const colRefs = useRef<Partial<Record<Column, HTMLDivElement | null>>>({})
-  const colWrapRefs = useRef<Partial<Record<Column, HTMLDivElement | null>>>({})
+  const colRefs = useRef<(HTMLDivElement | null)[]>([])
+  const colWrapRefs = useRef<(HTMLDivElement | null)[]>([])
   const compactRef = useRef<HTMLDivElement | null>(null)
 
-  const allUsed       = [...layout.left, ...layout.middle, ...layout.right]
+  const COLUMNS: Column[] = layout.cols.map((_, i) => i)
+  const allUsed       = layout.cols.flat()
   const hiddenWidgets = ALL_IDS.filter(id => !allUsed.includes(id))
 
   // ── Layout mutations ─────────────────────────────────────────────────────────
   const getFlex = (id: WidgetId) => layout.flexMap[id] ?? WIDGET_META[id].flex
   const getSpan = (id: WidgetId): WidgetSpan => layout.spanMap[id] ?? 'full'
-  const getColFlex = (col: Column) => (liveCols ?? layout.colFlex)[col]
+  const getColFlex = (col: Column) => (liveCols ?? layout.colFlex)[col] ?? 1
 
   function moveWidget(id: WidgetId, col: Column, idx: number) {
     setLayout(prev => {
-      const from = COLUMNS.find(c => prev[c].includes(id))
-      if (!from) return prev
-      const n: HomeLayout = { ...prev, left: [...prev.left], middle: [...prev.middle], right: [...prev.right] }
-      n[from] = n[from].filter(w => w !== id)
-      let at = from === col && prev[col].indexOf(id) < idx ? idx - 1 : idx
-      at = Math.max(0, Math.min(at, n[col].length))
-      n[col].splice(at, 0, id)
-      return n
+      const from = prev.cols.findIndex(c => c.includes(id))
+      if (from < 0 || !prev.cols[col]) return prev
+      const cols = prev.cols.map(c => [...c])
+      cols[from] = cols[from].filter(w => w !== id)
+      let at = from === col && prev.cols[col].indexOf(id) < idx ? idx - 1 : idx
+      at = Math.max(0, Math.min(at, cols[col].length))
+      cols[col].splice(at, 0, id)
+      return { ...prev, cols }
     })
   }
 
-  const removeWidget = (id: WidgetId, col: Column) => setLayout(p => ({ ...p, [col]: p[col].filter(w => w !== id) }))
-  const addWidget    = (id: WidgetId, col: Column) => setLayout(p => ({ ...p, [col]: [...p[col], id] }))
+  const removeWidget = (id: WidgetId) => setLayout(p => ({ ...p, cols: p.cols.map(c => c.filter(w => w !== id)) }))
+  const addWidget    = (id: WidgetId, col: Column) =>
+    setLayout(p => ({ ...p, cols: p.cols.map((c, i) => (i === Math.min(col, p.cols.length - 1) ? [...c, id] : c)) }))
+
+  /** Adds an empty column on the right. */
+  const addColumn = () => setLayout(p => p.cols.length >= MAX_COLS ? p : ({ ...p, cols: [...p.cols, []], colFlex: [...p.colFlex, 1] }))
+  /** Removes a column; its widgets move to the neighbouring column so nothing gets lost. */
+  const removeColumn = (col: Column) => setLayout(p => {
+    if (p.cols.length <= MIN_COLS) return p
+    const cols = p.cols.map(c => [...c])
+    const [moved] = cols.splice(col, 1)
+    const target = Math.max(0, col - 1)
+    cols[target] = [...cols[target], ...moved]
+    return { ...p, cols, colFlex: p.colFlex.filter((_, i) => i !== col) }
+  })
   const toggleSpan = (id: WidgetId) =>
     setLayout(p => ({ ...p, spanMap: { ...p.spanMap, [id]: (p.spanMap[id] ?? 'full') === 'full' ? 'half' : 'full' } }))
 
@@ -249,7 +276,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       const d = x < r.left ? r.left - x : x > r.right ? x - r.right : 0
       if (d < best) { best = d; col = c }
     }
-    if (!col) return null
+    if (col == null) return null
     const list = colRefs.current[col]!
     const lr = list.getBoundingClientRect()
     const rows = [...list.querySelectorAll<HTMLElement>(':scope > [data-row]')]
@@ -259,7 +286,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       if (y < r.top + r.height / 2) return { col, idx: Number(el.dataset.start), line: { left: r.left, top: r.top - 6, width: r.width } }
     }
     const last = rows[rows.length - 1].getBoundingClientRect()
-    return { col, idx: layout[col].length, line: { left: last.left, top: last.bottom + 6, width: last.width } }
+    return { col, idx: layout.cols[col].length, line: { left: last.left, top: last.bottom + 6, width: last.width } }
   }
 
   function startMove(e: React.PointerEvent, id: WidgetId) {
@@ -282,7 +309,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     if (!list) return
     const els = [...list.querySelectorAll<HTMLElement>(':scope > [data-row]')]
     const heights = els.map(el => el.getBoundingClientRect().height)
-    const rows = buildRows(layout[col])
+    const rows = buildRows(layout.cols[col])
     const y0 = e.clientY, MIN = 90
     let hs = heights
     const toFlex = (h: number[]) => Object.fromEntries(rows.map((row, i) => [row.items.join('+'), Math.round(h[i]) / 100]))
@@ -309,9 +336,9 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   // ── Desktop: drag the gap between two columns to change their widths ────────
   function startColResize(e: React.PointerEvent, i: number) {
     const widths = COLUMNS.map(c => colWrapRefs.current[c]?.getBoundingClientRect().width ?? 0)
-    const x0 = e.clientX, MIN = 220
+    const x0 = e.clientX, MIN = 160
     let ws = widths
-    const toFlex = (w: number[]) => ({ left: Math.round(w[0]) / 100, middle: Math.round(w[1]) / 100, right: Math.round(w[2]) / 100 })
+    const toFlex = (w: number[]) => w.map(x => Math.max(0.5, Math.round(x) / 100))
     trackPointer(e, ev => {
       const dx = ev.clientX - x0
       let a = widths[i] + dx, b = widths[i + 1] - dx
@@ -338,7 +365,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   )
 
   let cellIndex = 0
-  function renderCell(id: WidgetId, col: Column) {
+  function renderCell(id: WidgetId) {
     const i = cellIndex++
     return (
       <motion.div
@@ -367,7 +394,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               <motion.button
                 initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
                 whileTap={{ scale: 0.85 }}
-                onClick={() => removeWidget(id, col)}
+                onClick={() => removeWidget(id)}
                 className={cn(chip, 'absolute right-2.5 top-2.5 p-2 hover:text-red-400')}
                 title="Verbergen"
               >
@@ -415,7 +442,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   }
 
   function renderColumn(col: Column) {
-    const widgets  = layout[col]
+    const widgets  = layout.cols[col]
     const rows     = buildRows(widgets)
 
     return (
@@ -426,7 +453,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
             <React.Fragment key={items.join('+')}>
               {r > 0 && resizeGap('g', 'row', e => startRowResize(e, col, r - 1))}
               <div data-row data-start={startIdx} className="flex min-h-0 gap-3" style={{ flex: liveRows?.[items.join('+')] ?? rowFlex }}>
-                {items.map(id => renderCell(id, col))}
+                {items.map(id => renderCell(id))}
               </div>
             </React.Fragment>
           ))}
@@ -436,6 +463,12 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               drag ? 'border-orange-400/70 bg-orange-400/5' : 'border-subtle2')}>
               <Plus className="h-5 w-5" />
               <p className="text-xs">Sleep hier een widget</p>
+              {layout.cols.length > MIN_COLS && (
+                <button onClick={() => removeColumn(col)}
+                  className="mt-1 flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-fg3 transition-colors hover:bg-red-500/10 hover:text-red-400">
+                  <X className="h-3 w-3" /> Kolom weghalen
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -458,16 +491,21 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               <motion.div layout key={id} className="flex items-center gap-1.5 rounded-xl bg-card3 py-1 pl-3 pr-1">
                 <span className="text-xs font-medium text-fg">{WIDGET_META[id].label}</span>
                 {compactCols ? (
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, 'right')}
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, COLUMNS.length - 1)}
                     className="rounded-lg px-2 py-1 text-[11px] text-fg2 transition-colors hover:bg-accent hover:text-white">
                     + Toevoegen
                   </motion.button>
-                ) : COLUMNS.map(col => (
-                  <motion.button key={col} whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, col)}
-                    className="rounded-lg px-2 py-1 text-[11px] text-fg2 transition-colors hover:bg-accent hover:text-white">
-                    + {COL_LABEL[col]}
-                  </motion.button>
-                ))}
+                ) : (
+                  <>
+                    <span className="text-[11px] text-fg3">+ kolom</span>
+                    {COLUMNS.map(col => (
+                      <motion.button key={col} whileTap={{ scale: 0.9 }} onClick={() => addWidget(id, col)} title={`Toevoegen aan kolom ${col + 1}`}
+                        className="min-w-[1.75rem] rounded-lg px-2 py-1 text-[11px] font-medium text-fg2 transition-colors hover:bg-accent hover:text-white">
+                        {col + 1}
+                      </motion.button>
+                    ))}
+                  </>
+                )}
               </motion.div>
             ))}
           </div>
@@ -483,8 +521,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     const getH = (id: WidgetId) => mobileHeights[id] ?? WIDGET_META[id].mobileHeight
     const shownH = (id: WidgetId) => (liveH?.id === id ? liveH.h : getH(id))
     const removeCompact = (id: WidgetId) => {
-      const col = COLUMNS.find(c => layout[c].includes(id))
-      if (col) removeWidget(id, col)
+      removeWidget(id)
     }
 
     function computeCompactDrop(x: number, y: number, dragged: WidgetId) {
@@ -626,9 +663,34 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     )
   }
 
-  // ── Desktop: three flexible columns ──────────────────────────────────────────
+  // ── Desktop: flexible columns (1–6) ──────────────────────────────────────────
+  const columnControls = (
+    <AnimatePresence>
+      {editMode && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={softSpring}
+          className="flex shrink-0 items-center justify-center gap-3">
+          <div className="panel flex items-center gap-1 rounded-2xl py-1 pl-3 pr-1">
+            <Columns3 className="h-4 w-4 text-fg3" />
+            <span className="mr-1 text-xs font-medium text-fg2">Kolommen</span>
+            <motion.button whileTap={{ scale: 0.85 }} onClick={() => removeColumn(COLUMNS.length - 1)} disabled={COLUMNS.length <= MIN_COLS}
+              title="Laatste kolom weghalen (tegels schuiven naar links)"
+              className="rounded-xl p-2 text-fg2 transition-colors hover:bg-card3 hover:text-fg disabled:opacity-30">
+              <Minus className="h-4 w-4" />
+            </motion.button>
+            <span className="w-5 text-center text-sm font-semibold tabular text-fg">{COLUMNS.length}</span>
+            <motion.button whileTap={{ scale: 0.85 }} onClick={addColumn} disabled={COLUMNS.length >= MAX_COLS} title="Kolom toevoegen"
+              className="rounded-xl p-2 text-fg2 transition-colors hover:bg-card3 hover:text-fg disabled:opacity-30">
+              <Plus className="h-4 w-4" />
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
   return (
     <div className="flex h-full flex-col gap-3">
+      {columnControls}
       <div className="flex min-h-0 flex-1">
         {COLUMNS.map((col, i) => (
           <React.Fragment key={col}>
