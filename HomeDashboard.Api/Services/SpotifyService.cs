@@ -8,7 +8,7 @@ using System.Text.Json.Nodes;
 namespace HomeDashboard.Api.Services;
 
 public record SpotifyStatus(bool Configured, bool Connected, string RedirectUri, string? User, string? Product, string? Error, bool CanStream = false);
-public record SpotifyDevice(string Id, string Name, string Type, bool IsActive, int? Volume, bool Restricted);
+public record SpotifyDevice(string Id, string Name, string Type, bool IsActive, int? Volume, bool Restricted, bool SupportsVolume = true);
 public record SpotifyTrack(string Id, string Uri, string Name, string Artists, string? Album, string? Image, int DurationMs);
 public record SpotifyPlayback(bool IsPlaying, int ProgressMs, SpotifyTrack? Track, SpotifyDevice? Device, bool Shuffle, string Repeat, string? ContextUri);
 public record SpotifyItem(string Id, string Uri, string Kind, string Name, string? Subtitle, string? Image);
@@ -178,15 +178,34 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
             try { return JsonNode.Parse(text); } catch (JsonException) { return null; }
         }
 
-        string msg = res.StatusCode switch
+        string? apiMessage = null, reason = null;
+        try
         {
-            HttpStatusCode.NotFound => "Geen actief afspeelapparaat — kies eerst een apparaat",
-            HttpStatusCode.Forbidden => "Spotify Premium is nodig om af te spelen vanuit het dashboard",
-            HttpStatusCode.TooManyRequests => "Even te veel verzoeken naar Spotify, probeer het zo opnieuw",
-            _ => $"Spotify: {(int)res.StatusCode}",
-        };
-        try { if (JsonNode.Parse(text)?["error"]?["message"]?.GetValue<string>() is { } m && res.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.Forbidden)) msg = $"Spotify: {m}"; }
+            var err = JsonNode.Parse(text)?["error"];
+            apiMessage = err?["message"]?.GetValue<string>();
+            reason = err?["reason"]?.GetValue<string>();
+        }
         catch { /* not json */ }
+
+        // 403 has many causes — only one of them is a missing Premium subscription.
+        string msg = (res.StatusCode, reason) switch
+        {
+            (HttpStatusCode.NotFound, _) => "Geen actief afspeelapparaat — kies eerst een apparaat",
+            (HttpStatusCode.TooManyRequests, _) => "Even te veel verzoeken naar Spotify, probeer het zo opnieuw",
+            (HttpStatusCode.Forbidden, "PREMIUM_REQUIRED") => "Spotify Premium is nodig om af te spelen vanuit het dashboard",
+            (HttpStatusCode.Forbidden, "VOLUME_CONTROL_DISALLOW") => "Dit apparaat laat het volume niet op afstand regelen — pas het volume op het apparaat zelf aan",
+            (HttpStatusCode.Forbidden, "UNKNOWN") when apiMessage?.Contains("volume", StringComparison.OrdinalIgnoreCase) == true
+                => "Dit apparaat laat het volume niet op afstand regelen — pas het volume op het apparaat zelf aan",
+            (HttpStatusCode.Forbidden, "ALREADY_PAUSED") => "Staat al op pauze",
+            (HttpStatusCode.Forbidden, "ALREADY_PLAYING") or (HttpStatusCode.Forbidden, "ENDLESS_CONTEXT") => "Dat kan hier niet",
+            (HttpStatusCode.Forbidden, "NO_PREV_TRACK") => "Er is geen vorig nummer",
+            (HttpStatusCode.Forbidden, "NO_NEXT_TRACK") => "Er is geen volgend nummer",
+            (HttpStatusCode.Forbidden, "DISALLOWED") or (HttpStatusCode.Forbidden, "UNKNOWN") or (HttpStatusCode.Forbidden, null)
+                => apiMessage is { Length: > 0 } ? $"Spotify staat dit niet toe: {apiMessage}" : "Spotify staat dit op dit apparaat niet toe",
+            (HttpStatusCode.Forbidden, _) => $"Spotify staat dit niet toe ({reason})",
+            _ => apiMessage is { Length: > 0 } ? $"Spotify: {apiMessage}" : $"Spotify: {(int)res.StatusCode}",
+        };
+        log.LogInformation("Spotify {Method} {Path} -> {Status} {Reason} {Message}", method, path, (int)res.StatusCode, reason, apiMessage);
         throw new SpotifyException(res.StatusCode, msg);
     }
 
@@ -229,7 +248,8 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
 
     private static SpotifyDevice Device(JsonNode d) => new(
         d["id"]?.GetValue<string>() ?? "", d["name"]?.GetValue<string>() ?? "", d["type"]?.GetValue<string>() ?? "",
-        d["is_active"]?.GetValue<bool>() ?? false, d["volume_percent"]?.GetValue<int>(), d["is_restricted"]?.GetValue<bool>() ?? false);
+        d["is_active"]?.GetValue<bool>() ?? false, d["volume_percent"]?.GetValue<int>(), d["is_restricted"]?.GetValue<bool>() ?? false,
+        d["supports_volume"]?.GetValue<bool>() ?? true);
 
     // ── Player ────────────────────────────────────────────────────────────────
     public async Task<SpotifyPlayback?> GetPlaybackAsync()

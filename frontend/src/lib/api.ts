@@ -413,7 +413,7 @@ export const travelApi = {
 
 // ── Spotify ───────────────────────────────────────────────────────────────────
 export interface SpotifyStatus { configured: boolean; connected: boolean; redirectUri: string; user: string | null; product: string | null; error: string | null; canStream?: boolean }
-export interface SpotifyDevice { id: string; name: string; type: string; isActive: boolean; volume: number | null; restricted: boolean }
+export interface SpotifyDevice { id: string; name: string; type: string; isActive: boolean; volume: number | null; restricted: boolean; supportsVolume?: boolean }
 export interface SpotifyTrack { id: string; uri: string; name: string; artists: string; album: string | null; image: string | null; durationMs: number }
 export interface SpotifyPlayback { isPlaying: boolean; progressMs: number; track: SpotifyTrack | null; device: SpotifyDevice | null; shuffle: boolean; repeat: 'off' | 'track' | 'context'; contextUri: string | null; idle?: boolean }
 export interface SpotifyItem { id: string; uri: string; kind: 'track' | 'artist' | 'album' | 'playlist'; name: string; subtitle: string | null; image: string | null }

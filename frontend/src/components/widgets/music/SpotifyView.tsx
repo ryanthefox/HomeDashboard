@@ -129,7 +129,7 @@ function DevicePicker({ open, onClose, current, onPick }: {
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card3" style={active ? { color: GREEN } : undefined}><Icon className="h-4 w-4" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium" style={active ? { color: GREEN } : undefined}>{d.name}</span>
-                  <span className="block text-[11px] text-fg3">{d.isActive ? 'Speelt nu' : d.type}{d.volume != null ? ` · volume ${d.volume}%` : ''}</span>
+                  <span className="block text-[11px] text-fg3">{d.isActive ? 'Speelt nu' : d.type}{d.volume != null && d.supportsVolume !== false ? ` · volume ${d.volume}%` : ''}</span>
                 </span>
                 {active && <Check className="h-4 w-4 shrink-0" style={{ color: GREEN }} />}
               </button>
@@ -249,7 +249,10 @@ function NowPlaying({ pb, onError, onDevices, deviceId }: {
             <DevIcon className="h-4 w-4 shrink-0" style={pb?.device ? { color: GREEN } : undefined} />
             <span className="truncate font-medium text-fg">{pb?.device?.name ?? 'Kies een apparaat'}</span>
           </button>
-          {pb?.device && volume != null && (
+          {pb?.device && pb.device.supportsVolume === false && (
+            <span className="flex flex-1 items-center gap-1.5 text-[11px] text-fg3"><Volume2 className="h-3.5 w-3.5 shrink-0" />Volume regel je op het apparaat zelf</span>
+          )}
+          {pb?.device && volume != null && pb.device.supportsVolume !== false && (
             <div className="flex min-w-[150px] flex-1 items-center gap-2">
               <button onClick={() => { const v = volume > 0 ? 0 : 40; setVol(v); void act(() => spotifyApi.volume(v)) }} className="text-fg2 hover:text-fg">
                 {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
