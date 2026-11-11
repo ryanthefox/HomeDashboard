@@ -243,3 +243,11 @@ html { -webkit-tap-highlight-color: transparent; }
   input, textarea, [contenteditable="true"] { -webkit-touch-callout: default; -webkit-user-select: text; user-select: text; }
 }
 img { -webkit-user-drag: none; }
+
+/* Swiping between pages (home screens / tabs): vertical scroll areas inside a page
+   only pan vertically, so horizontal swipes reach the dashboard instead of the
+   browser. Horizontal lists (overflow-x-auto) keep their own sideways scrolling. */
+main .overflow-y-auto,
+main .overflow-auto { touch-action: pan-y pinch-zoom; }
+/* No browser back/forward when swiping past the edge (trackpads, Chrome) */
+html, body { overscroll-behavior-x: none; }

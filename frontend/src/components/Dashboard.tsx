@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, animate, useMotionValue, type Variants } from 'motion/react'
 import {
   Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing, CalendarDays, Route,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
 import { DoorbellAlert } from './widgets/ring/DoorbellAlert'
+import { HomeScreenBar } from './widgets/home/HomeScreenBar'
+import { useSwipeNavigation } from '@/lib/swipe'
+import { SCREENS_KEY, SCREEN_KEY, MAX_SCREENS, deleteScreenStorage } from '@/lib/homeScreens'
 
 // Other tabs are code-split: e.g. Leaflet only loads when the weather tab opens
 const WeatherWidget = lazy(() => import('./widgets/WeatherWidget').then(m => ({ default: m.WeatherWidget })))
@@ -231,11 +234,16 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
 }
 
 // ── Page transition wrapper ───────────────────────────────────────────────────
-const pageVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.99, filter: 'blur(6px)' },
-  enter:   { opacity: 1, y: 0,  scale: 1,    filter: 'blur(0px)', transition: { duration: 0.5, ease: easeOutExpo } },
-  exit:    { opacity: 0, y: -8, scale: 0.995, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } },
-} as const
+// dir = 0: tab clicked (fade up) · ±1: swiped to the next/previous page (slide sideways)
+const pageVariants: Variants = {
+  initial: (dir: number) => dir
+    ? { opacity: 0, x: dir * 90, y: 0, scale: 1, filter: 'blur(4px)' }
+    : { opacity: 0, x: 0, y: 16, scale: 0.99, filter: 'blur(6px)' },
+  enter: { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0.45, ease: easeOutExpo } },
+  exit: (dir: number) => dir
+    ? { opacity: 0, x: dir * -90, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } }
+    : { opacity: 0, y: -8, scale: 0.995, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } },
+}
 
 export function Dashboard() {
   useSignalR()
@@ -248,8 +256,49 @@ export function Dashboard() {
     return t && TABS.some(x => x.id === t) ? t : null
   })
   const activeTab = urlTab ?? storedTab
-  const selectTab = (t: Tab) => { setUrlTab(null); setActiveTab(t) }
+  const [dir, setDir] = useState(0) // animation direction of the last page change
+  const selectTab = (t: Tab) => { setDir(0); setUrlTab(null); setActiveTab(t) }
   const [editMode, setEditMode] = useState(false)
+
+  // ── Home screens ────────────────────────────────────────────────────────────
+  const [screenCount, setScreenCount] = useLocalStorage<number>(SCREENS_KEY, 1)
+  const [storedScreen, setScreen] = useLocalStorage<number>(SCREEN_KEY, 0)
+  const screens = Math.min(Math.max(1, Math.round(screenCount) || 1), MAX_SCREENS)
+  const screen = Math.min(Math.max(0, storedScreen), screens - 1)
+  const [screensRev, setScreensRev] = useState(0) // remounts the home page after a screen was deleted
+
+  const goScreen = (i: number) => { setDir(i === screen ? 0 : i > screen ? 1 : -1); setScreen(i) }
+  const addScreen = () => {
+    if (screens >= MAX_SCREENS) return
+    setScreenCount(screens + 1); setDir(1); setScreen(screens)
+  }
+  const deleteScreen = () => {
+    if (screens <= 1) return
+    deleteScreenStorage(screen, screens)
+    setScreenCount(screens - 1); setDir(-1); setScreen(Math.max(0, screen - 1)); setScreensRev(r => r + 1)
+  }
+
+  // ── Swipe: home 1 … home N → Weer → Verlichting → … (like a phone's home screens) ──
+  const pages: { tab: Tab; screen?: number }[] = [
+    ...Array.from({ length: screens }, (_, i) => ({ tab: 'home' as Tab, screen: i })),
+    ...TABS.filter(t => t.id !== 'home').map(t => ({ tab: t.id })),
+  ]
+  const pageIndex = activeTab === 'home' ? screen : screens - 1 + TABS.filter(t => t.id !== 'home').findIndex(t => t.id === activeTab) + 1
+  const mainRef = useRef<HTMLElement>(null)
+  const dragX = useMotionValue(0)
+  useSwipeNavigation(mainRef, {
+    enabled: !editMode,
+    canGo: d => pageIndex + d >= 0 && pageIndex + d < pages.length,
+    onSwipe: d => {
+      const next = pages[pageIndex + d]
+      if (!next) return
+      setDir(d); setUrlTab(null)
+      if (next.tab === 'home') setScreen(next.screen ?? 0)
+      setActiveTab(next.tab)
+      void animate(dragX, 0, { duration: 0.25, ease: easeOutExpo })
+    },
+    onDrag: dx => { if (dx === 0) void animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 35 }); else dragX.set(dx * 0.45) },
+  })
 
   // Home tiles open their own tab when their title is clicked
   useEffect(() => {
@@ -346,10 +395,12 @@ export function Dashboard() {
           <NavTabs active={activeTab} onChange={selectTab} mobile />
         </header>
 
-        <main className="relative flex-1 min-h-0">
-          <AnimatePresence mode="popLayout" initial={false}>
+        <main ref={mainRef} className="relative flex min-h-0 flex-1 flex-col" style={{ touchAction: 'pan-y pinch-zoom' }}>
+          <motion.div className="relative min-h-0 flex-1" style={{ x: dragX }}>
+          <AnimatePresence mode="popLayout" initial={false} custom={dir}>
             <motion.div
-              key={activeTab}
+              key={activeTab === 'home' ? `home-${screen}-${screensRev}` : activeTab}
+              custom={dir}
               variants={pageVariants}
               initial="initial"
               animate="enter"
@@ -357,7 +408,7 @@ export function Dashboard() {
               className="h-full w-full"
             >
               <Suspense fallback={null}>
-              {activeTab === 'home'        && <HomeWidget editMode={editMode} />}
+              {activeTab === 'home'        && <HomeWidget editMode={editMode} screen={screen} />}
               {activeTab === 'weer'        && <WeatherWidget />}
               {activeTab === 'verlichting' && <HueWidget />}
               {activeTab === 'muziek'      && <MusicWidget />}
@@ -372,6 +423,11 @@ export function Dashboard() {
               </Suspense>
             </motion.div>
           </AnimatePresence>
+          </motion.div>
+          {activeTab === 'home' && (
+            <HomeScreenBar count={screens} current={screen} editMode={editMode}
+              onSelect={goScreen} onAdd={addScreen} onDelete={deleteScreen} />
+          )}
         </main>
       </div>
     </>

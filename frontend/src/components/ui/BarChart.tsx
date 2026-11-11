@@ -72,7 +72,7 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
           {min < 0 && <div className="absolute inset-x-0 border-t border-subtle2" style={{ top: `${zero}%` }} />}
 
           {/* Bars */}
-          <div ref={barsRef} className="absolute inset-0 flex gap-[2px]" style={{ touchAction: 'pan-y' }}
+          <div ref={barsRef} data-no-swipe className="absolute inset-0 flex gap-[2px]" style={{ touchAction: 'pan-y' }}
             onPointerDown={point} onPointerMove={point}
             onPointerUp={e => { if (e.pointerType !== 'mouse') hideTimer.current = window.setTimeout(() => setHover(null), 2500) }}
             onPointerCancel={() => setHover(null)}>

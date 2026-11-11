@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { GripVertical, X, Plus, Minus, Columns2, Columns3, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
+import { GripVertical, X, Plus, Minus, Columns2, Columns3, Square, EyeOff, SlidersHorizontal, LayoutGrid } from 'lucide-react'
+import { screenKey, EMPTY_SCREEN_LAYOUT } from '@/lib/homeScreens'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
@@ -179,7 +180,7 @@ function DragOverlay({ drag, line }: { drag: DragState | null; line: DropLine | 
   )
 }
 
-export function HomeWidget({ editMode }: { editMode: boolean }) {
+export function HomeWidget({ editMode, screen = 0 }: { editMode: boolean; screen?: number }) {
   const compactCols = useCompactColumns()
   const [configId, setConfigId] = useState<WidgetId | null>(null)
   if (!editMode && configId) setConfigId(null)
@@ -195,12 +196,12 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       <SlidersHorizontal className="h-4 w-4" />
     </motion.button>
   )
-  const [layoutRaw, setLayoutRaw] = useLocalStorage<HomeLayout | LegacyLayout>('home-layout', DEFAULT_LAYOUT)
+  const [layoutRaw, setLayoutRaw] = useLocalStorage<HomeLayout | LegacyLayout>(screenKey('home-layout', screen), screen === 0 ? DEFAULT_LAYOUT : EMPTY_SCREEN_LAYOUT as HomeLayout)
   const layout = sanitize(layoutRaw)
   const setLayout = (fn: (prev: HomeLayout) => HomeLayout) => setLayoutRaw(prev => fn(sanitize(prev)))
 
-  const [mobileOrder,   setMobileOrder]   = useLocalStorage<WidgetId[]>('mobile-widget-order', [])
-  const [mobileHeights, setMobileHeights] = useLocalStorage<Partial<Record<WidgetId, number>>>('mobile-widget-heights', {})
+  const [mobileOrder,   setMobileOrder]   = useLocalStorage<WidgetId[]>(screenKey('mobile-widget-order', screen), [])
+  const [mobileHeights, setMobileHeights] = useLocalStorage<Partial<Record<WidgetId, number>>>(screenKey('mobile-widget-heights', screen), {})
 
   // Dragging a tile + where it would land
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -494,7 +495,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
           transition={softSpring}
           className="panel flex shrink-0 flex-col gap-3 rounded-3xl p-4 sm:flex-row sm:items-center sm:gap-4"
         >
-          <p className="flex shrink-0 items-center gap-1.5 label-caps"><EyeOff className="h-3.5 w-3.5" />Verborgen</p>
+          <p className="flex shrink-0 items-center gap-1.5 label-caps">{allUsed.length === 0 ? <><Plus className="h-3.5 w-3.5" />Toevoegen</> : <><EyeOff className="h-3.5 w-3.5" />Verborgen</>}</p>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             {hiddenWidgets.map(id => (
               <motion.div layout key={id} className="flex items-center gap-1.5 rounded-xl bg-card3 py-1 pl-3 pr-1">
@@ -521,6 +522,14 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
         </motion.div>
       )}
     </AnimatePresence>
+  )
+
+  const emptyScreen = !editMode && allUsed.length === 0 && (
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center text-fg3">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card3"><LayoutGrid className="h-5 w-5" /></span>
+      <p className="text-sm font-medium text-fg2">Leeg scherm</p>
+      <p className="max-w-[240px] text-xs">Tik op Bewerken om hier widgets neer te zetten</p>
+    </div>
   )
 
   // ── Compact (phone, portrait tablet, landscape phone): scrollable masonry ────
@@ -658,6 +667,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
 
     return (
       <div ref={compactRef} className="flex h-full flex-col gap-3 overflow-y-auto pb-6 scrollbar-hide">
+        {emptyScreen}
         {hiddenTray}
         {editMode && <p className="px-1 text-xs text-fg3">Sleep een tegel aan het grip-icoon naar een andere plek. Trek de onderrand omlaag om hem hoger te maken.</p>}
         <div className="flex items-start gap-3">
@@ -702,7 +712,8 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   return (
     <div className="flex h-full flex-col gap-3">
       {columnControls}
-      <div ref={gridRef} className="flex min-h-0 flex-1 overflow-x-auto scrollbar-hide">
+      {emptyScreen}
+      <div ref={gridRef} className={cn('flex min-h-0 flex-1 overflow-x-auto scrollbar-hide', emptyScreen && 'hidden')}>
         {COLUMNS.map((col, i) => (
           <React.Fragment key={col}>
             {i > 0 && resizeGap('g', 'col', e => startColResize(e, i - 1))}

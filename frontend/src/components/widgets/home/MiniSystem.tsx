@@ -67,7 +67,7 @@ export function MiniSystem() {
         right={pc?.configured && (
           <div className="flex items-center gap-1.5">
             {pcAvailable && <SourceToggle size="xs" value={preferred} onChange={setPreferred} pcName={pc.name} />}
-            <PcPowerButton pc={pc} compact />
+            {preferred === 'pc' && <PcPowerButton pc={pc} compact />}
           </div>
         )} />
       {showOfflineNote && <div className="-mt-1 mb-2"><PcOfflineNote pc={pc} compact /></div>}

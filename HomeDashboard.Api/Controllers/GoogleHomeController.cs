@@ -259,7 +259,15 @@ public class GoogleHomeController(
                 }
 
                 var on = exec.GetProperty("params").GetProperty("on").GetBoolean();
-                var ok = on ? await pc.WakeAsync() : await pc.PowerAsync("shutdown");
+                // Google may only switch the PC ON. Turning it off by voice is refused on purpose
+                // (anyone near the speaker could shut the PC down); use the dashboard for that.
+                if (!on)
+                {
+                    logger.LogInformation("Google: pc uitzetten geweigerd (alleen aanzetten is toegestaan)");
+                    results.Add(new JsonObject { ["ids"] = ToArray([PcDeviceId]), ["status"] = "ERROR", ["errorCode"] = "functionNotSupported" });
+                    continue;
+                }
+                var ok = await pc.WakeAsync();
                 logger.LogInformation("Google: pc {Action} → {Result}", on ? "aan" : "uit", ok ? "ok" : "mislukt");
 
                 results.Add(ok

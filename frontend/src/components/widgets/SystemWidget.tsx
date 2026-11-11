@@ -51,7 +51,8 @@ export function SystemWidget() {
       </div>
       <div className="flex items-center gap-2">
         {pcAvailable && <SourceToggle value={preferred} onChange={setPreferred} pcName={pc.name} />}
-        <PcPowerButton pc={pc} />
+        {/* Power only controls the PC — never shown in the server view */}
+        {preferred === 'pc' && <PcPowerButton pc={pc} />}
       </div>
       {pcAvailable && preferred === 'pc' && source === 'server' && <div className="w-full"><PcOfflineNote pc={pc} /></div>}
     </div>
