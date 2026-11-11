@@ -5,7 +5,7 @@ import { GripVertical, X, Plus, Minus, Columns2, Columns3, Square, EyeOff, Slide
 import { screenKey, EMPTY_SCREEN_LAYOUT } from '@/lib/homeScreens'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { fadeUp, softSpring, spring } from '@/components/ui/motion'
+import { fadeUp, softSpring, spring, entranceInitial } from '@/components/ui/motion'
 import { useCompactColumns, useContainerSize, TileTabContext } from './home/shared'
 import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig, RingTileConfig, TravelTileConfig, CalendarTileConfig } from './home/TileConfig'
 import { MiniCalendar } from './home/MiniCalendar'
@@ -383,7 +383,7 @@ export function HomeWidget({ editMode, screen = 0 }: { editMode: boolean; screen
         layout={resizing ? false : 'position'}
         transition={softSpring}
         variants={fadeUp}
-        initial="hidden"
+        initial={entranceInitial()}
         animate="show"
         custom={i}
         className={cn(
@@ -629,7 +629,7 @@ export function HomeWidget({ editMode, screen = 0 }: { editMode: boolean; screen
           data-ccell={id}
           layout={resizing ? false : true}
           transition={softSpring}
-          variants={fadeUp} initial="hidden" animate="show" custom={idx}
+          variants={fadeUp} initial={entranceInitial()} animate="show" custom={idx}
           className={cn('panel relative shrink-0 overflow-hidden rounded-3xl transition-opacity', editMode && 'ring-1 ring-orange-400/30', drag?.id === id && 'opacity-30')}
           style={{ height: shownH(id) }}
         >

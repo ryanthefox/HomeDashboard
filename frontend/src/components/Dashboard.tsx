@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion, animate, useMotionValue, type Variants } from 'motion/react'
 import {
   Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing, CalendarDays, Route,
@@ -234,19 +234,47 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
 }
 
 // ── Page transition wrapper ───────────────────────────────────────────────────
-// dir = 0: tab clicked (fade up) · ±1: swiped to the next/previous page (slide sideways)
+// dir = 0: tab clicked (fade up) · ±1: swiped to the next/previous page (slide sideways).
+// Only transform + opacity (GPU-friendly): no blur filter — the glass tiles already use
+// backdrop-filter, and blurring a whole page on top of that stutters on tablets.
+// Animating `transform` as a string (not x/y) lets the browser run it on the GPU
+// compositor, so it stays smooth even while React is building the new page.
 const pageVariants: Variants = {
-  initial: (dir: number) => dir
-    ? { opacity: 0, x: dir * 90, y: 0, scale: 1, filter: 'blur(4px)' }
-    : { opacity: 0, x: 0, y: 16, scale: 0.99, filter: 'blur(6px)' },
-  enter: { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0.45, ease: easeOutExpo } },
-  exit: (dir: number) => dir
-    ? { opacity: 0, x: dir * -90, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } }
-    : { opacity: 0, y: -8, scale: 0.995, filter: 'blur(4px)', transition: { duration: 0.2, ease: 'easeIn' } },
+  initial: (dir: number) => ({ opacity: 0, transform: dir ? `translate3d(${dir * 70}px,0px,0px)` : 'translate3d(0px,10px,0px)' }),
+  enter: { opacity: 1, transform: 'translate3d(0px,0px,0px)', transition: { duration: 0.28, ease: easeOutExpo } },
+  exit: (dir: number) => ({
+    opacity: 0, transform: dir ? `translate3d(${dir * -70}px,0px,0px)` : 'translate3d(0px,-6px,0px)',
+    transition: { duration: dir ? 0.14 : 0.12, ease: 'easeIn' },
+  }),
+}
+
+/** Marks the page as "switching" for a moment (see html.switching in index.css). */
+let switchTimer: number | undefined
+function markSwitching(ms = 450) {
+  document.documentElement.classList.add('switching')
+  window.clearTimeout(switchTimer)
+  switchTimer = window.setTimeout(() => document.documentElement.classList.remove('switching'), ms)
+}
+
+// Fetch the code of all tabs in the background once the dashboard is idle,
+// so the first visit to a tab doesn't wait for a download.
+function usePrefetchTabs() {
+  useEffect(() => {
+    const load = () => {
+      void import('./widgets/WeatherWidget'); void import('./widgets/HueWidget'); void import('./widgets/MusicWidget')
+      void import('./widgets/SystemWidget'); void import('./widgets/AircoWidget'); void import('./widgets/AfvalWidget')
+      void import('./widgets/PlexWidget'); void import('./widgets/EnergyWidget'); void import('./widgets/CalendarWidget')
+      void import('./widgets/TravelWidget'); void import('./widgets/RingWidget')
+    }
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number }
+    const t = w.requestIdleCallback ? w.requestIdleCallback(load) : window.setTimeout(load, 1500)
+    return () => { if (!w.requestIdleCallback) clearTimeout(t) }
+  }, [])
 }
 
 export function Dashboard() {
   useSignalR()
+  usePrefetchTabs()
   const { theme, toggle: toggleTheme } = useTheme()
   const { data: auth } = useAuth()
   const [storedTab, setActiveTab] = useLocalStorage<Tab>('active-tab', 'home')
@@ -297,8 +325,17 @@ export function Dashboard() {
       setActiveTab(next.tab)
       void animate(dragX, 0, { duration: 0.25, ease: easeOutExpo })
     },
-    onDrag: dx => { if (dx === 0) void animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 35 }); else dragX.set(dx * 0.45) },
+    onDrag: dx => {
+      if (dx === 0) { markSwitching(350); void animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 35 }) }
+      else { markSwitching(5000); dragX.set(dx * 0.7) } // stays on while the finger is down
+    },
   })
+
+  // Every page change (tab click, swipe, dots, title click) gets the lightweight rendering
+  const pageKey = activeTab === 'home' ? `home-${screen}-${screensRev}` : activeTab
+  const firstPage = useRef(true)
+  // Layout effect: the class is set before the first frame of the transition is painted
+  useLayoutEffect(() => { if (firstPage.current) { firstPage.current = false; return } markSwitching() }, [pageKey])
 
   // Home tiles open their own tab when their title is clicked
   useEffect(() => {
@@ -399,9 +436,10 @@ export function Dashboard() {
           <motion.div className="relative min-h-0 flex-1" style={{ x: dragX }}>
           <AnimatePresence mode="popLayout" initial={false} custom={dir}>
             <motion.div
-              key={activeTab === 'home' ? `home-${screen}-${screensRev}` : activeTab}
+              key={pageKey}
               custom={dir}
               variants={pageVariants}
+              style={{ willChange: 'transform, opacity' }}
               initial="initial"
               animate="enter"
               exit="exit"

@@ -93,8 +93,8 @@ html[data-theme="light"] {
     background-color: var(--c-card);
     box-shadow: var(--panel-shadow);
     border: 1px solid var(--c-border2);
-    -webkit-backdrop-filter: blur(22px) saturate(150%);
-    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
   }
 
   /* Warm accent gradient for "active" states */
@@ -251,3 +251,14 @@ main .overflow-y-auto,
 main .overflow-auto { touch-action: pan-y pinch-zoom; }
 /* No browser back/forward when swiping past the edge (trackpads, Chrome) */
 html, body { overscroll-behavior-x: none; }
+
+/* Smooth page switches: re-blurring every glass tile each frame (while the page slides and
+   the ambient blobs drift behind it) is what makes transitions stutter. During a switch or
+   swipe the glass blur is off and the background pauses — invisible behind the fade, since
+   the background is already blurred — and comes back right after. */
+html.switching .panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.switching .ambient .blob { animation-play-state: paused; }
+/* Phones/tablets: lighter glass (blur cost grows with the radius) */
+@media (hover: none) {
+  .panel { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+}

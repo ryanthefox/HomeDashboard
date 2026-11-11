@@ -17,13 +17,20 @@ export const fadeUp = {
   }),
 }
 
+// Cards only play their staggered entrance right after the app loads. When you switch
+// pages later (tabs / home screens / swipes) the content shows at once — the page
+// transition itself is the animation — so switching feels instant.
+let entranceDone = false
+if (typeof window !== 'undefined') setTimeout(() => { entranceDone = true }, 2000)
+export const entranceInitial = (): false | 'hidden' => (entranceDone ? false : 'hidden')
+
 // ── Panel: frosted glass card with entrance animation ─────────────────────────
 export const Panel = React.forwardRef<HTMLDivElement, HTMLMotionProps<'div'> & { index?: number }>(
   ({ className, index = 0, children, ...props }, ref) => (
     <motion.div
       ref={ref}
       variants={fadeUp}
-      initial="hidden"
+      initial={entranceInitial()}
       animate="show"
       custom={index}
       className={cn('panel rounded-3xl', className)}
