@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace HomeDashboard.Api.Services;
 
-public record SpotifyStatus(bool Configured, bool Connected, string RedirectUri, string? User, string? Product, string? Error, bool CanStream = false);
+public record SpotifyStatus(bool Configured, bool Connected, string RedirectUri, string? User, string? Product, string? Error, bool CanStream = false, string? HttpsUrl = null);
 public record SpotifyDevice(string Id, string Name, string Type, bool IsActive, int? Volume, bool Restricted, bool SupportsVolume = true);
 public record SpotifyTrack(string Id, string Uri, string Name, string Artists, string? Album, string? Image, int DurationMs);
 public record SpotifyPlayback(bool IsPlaying, int ProgressMs, SpotifyTrack? Track, SpotifyDevice? Device, bool Shuffle, string Repeat, string? ContextUri);
@@ -28,6 +28,8 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
     private string ClientSecret => config["Spotify:ClientSecret"] ?? "";
     public string RedirectUri => config["Spotify:RedirectUri"] is { Length: > 0 } r ? r : "http://127.0.0.1:8888/callback";
     public bool Configured => ClientId.Length > 0 && ClientSecret.Length > 0;
+    /// <summary>Public https address of the dashboard (DuckDNS), if set up.</summary>
+    private string? HttpsUrl => config["App:PublicUrl"] is { Length: > 0 } u ? u.TrimEnd('/') : null;
 
     private readonly SemaphoreSlim _lock = new(1, 1);
     private string? _state;
@@ -221,7 +223,7 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
                 var me = await SendAsync(HttpMethod.Get, "me");
                 _me = (me?["display_name"]?.GetValue<string>() ?? me?["id"]?.GetValue<string>(), me?["product"]?.GetValue<string>());
             }
-            return new(true, true, RedirectUri, _me.Value.Name, _me.Value.Product, null, CanStream);
+            return new(true, true, RedirectUri, _me.Value.Name, _me.Value.Product, null, CanStream, HttpsUrl);
         }
         catch (SpotifyException ex) when (ex.Status == HttpStatusCode.Unauthorized)
         {

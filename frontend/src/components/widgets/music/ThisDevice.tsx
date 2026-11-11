@@ -17,7 +17,7 @@ export function useThisDevicePlayer() {
   useEffect(() => {
     if (canStream) void startBrowserPlayer(() => void qc.invalidateQueries({ queryKey: ['spotify', 'devices'] }))
   }, [canStream, qc])
-  return { player: useBrowserPlayer(), canStream, connected: !!status?.connected }
+  return { player: useBrowserPlayer(), canStream, connected: !!status?.connected, httpsUrl: status?.httpsUrl ?? null }
 }
 
 function blockerText(message: string | null, canStream: boolean): { text: string; app: boolean } {
@@ -33,7 +33,7 @@ function blockerText(message: string | null, canStream: boolean): { text: string
 export function ThisDeviceRow({ activeId, onPick, size = 'md' }: {
   activeId: string | null | undefined; onPick: (deviceId: string) => void; size?: 'sm' | 'md'
 }) {
-  const { player, canStream, connected } = useThisDevicePlayer()
+  const { player, canStream, connected, httpsUrl } = useThisDevicePlayer()
   if (!connected) return null
   const sm = size === 'sm'
   const ready = player.status === 'ready' && !!player.deviceId
@@ -69,14 +69,20 @@ export function ThisDeviceRow({ activeId, onPick, size = 'md' }: {
   }
 
   const { text, app } = blockerText(player.message, canStream)
-  if (sm && !app) return null // the small tile only shows actionable hints
+  const goHttps = canStream && player.message === 'insecure' && !!httpsUrl
+  if (sm && !app && !goHttps) return null // the small tile only shows actionable hints
   return (
     <div className={cn('flex items-start gap-2.5 rounded-2xl text-fg3', sm ? 'px-2.5 py-1.5 text-[11px]' : 'bg-card3/50 px-3 py-2.5 text-xs')}>
       {!sm && <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0" />}
       <div className="min-w-0 flex-1">
         {!sm && <p className="font-medium text-fg2">Dit apparaat</p>}
         {!sm && <p className="leading-relaxed">{text}</p>}
-        {app && (
+        {goHttps && (
+          <a href={`${httpsUrl}/?tab=muziek`} className="mt-1 inline-flex items-center gap-1 font-medium hover:text-fg" style={{ color: GREEN }}>
+            <ExternalLink className="h-3 w-3" /> Open het dashboard via https
+          </a>
+        )}
+        {app && !goHttps && (
           <a href="spotify:" className="mt-1 inline-flex items-center gap-1 font-medium hover:text-fg" style={{ color: GREEN }}>
             <ExternalLink className="h-3 w-3" /> Spotify-app openen op dit apparaat
           </a>

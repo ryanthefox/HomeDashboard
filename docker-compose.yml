@@ -54,6 +54,8 @@ services:
       - Spotify__ClientId=${SPOTIFY_CLIENT_ID:-}
       - Spotify__ClientSecret=${SPOTIFY_CLIENT_SECRET:-}
       - Spotify__RedirectUri=${SPOTIFY_REDIRECT_URI:-}
+      # Het https-adres (DuckDNS), zodat het dashboard ernaar kan doorverwijzen waar https nodig is
+      - App__PublicUrl=${DUCKDNS_DOMAIN:+https://${DUCKDNS_DOMAIN}.duckdns.org}
       # PC: stats + aan/uit (zie HomeDashboard.Agent/install-agent.ps1)
       - Pc__Name=${PC_NAME:-PC}
       - Pc__AgentUrl=${PC_AGENT_URL}
