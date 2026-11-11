@@ -1,12 +1,10 @@
 {
   "0": "UI Primitives & Mini Tiles",
   "4": "Afval & Plex Data",
-  "5": "System & Weather Monitoring",
   "8": "Music Media Controls",
   "14": "TS App Config",
   "15": "TS Node Config",
   "16": "LG OAuth Setup Script",
-  "18": "Airco Request Models",
   "20": ".NET Project Setup",
   "21": "Docker Compose",
   "22": "TS Root Config",

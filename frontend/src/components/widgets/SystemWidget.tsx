@@ -151,6 +151,7 @@ function DiskRow({ disk, delay }: { disk: DiskDriveInfo; delay: number }) {
         </span>
       </div>
       <Bar pct={disk.percent} color={color} delay={delay} />
+      <p className="text-[11px] text-fg3 tabular">nog {formatGb(Math.max(0, disk.totalGb - disk.usedGb))} vrij</p>
     </div>
   )
 }

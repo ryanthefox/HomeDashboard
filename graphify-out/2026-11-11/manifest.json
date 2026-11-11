@@ -138,10 +138,10 @@
     "semantic_hash": "b440ee41c3a3df8428195d1555645360"
   },
   "HomeDashboard.Api/Program.cs": {
-    "mtime": 1774017725.4230824,
-    "seen": 1794395115.4604683,
-    "ast_hash": "05798fd2fbd931be5d56e186e717fe9b",
-    "semantic_hash": "05798fd2fbd931be5d56e186e717fe9b"
+    "mtime": 1794398135.8165975,
+    "seen": 1794398328.573029,
+    "ast_hash": "419fe8e7816c1a6fd5bb0ce72d29367c",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Properties/launchSettings.json": {
     "mtime": 1773864765.55338,
@@ -216,21 +216,21 @@
     "semantic_hash": "2bbb46e6759eb687d0021a3fc359b85c"
   },
   "HomeDashboard.Api/appsettings.example.json": {
-    "mtime": 1794395866.537519,
-    "seen": 1794395878.4361296,
-    "ast_hash": "8d0d7f004541442b8c1d5521dc530ad6",
+    "mtime": 1794398135.8165975,
+    "seen": 1794398328.5730445,
+    "ast_hash": "6d24a8af378804a1b8caf6daac36083e",
     "semantic_hash": ""
   },
   "HomeDashboard.sln": {
-    "mtime": 1774012238.1657372,
-    "seen": 1794395115.460477,
-    "ast_hash": "0f82b03f512ddfd40e7fb199473cb0c2",
-    "semantic_hash": "0f82b03f512ddfd40e7fb199473cb0c2"
+    "mtime": 1794398076.7919114,
+    "seen": 1794398328.5730457,
+    "ast_hash": "38e47bdf0e77c276d341c2d713c31ac4",
+    "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1794396020.3223002,
-    "seen": 1794396308.6483977,
-    "ast_hash": "3bbf74cf9b16295b1d736fe16690f473",
+    "mtime": 1794398135.8295817,
+    "seen": 1794398328.5730467,
+    "ast_hash": "4c16cb85b5569f4125680dd683cbfa8a",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -324,10 +324,10 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/SystemWidget.tsx": {
-    "mtime": 1794394244.6933503,
-    "seen": 1794395115.4604886,
-    "ast_hash": "27474f52077e0f99d1be2aadf201d8ff",
-    "semantic_hash": "27474f52077e0f99d1be2aadf201d8ff"
+    "mtime": 1794398310.9726589,
+    "seen": 1794398328.5730624,
+    "ast_hash": "753e8e4a4f069f4b8241f497f3416c8d",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/WeatherWidget.tsx": {
     "mtime": 1794394705.4547417,
@@ -366,10 +366,10 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniSystem.tsx": {
-    "mtime": 1794393975.628008,
-    "seen": 1794395115.4604928,
-    "ast_hash": "c1da0127dcda8292d222e0981bbe1193",
-    "semantic_hash": "c1da0127dcda8292d222e0981bbe1193"
+    "mtime": 1794398288.12813,
+    "seen": 1794398328.5730705,
+    "ast_hash": "08ac8d929194bf4d99552cb6cb731cef",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniWeather.tsx": {
     "mtime": 1794393935.717177,
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794397277.9712932,
-    "seen": 1794397429.8133304,
-    "ast_hash": "3cc187df06270f2eeb9f6d12f33e05f6",
+    "mtime": 1794398248.0306282,
+    "seen": 1794398328.5730839,
+    "ast_hash": "ee5aeffa90d9294c511b417921512537",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -549,6 +549,54 @@
     "mtime": 1794397330.945636,
     "seen": 1794397429.8133252,
     "ast_hash": "2eb9c0e24645885f77158f1a153b474f",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Agent/HomeDashboard.Agent.csproj": {
+    "mtime": 1794398028.2028117,
+    "seen": 1794398328.5729835,
+    "ast_hash": "6bebff7ef7932b3f1bbfd0ad9d2d1698",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Agent/Program.cs": {
+    "mtime": 1794398197.1089678,
+    "seen": 1794398328.5729868,
+    "ast_hash": "7d31b102235d7a76a756a801cca33724",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Agent/install-agent.ps1": {
+    "mtime": 1794398071.4485185,
+    "seen": 1794398328.5729883,
+    "ast_hash": "1a5b13d0b88f9139a7981f386b2980c0",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/PcController.cs": {
+    "mtime": 1794398221.228554,
+    "seen": 1794398328.573,
+    "ast_hash": "ac4492e471438e9ebe6df6ca70046114",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Models/PcStatus.cs": {
+    "mtime": 1794398110.774613,
+    "seen": 1794398328.573017,
+    "ast_hash": "170c585d3371debb9bc3554df34f4e6b",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/PcService.cs": {
+    "mtime": 1794398197.1826026,
+    "seen": 1794398328.5730398,
+    "ast_hash": "5c78da9a09ecdd674b849489545dec7c",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/system/PcControls.tsx": {
+    "mtime": 1794398273.4067936,
+    "seen": 1794398328.5730753,
+    "ast_hash": "3939a9ccb8e5cb23ca6af0fbf063f48c",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/pc.ts": {
+    "mtime": 1794398248.2244477,
+    "seen": 1794398328.5730867,
+    "ast_hash": "a429338b1014d876cc69a49c7d6db994",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

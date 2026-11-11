@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { ArrowDown, ArrowUp, Cpu, Monitor } from 'lucide-react'
 import { useSystemSource } from '@/lib/pc'
-import { formatBps } from '@/lib/format'
+import { formatBps, formatGb } from '@/lib/format'
 import { ArcGauge } from '@/components/ui/ArcGauge'
 import { AnimatedNumber, Skeleton } from '@/components/ui/motion'
 import { useContainerSize, TileHeader } from './shared'
@@ -68,11 +68,11 @@ export function MiniSystem() {
 
           {showDiskList && data.disks.map(disk => (
             <div key={disk.name} className="mt-1.5 flex items-center gap-2 text-xs text-fg2">
-              <span className="w-6 shrink-0 text-fg3">{disk.name.replace(':\\', '')}</span>
+              <span className="w-16 shrink-0 truncate text-fg3" title={disk.name}>{disk.name.replace(':\\', '')}</span>
               <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-[var(--c-track)]">
                 <div className="absolute inset-y-0 left-0 rounded-full bg-sky-400 transition-[width] duration-700" style={{ width: `${disk.percent}%` }} />
               </div>
-              <span className="text-[10px] text-fg3 tabular">{disk.usedGb}/{disk.totalGb} GB</span>
+              <span className="shrink-0 text-[10px] text-fg3 tabular">{formatGb(Math.max(0, disk.totalGb - disk.usedGb))} vrij van {formatGb(disk.totalGb)}</span>
             </div>
           ))}
 

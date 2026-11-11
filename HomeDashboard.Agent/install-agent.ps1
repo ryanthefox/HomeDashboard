@@ -7,8 +7,11 @@
   Wat het doet:
     1. Bouwt de agent naar C:\Program Files\HomeDashboardAgent
     2. Opent poort 5055 in de Windows-firewall, alleen voor je thuisnetwerk
-    3. Maakt een geplande taak die de agent bij het opstarten van Windows start (als SYSTEM,
-       zodat temperaturen uitgelezen kunnen worden en de agent al draait voor je inlogt)
+    3. Maakt twee geplande taken:
+       - "HomeDashboard Agent": stats + aan/uit, start bij het opstarten van Windows als SYSTEM
+         (temperaturen uitlezen, en werkt al voordat je inlogt)
+       - "HomeDashboard Agent Media": wat er nu speelt + bediening, start bij het inloggen onder
+         jouw account (Windows laat media alleen aan de ingelogde gebruiker zien), poort 5056
     4. -SetupWakeOnLan: zet "Snel opstarten" uit en Wake-on-LAN aan op je netwerkkaart
     5. Toont de regels die je in .env op de server zet
 #>
@@ -19,14 +22,18 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$TaskName = 'HomeDashboard Agent'
+$TaskName      = 'HomeDashboard Agent'
+$MediaTaskName = 'HomeDashboard Agent Media'
+$MediaPort     = $Port + 1
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) { throw 'Start PowerShell als administrator en voer dit script opnieuw uit.' }
 
 Write-Host "`n[1/4] Agent stoppen (als die al draait)..." -ForegroundColor Cyan
-if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) { Stop-ScheduledTask -TaskName $TaskName }
+foreach ($t in @($TaskName, $MediaTaskName)) {
+    if (Get-ScheduledTask -TaskName $t -ErrorAction SilentlyContinue) { Stop-ScheduledTask -TaskName $t }
+}
 Get-Process HomeDashboardAgent -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 1
 
@@ -48,7 +55,7 @@ else {
 Write-Host "[3/4] Firewall en opstarttaak instellen..." -ForegroundColor Cyan
 $ruleName = 'HomeDashboard Agent'
 Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue | Remove-NetFirewallRule
-New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP -LocalPort $Port `
+New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP -LocalPort $Port, $MediaPort `
     -RemoteAddress LocalSubnet -Action Allow -Profile Any | Out-Null
 
 $exe       = Join-Path $InstallDir 'HomeDashboardAgent.exe'
@@ -94,6 +101,22 @@ try {
     $ping = Invoke-RestMethod "http://localhost:$Port/ping" -Headers @{ 'X-Agent-Key' = $key } -TimeoutSec 10
     Write-Host "  Agent draait op $($ping.hostname)" -ForegroundColor Green
 } catch { Write-Host "  Agent reageert (nog) niet: $($_.Exception.Message)" -ForegroundColor Yellow }
+
+# Media helper: runs as the user who installs this (the account you watch/listen on)
+$user = (Get-CimInstance Win32_ComputerSystem).UserName
+if (-not $user) { $user = "$env:USERDOMAIN\$env:USERNAME" }
+$mediaAction    = New-ScheduledTaskAction -Execute $exe -Argument '--media' -WorkingDirectory $InstallDir
+$mediaTrigger   = New-ScheduledTaskTrigger -AtLogOn -User $user
+$mediaPrincipal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
+Register-ScheduledTask -TaskName $MediaTaskName -Action $mediaAction -Trigger $mediaTrigger -Principal $mediaPrincipal `
+    -Settings $settings -Force | Out-Null
+Start-ScheduledTask -TaskName $MediaTaskName
+Start-Sleep -Seconds 3
+try {
+    $media = Invoke-RestMethod "http://localhost:$MediaPort/media" -Headers @{ 'X-Agent-Key' = $key } -TimeoutSec 10
+    $now = if ($media.title) { "$($media.artist) - $($media.title)" } else { 'niets' }
+    Write-Host "  Media-helper draait voor $user (speelt nu: $now)" -ForegroundColor Green
+} catch { Write-Host "  Media-helper reageert (nog) niet: $($_.Exception.Message)" -ForegroundColor Yellow }
 
 $nic = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' -and $_.MediaType -eq '802.3' } | Select-Object -First 1
 $ip  = if ($nic) { (Get-NetIPAddress -InterfaceIndex $nic.ifIndex -AddressFamily IPv4 | Select-Object -First 1).IPAddress }

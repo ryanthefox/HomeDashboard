@@ -246,6 +246,18 @@ public class SystemMonitorService : IDisposable
     // ── Shared: disk stats via DriveInfo (cross-platform) ─────────────────────
     private static (List<DiskDriveInfo> disks, double diskPct) GetDiskStats()
     {
+        // In Docker the host's filesystems are bind-mounted read-only at HOST_ROOT (e.g. /hostfs);
+        // read the real disks from there instead of the container's own overlay filesystem.
+        if (OperatingSystem.IsLinux())
+        {
+            var hostRoot = Environment.GetEnvironmentVariable("HOST_ROOT")?.TrimEnd('/');
+            if (!string.IsNullOrEmpty(hostRoot) && Directory.Exists(hostRoot))
+            {
+                var host = GetHostDisks(hostRoot);
+                if (host.Count > 0) return (host, host[0].Percent);
+            }
+        }
+
         var disks = new List<DiskDriveInfo>();
         double diskPct = 0;
         try
@@ -266,4 +278,103 @@ public class SystemMonitorService : IDisposable
         catch { }
         return (disks, diskPct);
     }
+
+    // ── Linux host disks (Docker with "/:/hostfs:ro,rslave") ───────────────────
+    private static readonly HashSet<string> DiskFsTypes =
+        ["ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "f2fs", "jfs", "ntfs", "ntfs3", "fuseblk", "exfat"];
+
+    private static readonly string[] SkipPrefixes =
+        ["/proc", "/sys", "/dev", "/run", "/boot", "/var/lib/docker", "/var/lib/containers", "/snap"];
+
+    /// Real disks of the host, found through the container's mount table. Docker bind mounts
+    /// are recursive, so every host mount (OMV data disks under /srv included) shows up below hostRoot.
+    private static List<DiskDriveInfo> GetHostDisks(string hostRoot)
+    {
+        var result = new List<(DiskDriveInfo Disk, bool IsRoot)>();
+        try
+        {
+            var labels = ReadDiskLabels(hostRoot);
+            var seen   = new Dictionary<string, (string MountPoint, string Source)>(); // device id -> shortest mount
+
+            foreach (var line in File.ReadLines("/proc/self/mountinfo"))
+            {
+                // 36 35 98:0 /mnt1 /mnt/parent rw,noatime master:1 - ext4 /dev/sdb1 rw
+                var sep = line.IndexOf(" - ", StringComparison.Ordinal);
+                if (sep < 0) continue;
+                var pre  = line[..sep].Split(' ');
+                var post = line[(sep + 3)..].Split(' ');
+                if (pre.Length < 5 || post.Length < 2) continue;
+
+                var deviceId   = pre[2];
+                var mountPoint = UnescapeMount(pre[4]);
+                var fsType     = post[0];
+                var source     = UnescapeMount(post[1]);
+
+                if (!DiskFsTypes.Contains(fsType)) continue;
+                if (mountPoint != hostRoot && !mountPoint.StartsWith(hostRoot + "/", StringComparison.Ordinal)) continue;
+
+                var hostPath = mountPoint == hostRoot ? "/" : mountPoint[hostRoot.Length..];
+                if (SkipPrefixes.Any(p => hostPath == p || hostPath.StartsWith(p + "/", StringComparison.Ordinal))) continue;
+
+                if (!seen.TryGetValue(deviceId, out var prev) || mountPoint.Length < prev.MountPoint.Length)
+                    seen[deviceId] = (mountPoint, source);
+            }
+
+            foreach (var (mountPoint, source) in seen.Values)
+            {
+                var drive = new DriveInfo(mountPoint);
+                if (!drive.IsReady || drive.TotalSize < 1_000_000_000) continue;   // skip tiny partitions
+
+                var hostPath = mountPoint == hostRoot ? "/" : mountPoint[hostRoot.Length..];
+                var isRoot   = hostPath == "/";
+                double usedGb  = Math.Round((drive.TotalSize - drive.AvailableFreeSpace) / 1e9, 1);
+                double totalGb = Math.Round(drive.TotalSize / 1e9, 1);
+                double pct     = Math.Round((1.0 - (double)drive.AvailableFreeSpace / drive.TotalSize) * 100, 1);
+                var name = isRoot ? "Systeem" : DiskName(hostPath, source, labels);
+                result.Add((new DiskDriveInfo(name, usedGb, totalGb, pct), isRoot));
+            }
+        }
+        catch { /* fall back to the container view */ }
+
+        return result
+            .OrderByDescending(r => r.IsRoot)
+            .ThenByDescending(r => r.Disk.TotalGb)
+            .Select(r => r.Disk)
+            .ToList();
+    }
+
+    /// device name (e.g. "sdb1") -> filesystem label, from /dev/disk/by-label.
+    private static Dictionary<string, string> ReadDiskLabels(string hostRoot)
+    {
+        var map = new Dictionary<string, string>();
+        try
+        {
+            var dir = Path.Combine(hostRoot, "dev/disk/by-label");
+            if (!Directory.Exists(dir)) return map;
+            foreach (var link in Directory.GetFiles(dir))
+            {
+                var target = new FileInfo(link).LinkTarget;
+                if (target != null) map[Path.GetFileName(target)] = UnescapeMount(Path.GetFileName(link).Replace("\\x20", " "));
+            }
+        }
+        catch { }
+        return map;
+    }
+
+    private static string DiskName(string hostPath, string source, Dictionary<string, string> labels)
+    {
+        var device = Path.GetFileName(source);
+        if (labels.TryGetValue(device, out var label) && label.Length > 0) return label;
+
+        var last = Path.GetFileName(hostPath.TrimEnd('/'));
+        // OMV mounts disks as /srv/dev-disk-by-label-<label> or /srv/dev-disk-by-uuid-<uuid>
+        if (last.StartsWith("dev-disk-by-label-", StringComparison.Ordinal)) return last["dev-disk-by-label-".Length..];
+        if (last.StartsWith("dev-disk-by-", StringComparison.Ordinal) || last.Length > 16)
+            return string.IsNullOrEmpty(device) ? "Schijf" : device;
+        return last;
+    }
+
+    /// mountinfo escapes spaces etc. as octal: "\040".
+    private static string UnescapeMount(string s) =>
+        System.Text.RegularExpressions.Regex.Replace(s, @"\\([0-7]{3})", m => ((char)Convert.ToInt32(m.Groups[1].Value, 8)).ToString());
 }

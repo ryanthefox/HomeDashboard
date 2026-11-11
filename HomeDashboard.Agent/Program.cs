@@ -6,8 +6,10 @@ using HomeDashboard.Api.Services;
 
 // HomeDashboard PC agent
 // ──────────────────────
-// Runs on the Windows PC (started at boot by a scheduled task, see install-agent.ps1).
-// The dashboard server polls it for hardware stats and asks it to sleep / shut down.
+// Runs on the Windows PC (started by scheduled tasks, see install-agent.ps1). Two modes:
+//   default  → hardware stats + sleep/restart/shutdown. Runs as SYSTEM at boot.
+//   --media  → now-playing media + play/pause/skip. Runs in the user's session at logon,
+//              because Windows only exposes media sessions to the logged-in user.
 // Every request must carry the shared secret in the "X-Agent-Key" header.
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -16,9 +18,12 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = AppContext.BaseDirectory,   // find appsettings.json when started as a task
 });
 
-var port = builder.Configuration.GetValue("Agent:Port", 5055);
+var mediaMode = args.Contains("--media");
+var basePort  = builder.Configuration.GetValue("Agent:Port", 5055);
+var port      = mediaMode ? builder.Configuration.GetValue("Agent:MediaPort", basePort + 1) : basePort;
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-builder.Services.AddSingleton<SystemMonitorService>();
+if (mediaMode) builder.Services.AddSingleton<MusicService>();
+else           builder.Services.AddSingleton<SystemMonitorService>();
 
 var app = builder.Build();
 var key = LoadOrCreateKey(app.Configuration["Agent:Key"]);
@@ -41,6 +46,25 @@ app.MapGet("/ping", () => new
     hostname      = Environment.MachineName,
     uptimeSeconds = Environment.TickCount64 / 1000,
 });
+
+if (mediaMode)
+{
+    app.MapGet("/media", (MusicService music) => music.GetCurrentMediaAsync());
+    app.MapPost("/media/{command}", async (string command, MusicService music) =>
+    {
+        var ok = command switch
+        {
+            "play"  => await music.PlayAsync(),
+            "pause" => await music.PauseAsync(),
+            "next"  => await music.SkipNextAsync(),
+            "prev"  => await music.SkipPreviousAsync(),
+            _       => (bool?)null,
+        };
+        return ok == null ? Results.BadRequest(new { error = "Onbekende actie" }) : Results.Ok(new { success = ok });
+    });
+    app.Run();
+    return;
+}
 
 app.MapGet("/stats", (SystemMonitorService monitor) => monitor.GetStats());
 

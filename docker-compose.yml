@@ -5,7 +5,12 @@ services:
     # Host-netwerk: nodig zodat Wake-on-LAN-broadcasts je LAN bereiken.
     # Het dashboard blijft gewoon op poort 5000 bereikbaar.
     network_mode: host
+    # Schijven van de server alleen-lezen meekijken (ook je datadisks onder /srv),
+    # zodat de systeem-widget de echte schijven en vrije ruimte toont.
+    volumes:
+      - /:/hostfs:ro,rslave
     environment:
+      - HOST_ROOT=/hostfs
       # Hue
       - HueBridge__BridgeIp=${HUE_BRIDGE_IP}
       - HueBridge__ApiKey=${HUE_API_KEY}
@@ -29,3 +34,4 @@ services:
       - Pc__AgentKey=${PC_AGENT_KEY}
       - Pc__MacAddress=${PC_MAC}
       - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}
+      - Pc__MediaUrl=${PC_MEDIA_URL}

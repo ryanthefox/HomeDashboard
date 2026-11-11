@@ -35,6 +35,8 @@ public sealed class PcService
     }
 
     private string? AgentUrl => NullIfEmpty(_config["Pc:AgentUrl"])?.TrimEnd('/');
+    /// Media helper runs in the user's session on the next port (5056); override with Pc:MediaUrl.
+    private string? MediaUrl => NullIfEmpty(_config["Pc:MediaUrl"])?.TrimEnd('/') ?? DeriveMediaUrl(AgentUrl);
     private string? AgentKey => NullIfEmpty(_config["Pc:AgentKey"]);
     private string? Mac      => NullIfEmpty(_config["Pc:MacAddress"]);
     private string  Name     => NullIfEmpty(_config["Pc:Name"]) ?? "PC";
@@ -147,6 +149,46 @@ public sealed class PcService
         }
     }
 
+    /// Now-playing media on the PC, or null when the PC/media helper isn't reachable.
+    public async Task<MediaInfo?> GetMediaAsync()
+    {
+        if (!HasAgent || MediaUrl == null) return null;
+        var status = await GetStatusAsync();
+        if (status.State != "online") return null;   // don't wait on timeouts while the PC is off
+        try
+        {
+            using var client = CreateClient(TimeSpan.FromSeconds(2));
+            return await client.GetFromJsonAsync<MediaInfo>($"{MediaUrl}/media", JsonOpts);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            return null;   // not logged in yet, or the media helper isn't running
+        }
+    }
+
+    public async Task<bool> MediaControlAsync(string command)
+    {
+        if (!HasAgent || MediaUrl == null || command is not ("play" or "pause" or "next" or "prev")) return false;
+        try
+        {
+            using var client = CreateClient(TimeSpan.FromSeconds(3));
+            var res = await client.PostAsync($"{MediaUrl}/media/{command}", null);
+            if (!res.IsSuccessStatusCode) return false;
+            var body = await res.Content.ReadFromJsonAsync<MediaCommandResult>(JsonOpts);
+            return body?.Success ?? false;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static string? DeriveMediaUrl(string? agentUrl)
+    {
+        if (agentUrl == null || !Uri.TryCreate(agentUrl, UriKind.Absolute, out var uri)) return null;
+        return new UriBuilder(uri) { Port = uri.Port + 1 }.Uri.ToString().TrimEnd('/');
+    }
+
     private HttpClient CreateClient(TimeSpan timeout)
     {
         var client = _http.CreateClient();
@@ -165,4 +207,5 @@ public sealed class PcService
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     private sealed record AgentPing(string Hostname, long UptimeSeconds);
+    private sealed record MediaCommandResult(bool Success);
 }

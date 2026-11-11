@@ -10,6 +10,7 @@ public class DashboardBackgroundService : BackgroundService
     private readonly WeatherService _weather;
     private readonly HueService _hue;
     private readonly MusicService _music;
+    private readonly PcService _pc;
     private readonly SystemMonitorService _system;
     private readonly AircoService _airco;
     private readonly ILogger<DashboardBackgroundService> _logger;
@@ -19,11 +20,11 @@ public class DashboardBackgroundService : BackgroundService
     public DashboardBackgroundService(
         IHubContext<DashboardHub> hub,
         WeatherService weather, HueService hue, MusicService music,
-        SystemMonitorService system, AircoService airco,
+        SystemMonitorService system, AircoService airco, PcService pc,
         ILogger<DashboardBackgroundService> logger)
     {
         _hub = hub; _weather = weather; _hue = hue; _music = music;
-        _system = system; _airco = airco; _logger = logger;
+        _system = system; _airco = airco; _pc = pc; _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -74,6 +75,7 @@ public class DashboardBackgroundService : BackgroundService
     private async Task PushMusicAsync()
     {
         var media = await _music.GetCurrentMediaAsync();
+        if (media.Title == null && await _pc.GetMediaAsync() is { } pcMedia) media = pcMedia;
         var json  = System.Text.Json.JsonSerializer.Serialize(media with { AlbumArtDataUrl = null });
         if (json == _lastMusicJson) return;
         _lastMusicJson = json;
