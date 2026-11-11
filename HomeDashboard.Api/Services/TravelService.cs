@@ -12,7 +12,7 @@ public record TravelResponse(string Direction, string FromName, string ToName, b
     CarRoute? Car, string? CarError, List<TrainTrip> Trains, string? TrainError);
 
 /// <summary>
-/// Travel time home ↔ work: by car via the Google Maps Routes API (with live traffic),
+/// Travel time home ↔ work: by car via TomTom (free, no credit card) or the Google Maps Routes API — both with live traffic —
 /// by train via the NS Reisinformatie API. Directions are cached so the daily free quota is never reached.
 /// </summary>
 public sealed partial class TravelService(IHttpClientFactory http, IConfiguration config, ILogger<TravelService> log)
@@ -25,17 +25,20 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
     private string HomeStation => config["Travel:HomeStation"] ?? "";
     private string WorkStation => config["Travel:WorkStation"] ?? "";
     private string GoogleKey => config["Travel:GoogleMapsKey"] ?? "";
+    private string TomTomKey => config["Travel:TomTomKey"] ?? "";
+    private bool UseGoogle => GoogleKey.Length > 0;
     private string NsKey => config["Travel:NsKey"] ?? "";
 
-    public bool CarConfigured => Home.Length > 0 && Work.Length > 0 && GoogleKey.Length > 0;
+    public bool CarConfigured => Home.Length > 0 && Work.Length > 0 && (GoogleKey.Length > 0 || TomTomKey.Length > 0);
     public bool TrainConfigured => HomeStation.Length > 0 && WorkStation.Length > 0 && NsKey.Length > 0;
 
     private readonly Dictionary<string, (DateTime At, CarRoute Route)> _car = new();
     private readonly Dictionary<string, (DateTime At, List<TrainTrip> Trips)> _train = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
 
-    /// <summary>Google charges per route: refresh every 10 min by day, hourly at night (~3,000 calls/month).</summary>
-    private static TimeSpan CarCacheFor => DateTime.Now.Hour is >= 1 and < 6 ? TimeSpan.FromHours(1) : TimeSpan.FromMinutes(10);
+    /// <summary>Google charges per route: every 10 min by day (~3,000 calls/month). TomTom's free tier (2,500/day) allows every 5 min. Hourly at night.</summary>
+    private TimeSpan CarCacheFor => DateTime.Now.Hour is >= 1 and < 6 ? TimeSpan.FromHours(1) : TimeSpan.FromMinutes(UseGoogle ? 10 : 5);
+    private readonly Dictionary<string, (double Lat, double Lon)> _geo = new();
     private static readonly TimeSpan TrainCacheFor = TimeSpan.FromMinutes(2);
 
     public async Task<TravelResponse> GetAsync(string direction, bool force = false)
@@ -53,11 +56,16 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
                 try
                 {
                     if (!force && _car.TryGetValue(dir, out var c) && DateTime.UtcNow - c.At < CarCacheFor) car = c.Route;
-                    else { car = await FetchCarAsync(toWork ? Home : Work, toWork ? Work : Home); _car[dir] = (DateTime.UtcNow, car); }
+                    else
+                    {
+                        var (from, to) = (toWork ? Home : Work, toWork ? Work : Home);
+                        car = UseGoogle ? await FetchCarAsync(from, to) : await FetchTomTomAsync(from, to);
+                        _car[dir] = (DateTime.UtcNow, car);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    log.LogWarning("Google Routes failed: {Message}", ex.Message);
+                    log.LogWarning("Car route failed: {Message}", ex.Message);
                     carError = ex.Message;
                     if (_car.TryGetValue(dir, out var old)) car = old.Route; // show the last known time
                 }
@@ -131,6 +139,51 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
         return new CarRoute(minutes, typicalMin, Math.Max(0, minutes - typicalMin), Math.Round(km, 1), string.IsNullOrWhiteSpace(via) ? null : via, DateTime.UtcNow);
     }
 
+    // ── TomTom (free tier) ────────────────────────────────────────────────────
+    private string TomTomRouteUrl((double Lat, double Lon) a, (double Lat, double Lon) b) =>
+        string.Create(CultureInfo.InvariantCulture,
+            $"https://api.tomtom.com/routing/1/calculateRoute/{a.Lat},{a.Lon}:{b.Lat},{b.Lon}/json?key={TomTomKey}&traffic=true&travelMode=car&routeType=fastest&computeTravelTimeFor=all");
+
+    /// <summary>Address → coordinates, once per address.</summary>
+    private async Task<(double Lat, double Lon)> GeocodeAsync(string address)
+    {
+        if (_geo.TryGetValue(address, out var hit)) return hit;
+        var url = $"https://api.tomtom.com/search/2/geocode/{Uri.EscapeDataString(address)}.json?key={TomTomKey}&countrySet=NL&limit=1&language=nl-NL";
+        using var res = await http.CreateClient().GetAsync(url);
+        if (res.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized)
+            throw new InvalidOperationException("TomTom: ongeldige API-sleutel");
+        res.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var results = doc.RootElement.GetProperty("results");
+        if (results.GetArrayLength() == 0) throw new InvalidOperationException($"TomTom kan het adres niet vinden — controleer het adres");
+        var pos = results[0].GetProperty("position");
+        var p = (pos.GetProperty("lat").GetDouble(), pos.GetProperty("lon").GetDouble());
+        _geo[address] = p;
+        return p;
+    }
+
+    private async Task<CarRoute> FetchTomTomAsync(string from, string to)
+    {
+        var a = await GeocodeAsync(from);
+        var b = await GeocodeAsync(to);
+        using var res = await http.CreateClient().GetAsync(TomTomRouteUrl(a, b));
+        var text = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode)
+            throw new InvalidOperationException(res.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized
+                ? "TomTom: ongeldige API-sleutel" : $"TomTom: {(int)res.StatusCode}");
+        using var doc = JsonDocument.Parse(text);
+        var routes = doc.RootElement.GetProperty("routes");
+        if (routes.GetArrayLength() == 0) throw new InvalidOperationException("TomTom vond geen route");
+        var s = routes[0].GetProperty("summary");
+        int Sec(string prop) => s.TryGetProperty(prop, out var v) ? v.GetInt32() : 0;
+        var dur = Sec("travelTimeInSeconds");
+        var free = Sec("noTrafficTravelTimeInSeconds");
+        if (free == 0) free = dur - Sec("trafficDelayInSeconds");
+        var minutes = (int)Math.Round(dur / 60.0);
+        var typical = (int)Math.Round(free / 60.0);
+        return new CarRoute(minutes, typical, Math.Max(0, minutes - typical), Math.Round(Sec("lengthInMeters") / 1000.0, 1), null, DateTime.UtcNow);
+    }
+
     // ── NS Reisinformatie ─────────────────────────────────────────────────────
     private HttpRequestMessage TrainRequest(string from, string to)
     {
@@ -197,6 +250,12 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
     private static partial Regex OffsetRegex();
 
     // ── Debug: raw answers, to check a fresh setup ────────────────────────────
+    private async Task<object> TomTomDebugAsync(Func<HttpRequestMessage, Task<object>> raw)
+    {
+        try { return await raw(new HttpRequestMessage(HttpMethod.Get, TomTomRouteUrl(await GeocodeAsync(Home), await GeocodeAsync(Work)))); }
+        catch (Exception ex) { return new { error = ex.Message }; }
+    }
+
     public async Task<object> DebugAsync()
     {
         async Task<object> Raw(HttpRequestMessage req)
@@ -213,7 +272,8 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
         {
             carConfigured = CarConfigured,
             trainConfigured = TrainConfigured,
-            car = CarConfigured ? await Raw(CarRequest(Home, Work)) : null,
+            carProvider = UseGoogle ? "google" : TomTomKey.Length > 0 ? "tomtom" : null,
+            car = !CarConfigured ? null : UseGoogle ? await Raw(CarRequest(Home, Work)) : await TomTomDebugAsync(Raw),
             train = TrainConfigured ? await Raw(TrainRequest(HomeStation, WorkStation)) : null,
         };
     }

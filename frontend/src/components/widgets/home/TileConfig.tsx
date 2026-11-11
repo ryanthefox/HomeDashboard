@@ -25,7 +25,7 @@ export type SystemItem = typeof SYSTEM_ITEMS[number]['id']
 export const RING_VISIBLE_KEY = 'home-ring-cameras'
 export const TRAVEL_VISIBLE_KEY = 'home-travel-items'
 export const TRAVEL_ITEMS = [
-  { id: 'car',   label: 'Auto (Google Maps, met files)' },
+  { id: 'car',   label: 'Auto (met files)' },
   { id: 'train', label: 'Trein (NS)' },
 ] as const
 export const ENERGY_VISIBLE_KEY = 'home-energy-items'

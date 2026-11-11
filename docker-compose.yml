@@ -42,9 +42,10 @@ services:
       - Ring__BridgeUrl=http://127.0.0.1:${RING_PORT:-5057}
       # Agenda: geheime iCal-adressen van je Google Agenda('s), komma-gescheiden
       - Calendar__IcsUrls=${CALENDAR_ICS_URLS:-}
-      # Reistijd naar werk: auto via Google Maps, trein via NS
+      # Reistijd naar werk: auto via TomTom (gratis) of Google Maps, trein via NS
       - Travel__HomeAddress=${TRAVEL_HOME_ADDRESS:-}
       - Travel__WorkAddress=${TRAVEL_WORK_ADDRESS:-}
+      - Travel__TomTomKey=${TOMTOM_KEY:-}
       - Travel__GoogleMapsKey=${GOOGLE_MAPS_KEY:-}
       - Travel__HomeStation=${TRAVEL_HOME_STATION:-}
       - Travel__WorkStation=${TRAVEL_WORK_STATION:-}
