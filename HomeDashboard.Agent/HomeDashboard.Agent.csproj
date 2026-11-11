@@ -3,7 +3,7 @@
   <!--
     Small Windows agent that exposes this PC to the dashboard server. One exe, two modes:
       (default)  stats + power actions — runs as SYSTEM at boot (port 5055)
-      - -media   now-playing media + controls — runs in the user's session at logon (port 5056),
+      - -media   now-playing media + controls + sound output — runs in the user's session at logon (port 5056),
                  because Windows only shows media sessions to the logged-in user
   -->
   <PropertyGroup>
@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
 
   <!-- Reuse the dashboard's Windows code so the agent reports exactly what the dashboard would. -->
@@ -26,6 +27,8 @@
     <Compile Include="..\HomeDashboard.Api\Services\SystemMonitorService.cs" Link="Shared\SystemMonitorService.cs" />
     <Compile Include="..\HomeDashboard.Api\Models\MediaInfo.cs" Link="Shared\MediaInfo.cs" />
     <Compile Include="..\HomeDashboard.Api\Services\MusicService.cs" Link="Shared\MusicService.cs" />
+    <Compile Include="..\HomeDashboard.Api\Models\AudioOutputDevice.cs" Link="Shared\AudioOutputDevice.cs" />
+    <Compile Include="..\HomeDashboard.Api\Services\AudioService.cs" Link="Shared\AudioService.cs" />
   </ItemGroup>
 
 </Project>

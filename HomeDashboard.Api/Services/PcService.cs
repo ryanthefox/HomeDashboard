@@ -183,6 +183,37 @@ public sealed class PcService
         }
     }
 
+    /// Sound output devices on the PC (empty when unreachable).
+    public async Task<List<AudioOutputDevice>> GetAudioOutputsAsync()
+    {
+        if (!HasAgent || MediaUrl == null) return [];
+        if ((await GetStatusAsync()).State != "online") return [];
+        try
+        {
+            using var client = CreateClient(TimeSpan.FromSeconds(2));
+            return await client.GetFromJsonAsync<List<AudioOutputDevice>>($"{MediaUrl}/audio/outputs", JsonOpts) ?? [];
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            return [];
+        }
+    }
+
+    public async Task<bool> SetAudioOutputAsync(string deviceId)
+    {
+        if (!HasAgent || MediaUrl == null) return false;
+        try
+        {
+            using var client = CreateClient(TimeSpan.FromSeconds(3));
+            var res = await client.PostAsJsonAsync($"{MediaUrl}/audio/outputs/default", new { deviceId }, JsonOpts);
+            return res.IsSuccessStatusCode;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return false;
+        }
+    }
+
     private static string? DeriveMediaUrl(string? agentUrl)
     {
         if (agentUrl == null || !Uri.TryCreate(agentUrl, UriKind.Absolute, out var uri)) return null;

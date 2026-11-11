@@ -3,24 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HomeDashboard.Api.Controllers;
 
+/// Sound output of this machine (Windows), or of the PC through its agent when the
+/// dashboard runs on the Linux server.
 [ApiController]
 [Route("api/audio")]
-public class AudioController(AudioService audio) : ControllerBase
+public class AudioController(AudioService audio, PcService pc) : ControllerBase
 {
     [HttpGet("outputs")]
-    public IActionResult GetOutputs()
+    public async Task<IActionResult> GetOutputs()
     {
-        try   { return Ok(audio.GetOutputDevices()); }
+        try
+        {
+            var local = audio.GetOutputDevices();
+            return Ok(local.Count > 0 ? local : await pc.GetAudioOutputsAsync());
+        }
         catch { return Ok(Array.Empty<object>()); }
     }
 
     [HttpPost("outputs/default")]
-    public IActionResult SetDefault([FromBody] SetDefaultRequest req)
+    public async Task<IActionResult> SetDefault([FromBody] SetDefaultRequest req)
     {
         try
         {
-            audio.SetDefaultDevice(req.DeviceId);
-            return NoContent();
+            if (audio.GetOutputDevices().Any(d => d.Id == req.DeviceId))
+            {
+                audio.SetDefaultDevice(req.DeviceId);
+                return NoContent();
+            }
+            return await pc.SetAudioOutputAsync(req.DeviceId)
+                ? NoContent()
+                : StatusCode(502, new { error = "Kon de geluidsuitvoer op de PC niet aanpassen" });
         }
         catch (Exception ex)
         {

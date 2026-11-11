@@ -8,8 +8,9 @@ using HomeDashboard.Api.Services;
 // ──────────────────────
 // Runs on the Windows PC (started by scheduled tasks, see install-agent.ps1). Two modes:
 //   default  → hardware stats + sleep/restart/shutdown. Runs as SYSTEM at boot.
-//   --media  → now-playing media + play/pause/skip. Runs in the user's session at logon,
-//              because Windows only exposes media sessions to the logged-in user.
+//   --media  → now-playing media + play/pause/skip + sound output device. Runs in the user's
+//              session at logon, because Windows keeps media sessions and the default audio
+//              device per logged-in user.
 // Every request must carry the shared secret in the "X-Agent-Key" header.
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -22,7 +23,7 @@ var mediaMode = args.Contains("--media");
 var basePort  = builder.Configuration.GetValue("Agent:Port", 5055);
 var port      = mediaMode ? builder.Configuration.GetValue("Agent:MediaPort", basePort + 1) : basePort;
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-if (mediaMode) builder.Services.AddSingleton<MusicService>();
+if (mediaMode) { builder.Services.AddSingleton<MusicService>(); builder.Services.AddSingleton<AudioService>(); }
 else           builder.Services.AddSingleton<SystemMonitorService>();
 
 var app = builder.Build();
@@ -61,6 +62,15 @@ if (mediaMode)
             _       => (bool?)null,
         };
         return ok == null ? Results.BadRequest(new { error = "Onbekende actie" }) : Results.Ok(new { success = ok });
+    });
+    app.MapGet("/audio/outputs", (AudioService audio) => audio.GetOutputDevices());
+    app.MapPost("/audio/outputs/default", (AudioDeviceRequest req, AudioService audio) =>
+    {
+        if (string.IsNullOrWhiteSpace(req.DeviceId)) return Results.BadRequest(new { error = "Geen apparaat opgegeven" });
+        // Windows silently ignores unknown ids, so check the device exists first
+        if (!audio.GetOutputDevices().Any(d => d.Id == req.DeviceId)) return Results.NotFound(new { error = "Apparaat niet gevonden" });
+        try   { audio.SetDefaultDevice(req.DeviceId); return Results.NoContent(); }
+        catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
     });
     app.Run();
     return;
@@ -105,3 +115,5 @@ static string LoadOrCreateKey(string? configured)
 
 [DllImport("powrprof.dll", SetLastError = true)]
 static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
+
+record AudioDeviceRequest(string DeviceId);
