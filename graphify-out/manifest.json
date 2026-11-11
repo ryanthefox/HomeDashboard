@@ -138,9 +138,9 @@
     "semantic_hash": "b440ee41c3a3df8428195d1555645360"
   },
   "HomeDashboard.Api/Program.cs": {
-    "mtime": 1794410441.4412367,
-    "seen": 1794411291.444264,
-    "ast_hash": "f2fbaf2a963d0cae15dcbae99a13228f",
+    "mtime": 1794411807.265861,
+    "seen": 1794412228.537737,
+    "ast_hash": "1e715b61cb69894110ee74ce42639f7f",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Properties/launchSettings.json": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1794410441.442238,
-    "seen": 1794411291.4442804,
-    "ast_hash": "dd8bb97b3e8617e684d00e1c823d733f",
+    "mtime": 1794411829.1171176,
+    "seen": 1794412228.5377533,
+    "ast_hash": "32787a2e12beb2f507cf89fe863d2fa7",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794411116.601769,
-    "seen": 1794411291.4442837,
-    "ast_hash": "f29400552809a3b710da68b24f384aa3",
+    "mtime": 1794412026.1983285,
+    "seen": 1794412228.5377567,
+    "ast_hash": "07b98d49f445e70a5467223d55f2613c",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HomeWidget.tsx": {
-    "mtime": 1794411140.9147522,
-    "seen": 1794411291.4442923,
-    "ast_hash": "f25583542401d30f73054571d7426c39",
+    "mtime": 1794412026.1983285,
+    "seen": 1794412228.537766,
+    "ast_hash": "ae2c62f80324cfecdaab9327dc52bd88",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
@@ -390,10 +390,10 @@
     "semantic_hash": ""
   },
   "frontend/src/hooks/useSignalR.ts": {
-    "mtime": 1794394659.853688,
-    "seen": 1794395115.4604955,
-    "ast_hash": "2032a2e2d1deb8739f60cd8816435f9a",
-    "semantic_hash": "2032a2e2d1deb8739f60cd8816435f9a"
+    "mtime": 1794411887.791008,
+    "seen": 1794412228.5377855,
+    "ast_hash": "0f691b12bb6ab87d974457733adaed15",
+    "semantic_hash": ""
   },
   "frontend/src/lib/ThemeContext.tsx": {
     "mtime": 1794394473.6446104,
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794410465.4792893,
-    "seen": 1794411291.4443119,
-    "ast_hash": "41d375287e0a8ad0405afd815a930494",
+    "mtime": 1794412052.4566216,
+    "seen": 1794412228.5377886,
+    "ast_hash": "2d40628d666d97675c43ceabedee7b4b",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/TileConfig.tsx": {
-    "mtime": 1794411324.9969182,
-    "seen": 1794411374.6448274,
-    "ast_hash": "1d634bda485e3b065dbd71b709a5aee3",
+    "mtime": 1794412052.4636252,
+    "seen": 1794412228.5377781,
+    "ast_hash": "f402451258b1d7c167cef9ad66203262",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/EnergyController.cs": {
@@ -701,10 +701,82 @@
     "ast_hash": "3e3ff6e8ff233ce2d8edcee2c079fa0b",
     "semantic_hash": ""
   },
+  "HomeDashboard.Api/BackgroundServices/RingEventListener.cs": {
+    "mtime": 1794411796.5654557,
+    "seen": 1794412228.5377092,
+    "ast_hash": "f1d6e4ee44fc36e316110ea1fa5dc2f2",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/RingController.cs": {
+    "mtime": 1794412052.4566216,
+    "seen": 1794412228.5377202,
+    "ast_hash": "03cb5b097a83b3865c80949a23ca1891",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/RingService.cs": {
+    "mtime": 1794411796.5364027,
+    "seen": 1794412228.5377486,
+    "ast_hash": "25d9b7bf1504fb74fd49316ba25207aa",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/ui/Dialog.tsx": {
+    "mtime": 1794411910.349826,
+    "seen": 1794412228.5377605,
+    "ast_hash": "38e26c6de653bc670ef06a302e24e977",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/home/MiniRing.tsx": {
+    "mtime": 1794411994.4618182,
+    "seen": 1794412228.5377753,
+    "ast_hash": "c1cf370f67dd89113e412cadbac273e5",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/ring/DoorbellAlert.tsx": {
+    "mtime": 1794412052.4646256,
+    "seen": 1794412228.5377805,
+    "ast_hash": "022f18cd7b414ddb485cee07e29c6ef0",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/ring/RingDetail.tsx": {
+    "mtime": 1794411931.8693056,
+    "seen": 1794412228.5377815,
+    "ast_hash": "9035c555f5c0a8e8af7c1dc5389c60d2",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/ring/RingLogin.tsx": {
+    "mtime": 1794411910.366501,
+    "seen": 1794412228.5377822,
+    "ast_hash": "37912dcb490e8bda9119edef4f69d966",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/ring.ts": {
+    "mtime": 1794411887.6726832,
+    "seen": 1794412228.5377953,
+    "ast_hash": "388732cff1c07e31dfdb99a1d77e8b74",
+    "semantic_hash": ""
+  },
+  "ring-bridge/package.json": {
+    "mtime": 1794411648.0323284,
+    "seen": 1794412228.5378056,
+    "ast_hash": "c5bb0aac433b46925f8c3beda42402e0",
+    "semantic_hash": ""
+  },
+  "ring-bridge/server.mjs": {
+    "mtime": 1794412052.4556172,
+    "seen": 1794412228.5378063,
+    "ast_hash": "71775bd4510ee8a87afff11301bb0084",
+    "semantic_hash": ""
+  },
   "frontend/package-lock.json": {
     "mtime": 1794393500.9397008,
     "seen": 1794395435.3042104,
     "ast_hash": "01eb3bdf65dc25187c2891ce72525c29",
+    "semantic_hash": ""
+  },
+  "ring-bridge/package-lock.json": {
+    "mtime": 1794411654.53039,
+    "seen": 1794412228.5378113,
+    "ast_hash": "0c943c901596edc116ad4e5e7dc0b8fc",
     "semantic_hash": ""
   }
 }
