@@ -6,6 +6,16 @@ async function json<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+/** Fire a command; throws on non-2xx so mutations can roll back optimistic updates. */
+async function send(url: string, method: 'POST' | 'PUT', body?: unknown): Promise<void> {
+  const res = await fetch(url, {
+    method,
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+}
+
 // ── Weather ──────────────────────────────────────────────────────────────────
 export const weatherApi = {
   getCurrent: () => json<WeatherData>(`${BASE}/weather`),
@@ -16,29 +26,21 @@ export const hueApi = {
   getRooms: () => json<HueRoom[]>(`${BASE}/hue/rooms`),
   getLights: () => json<HueLight[]>(`${BASE}/hue/lights`),
   setLightState: (id: string, state: HueLightStateRequest) =>
-    fetch(`${BASE}/hue/lights/${id}/state`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state),
-    }),
-  setGroupAction: (groupId: string, on: boolean) =>
-    fetch(`${BASE}/hue/groups/${groupId}/action`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ on }),
-    }),
+    send(`${BASE}/hue/lights/${id}/state`, 'PUT', state),
+  setGroupAction: (groupId: string, action: { on?: boolean; brightness?: number }) =>
+    send(`${BASE}/hue/groups/${groupId}/action`, 'PUT', action),
   getScenes: (groupId: string) => json<HueScene[]>(`${BASE}/hue/groups/${groupId}/scenes`),
   activateScene: (groupId: string, sceneId: string) =>
-    fetch(`${BASE}/hue/groups/${groupId}/scene/${sceneId}`, { method: 'PUT' }),
+    send(`${BASE}/hue/groups/${groupId}/scene/${sceneId}`, 'PUT'),
 }
 
 // ── Music ─────────────────────────────────────────────────────────────────────
 export const musicApi = {
   getCurrent: () => json<MediaInfo>(`${BASE}/music`),
-  play: () => fetch(`${BASE}/music/play`, { method: 'POST' }),
-  pause: () => fetch(`${BASE}/music/pause`, { method: 'POST' }),
-  next: () => fetch(`${BASE}/music/next`, { method: 'POST' }),
-  prev: () => fetch(`${BASE}/music/prev`, { method: 'POST' }),
+  play:  () => send(`${BASE}/music/play`,  'POST'),
+  pause: () => send(`${BASE}/music/pause`, 'POST'),
+  next:  () => send(`${BASE}/music/next`,  'POST'),
+  prev:  () => send(`${BASE}/music/prev`,  'POST'),
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -118,11 +120,7 @@ export const systemApi = {
 export const audioApi = {
   getOutputs: () => json<AudioOutputDevice[]>(`${BASE}/audio/outputs`),
   setDefault: (deviceId: string) =>
-    fetch(`${BASE}/audio/outputs/default`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId }),
-    }),
+    send(`${BASE}/audio/outputs/default`, 'POST', { deviceId }),
 }
 
 export interface AudioOutputDevice {
@@ -141,10 +139,10 @@ export const aircoApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, state }),
     }),
-  setPower:       (deviceId: string, on: boolean)       => fetch(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/power`,       { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) }),
-  setTemperature: (deviceId: string, temperature: number) => fetch(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/temperature`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ temperature }) }),
-  setMode:        (deviceId: string, mode: string)      => fetch(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/mode`,        { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode }) }),
-  setFanSpeed:    (deviceId: string, speed: number)     => fetch(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/fanspeed`,    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ speed }) }),
+  setPower:       (deviceId: string, on: boolean)         => send(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/power`,       'PUT', { on }),
+  setTemperature: (deviceId: string, temperature: number) => send(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/temperature`, 'PUT', { temperature }),
+  setMode:        (deviceId: string, mode: string)        => send(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/mode`,        'PUT', { mode }),
+  setFanSpeed:    (deviceId: string, speed: number)       => send(`${BASE}/airco/devices/${encodeURIComponent(deviceId)}/fanspeed`,    'PUT', { speed }),
 }
 
 export interface AircoDevice {
@@ -184,20 +182,6 @@ export interface HueScene {
   name: string
 }
 
-// ── Washer ─────────────────────────────────────────────────────────────────────
-export const washerApi = {
-  getDevices: () => json<WasherDevice[]>(`${BASE}/washer/devices`),
-}
-
-export interface WasherDevice {
-  deviceId: string
-  name: string
-  isOnline: boolean
-  runState: string         // standby | running | pause | rinsing | spinning | end | error
-  cycle: string            // Dutch display name
-  remainingMinutes: number
-}
-
 export interface MediaInfo {
   title: string | null
   artist: string | null
@@ -208,4 +192,46 @@ export interface MediaInfo {
   canPause: boolean
   canSkipNext: boolean
   canSkipPrev: boolean
+}
+
+// ── Afval ─────────────────────────────────────────────────────────────────────
+export const afvalApi = {
+  getUpcoming: () => json<AfvalItem[]>(`${BASE}/afval/upcoming`),
+}
+export interface AfvalItem {
+  type: string
+  date: string  // ISO date
+  label: string
+}
+
+// ── Plex ──────────────────────────────────────────────────────────────────────
+export const plexApi = {
+  getOnDeck:   () => json<PlexItem[]>(`${BASE}/plex/ondeck`),
+  getRecent:   () => json<PlexItem[]>(`${BASE}/plex/recent`),
+  getSessions: () => json<PlexSession[]>(`${BASE}/plex/sessions`),
+}
+export interface PlexItem {
+  key: string
+  title: string
+  type: string
+  thumbUrl: string | null
+  year: number | null
+  showTitle: string | null
+  season: number | null
+  episode: number | null
+  summary: string | null
+}
+export interface PlexSession {
+  key: string
+  title: string
+  type: string
+  thumbUrl: string | null
+  showTitle: string | null
+  season: number | null
+  episode: number | null
+  user: string | null
+  playerName: string | null
+  state: string
+  viewOffset: number
+  duration: number
 }

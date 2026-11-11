@@ -1,280 +1,125 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Power, Wind, Thermometer, WashingMachine } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { motion } from 'motion/react'
+import { Wind, AirVent } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { aircoApi, washerApi, type AircoDevice, type WasherDevice } from '@/lib/api'
-
-const MODES = [
-  { id: 'cool', label: 'Koelen',    emoji: '❄️' },
-  { id: 'heat', label: 'Verwarmen', emoji: '🔥' },
-  { id: 'fan',  label: 'Ventilatie', emoji: '💨' },
-  { id: 'dry',  label: 'Ontvochtigen', emoji: '💧' },
-  { id: 'auto', label: 'Auto',      emoji: '♻️' },
-]
-
-const FAN_SPEEDS = [
-  { id: 0, label: 'Auto' },
-  { id: 2, label: 'Laag' },
-  { id: 3, label: 'Midden' },
-  { id: 4, label: 'Hoog' },
-  { id: 6, label: 'Turbo' },
-]
+import { aircoApi, type AircoDevice } from '@/lib/api'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useAircoActions, AIRCO_MODES, FAN_SPEEDS, modeColor } from '@/lib/airco'
+import { ThermostatRing } from '@/components/ui/ThermostatRing'
+import { Panel, Press, Segmented, Label, Skeleton, spring } from '@/components/ui/motion'
+import { PowerButton, TempStepper } from './home/MiniAirco'
 
 function AircoSetupPrompt() {
   return (
-    <div className="mx-auto max-w-sm flex flex-col gap-4 py-12 px-2">
+    <Panel className="mx-auto mt-6 flex max-w-md flex-col gap-4 p-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Thermometer className="h-10 w-10 text-zinc-600" />
-        <p className="text-base font-semibold text-fg">Airco configureren</p>
-        <p className="text-xs text-zinc-500">Voeg je LG ThinQ Personal Access Token toe aan appsettings.json</p>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card3 text-fg2"><AirVent className="h-7 w-7" /></div>
+        <p className="text-base font-semibold text-fg">Airco koppelen</p>
+        <p className="text-xs text-fg3">Voeg je LG ThinQ Personal Access Token toe aan appsettings.json</p>
       </div>
-      <div className="rounded-2xl bg-card3 p-4 space-y-2.5 text-xs text-zinc-400">
-        <p className="font-medium text-zinc-300">Stap 1 — PAT aanmaken</p>
-        <p>Ga naar <span className="text-orange-400">smartsolution.developer.lge.com</span> → Log in met je LG account → maak een Personal Access Token aan met alle scopes.</p>
-        <p className="font-medium text-zinc-300 pt-1">Stap 2 — DeviceId vinden</p>
-        <p>Start de backend en roep <span className="text-orange-400">/api/airco/devices/all</span> aan — je ziet dan je device ID in de response.</p>
-        <p className="font-medium text-zinc-300 pt-1">Stap 3 — appsettings.json</p>
-        <pre className="bg-[#111] rounded-lg p-2 text-[10px] text-zinc-400 overflow-x-auto whitespace-pre-wrap">{`"LgThinq": {
+      <div className="space-y-2.5 rounded-2xl bg-card3 p-4 text-xs text-fg2">
+        <p className="font-semibold text-fg">1 — PAT aanmaken</p>
+        <p>Ga naar <span className="text-orange-400">smartsolution.developer.lge.com</span>, log in en maak een Personal Access Token met alle scopes.</p>
+        <p className="pt-1 font-semibold text-fg">2 — DeviceId vinden</p>
+        <p>Start de backend en open <span className="text-orange-400">/api/airco/devices/all</span>.</p>
+        <p className="pt-1 font-semibold text-fg">3 — appsettings.json</p>
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-black/40 p-2 text-[10px] text-zinc-300">{`"LgThinq": {
   "PersonalAccessToken": "jouw-pat",
   "CountryCode": "NL",
   "ClientId": "genereer-een-uuid",
   "BaseUrl": "https://api-eic.lgthinq.com"
 }`}</pre>
       </div>
-    </div>
-  )
-}
-
-// ── Washer state helpers ───────────────────────────────────────────────────────
-const WASHER_STATE_LABEL: Record<string, string> = {
-  standby:  'Standby',
-  running:  'Bezig',
-  pause:    'Gepauzeerd',
-  rinsing:  'Spoelen',
-  spinning: 'Centrifugeren',
-  drying:   'Drogen',
-  cooling:  'Afkoelen',
-  steam:    'Stoomverzachten',
-  end:      'Klaar',
-  error:    'Fout',
-}
-
-const WASHER_STATE_COLOR: Record<string, string> = {
-  standby:  'text-zinc-500',
-  running:  'text-blue-400',
-  pause:    'text-amber-400',
-  rinsing:  'text-cyan-400',
-  spinning: 'text-violet-400',
-  drying:   'text-orange-400',
-  cooling:  'text-sky-400',
-  steam:    'text-teal-400',
-  end:      'text-emerald-400',
-  error:    'text-red-400',
-}
-
-function formatRemaining(minutes: number) {
-  if (minutes <= 0) return null
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return h > 0 ? `${h}u ${m}m` : `${m}m`
-}
-
-function WasherSection({ washers }: { washers: WasherDevice[] }) {
-  if (washers.length === 0) return null
-
-  return (
-    <div className="rounded-3xl bg-card p-5 space-y-3">
-      <div className="flex items-center gap-2">
-        <WashingMachine className="h-4 w-4 text-zinc-500" />
-        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Wasmachine</p>
-      </div>
-
-      {washers.map(w => {
-        const stateLabel = WASHER_STATE_LABEL[w.runState] ?? w.runState
-        const stateColor = WASHER_STATE_COLOR[w.runState] ?? 'text-zinc-400'
-        const remaining  = formatRemaining(w.remainingMinutes)
-        const isActive   = !['standby', 'end', 'error'].includes(w.runState)
-
-        return (
-          <div key={w.deviceId} className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className={cn('h-1.5 w-1.5 rounded-full', w.isOnline ? 'bg-emerald-500' : 'bg-zinc-600')} />
-                <p className="text-sm font-medium text-fg">{w.name}</p>
-              </div>
-              {w.cycle && isActive && (
-                <p className="text-xs text-zinc-500 mt-0.5 pl-3.5">{w.cycle}</p>
-              )}
-            </div>
-            <div className="text-right">
-              <p className={cn('text-sm font-semibold', stateColor)}>{stateLabel}</p>
-              {remaining && (
-                <p className="text-xs text-zinc-500 mt-0.5">{remaining} over</p>
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
+    </Panel>
   )
 }
 
 export function AircoWidget() {
-  const qc = useQueryClient()
   const { data: devices = [], isLoading } = useQuery<AircoDevice[]>({
-    queryKey: ['airco', 'devices'],
-    queryFn: aircoApi.getDevices,
-    staleTime: 5 * 60_000,   // 5 min — avoid hitting LG rate limits
+    queryKey: ['airco', 'devices'], queryFn: aircoApi.getDevices,
+    staleTime: 5 * 60_000, // avoid hitting LG rate limits
   })
-  const { data: washers = [] } = useQuery<WasherDevice[]>({
-    queryKey: ['washer', 'devices'],
-    queryFn: washerApi.getDevices,
-    refetchInterval: 30_000,
-  })
-
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [selectedId, setSelectedId] = useLocalStorage<string>('home-ac-device', '')
   const device = devices.find(d => d.deviceId === selectedId) ?? devices[0]
+  const act = useAircoActions(device)
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['airco', 'devices'] })
+  if (isLoading) return <div className="mx-auto max-w-xl"><Skeleton className="h-[480px] rounded-3xl" /></div>
+  if (devices.length === 0 || !device) return <div className="h-full overflow-y-auto scrollbar-hide"><AircoSetupPrompt /></div>
 
-  const power   = useMutation({ mutationFn: (on: boolean) => aircoApi.setPower(device!.deviceId, on),       onSuccess: invalidate })
-  const setTemp = useMutation({ mutationFn: (t: number)   => aircoApi.setTemperature(device!.deviceId, t),  onSuccess: invalidate })
-  const setMode = useMutation({ mutationFn: (m: string)   => aircoApi.setMode(device!.deviceId, m),         onSuccess: invalidate })
-  const setFan  = useMutation({ mutationFn: (s: number)   => aircoApi.setFanSpeed(device!.deviceId, s),     onSuccess: invalidate })
-
-  if (isLoading) return <div className="flex h-64 items-center justify-center text-zinc-500">Laden…</div>
-
-  if (devices.length === 0) return (
-    <div className="h-full overflow-y-auto scrollbar-hide">
-      <div className="mx-auto max-w-xl space-y-4 pb-4">
-        <AircoSetupPrompt />
-        <WasherSection washers={washers} />
-      </div>
-    </div>
-  )
+  const color = modeColor(device.mode)
 
   return (
-    <div className="h-full flex flex-col w-full">
-
-      {/* Device selector — horizontally scrollable, stays fixed */}
+    <div className="flex h-full w-full flex-col">
       {devices.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide shrink-0 pb-3">
-          {devices.map(d => (
-            <button key={d.deviceId} onClick={() => setSelectedId(d.deviceId)}
-              className={cn('rounded-2xl px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap shrink-0',
-                (device?.deviceId === d.deviceId) ? 'bg-white text-black' : 'bg-card text-zinc-400 hover:text-zinc-200')}>
-              {d.name}
-            </button>
-          ))}
+        <div className="mb-3 flex shrink-0 justify-center overflow-x-auto scrollbar-hide">
+          <Segmented layoutId="ac-device" value={device.deviceId} onChange={setSelectedId}
+            items={devices.map(d => ({ id: d.deviceId, label: d.name }))} />
         </div>
       )}
 
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-      <div className="mx-auto max-w-xl space-y-4 pb-4">
-
-      {device && (
-        <>
-          {/* Main card */}
-          <div className={cn('rounded-3xl p-5 sm:p-8 transition-colors', device.isOn ? 'bg-card' : 'bg-[#141414]')}>
-            <div className="flex items-start justify-between mb-8">
+        <div className="mx-auto grid max-w-4xl gap-4 pb-4 md:grid-cols-[1.2fr_1fr]">
+          {/* Dial card */}
+          <Panel className="relative overflow-hidden p-6 sm:p-8">
+            <motion.div className="pointer-events-none absolute -top-1/3 left-1/2 h-2/3 w-2/3 -translate-x-1/2 rounded-full blur-3xl"
+              animate={{ backgroundColor: color, opacity: device.isOn ? 0.18 : 0.03 }} transition={{ duration: 0.8 }} />
+            <div className="relative mb-4 flex items-start justify-between">
               <div>
-                <p className="text-sm text-zinc-500">{device.name}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className={cn('h-1.5 w-1.5 rounded-full', device.isOnline ? 'bg-emerald-500' : 'bg-zinc-600')} />
-                  <p className="text-xs text-zinc-500">{device.isOnline ? 'Online' : 'Offline'}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => power.mutate(!device.isOn)}
-                disabled={power.isPending || !device.isOnline}
-                className={cn(
-                  'flex h-12 w-12 items-center justify-center rounded-full transition-all',
-                  device.isOn
-                    ? 'bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.5)]'
-                    : 'bg-elev2 text-zinc-500 hover:text-zinc-300',
-                  'disabled:opacity-40'
-                )}
-              >
-                <Power className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Temperature display */}
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <p className="text-xs text-zinc-600 mb-1">Huidig</p>
-                <p className="text-6xl font-bold text-fg tracking-tighter">
-                  {device.currentTemperature > 0 ? `${device.currentTemperature}°` : '–°'}
+                <p className="text-lg font-semibold text-fg">{device.name}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-fg3">
+                  <span className={cn('h-1.5 w-1.5 rounded-full', device.isOnline ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-zinc-500')} />
+                  {device.isOnline ? 'Online' : 'Offline'}
                 </p>
               </div>
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-xs text-zinc-500">Doel</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setTemp.mutate(device.targetTemperature - 1)}
-                    disabled={!device.isOn || setTemp.isPending}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-elev2 text-zinc-300 hover:bg-[#333] disabled:opacity-30 text-lg font-bold"
-                  >−</button>
-                  <p className="text-3xl font-bold text-fg w-16 text-center">{device.targetTemperature}°</p>
-                  <button
-                    onClick={() => setTemp.mutate(device.targetTemperature + 1)}
-                    disabled={!device.isOn || setTemp.isPending}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-elev2 text-zinc-300 hover:bg-[#333] disabled:opacity-30 text-lg font-bold"
-                  >+</button>
-                </div>
+              <PowerButton on={device.isOn} color={color} onClick={() => act.setPower(!device.isOn)} disabled={!device.isOnline} size={52} />
+            </div>
+
+            <ThermostatRing className="max-w-[300px]" target={device.targetTemperature} current={device.currentTemperature} mode={device.mode} isOn={device.isOn} />
+
+            <div className="relative mt-4 flex items-center justify-between">
+              <div>
+                <p className="label-caps">Kamer</p>
+                <p className="text-3xl font-semibold tracking-tight text-fg tabular">
+                  {device.currentTemperature > 0 ? `${device.currentTemperature}°` : '–'}
+                </p>
               </div>
+              <TempStepper device={device} onStep={act.stepTemp} />
             </div>
+          </Panel>
 
-            {/* Mode selector */}
-            <div className="space-y-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-600">Stand</p>
-              <div className="flex gap-2">
-                {MODES.map(m => (
-                  <button key={m.id} onClick={() => setMode.mutate(m.id)}
-                    disabled={!device.isOn || setMode.isPending}
-                    className={cn(
-                      'flex-1 flex flex-col items-center gap-1 rounded-2xl py-3 text-xs font-medium transition-all disabled:opacity-30',
-                      device.mode === m.id
-                        ? 'bg-white text-black'
-                        : 'bg-elev text-zinc-400 hover:text-zinc-200 hover:bg-elev2'
-                    )}
-                  >
-                    <span className="text-base">{m.emoji}</span>
-                    <span>{m.label}</span>
-                  </button>
-                ))}
+          <div className="flex flex-col gap-4">
+            {/* Modes */}
+            <Panel index={1} className="p-5">
+              <Label className="mb-3">Stand</Label>
+              <div className="grid grid-cols-5 gap-2 md:grid-cols-1 md:gap-1.5">
+                {AIRCO_MODES.map(m => {
+                  const active = device.mode === m.id
+                  const Icon = m.icon
+                  return (
+                    <Press key={m.id} onClick={() => act.setMode(m.id)} disabled={!device.isOn}
+                      className={cn('relative flex flex-col items-center gap-1.5 rounded-2xl py-3 text-xs font-medium transition-colors disabled:opacity-30 md:flex-row md:gap-3 md:px-4',
+                        active ? 'text-fg' : 'bg-card3 text-fg2 hover:text-fg')}>
+                      {active && (
+                        <motion.span layoutId="ac-mode" transition={spring} className="absolute inset-0 rounded-2xl"
+                          style={{ background: `${m.color}22`, boxShadow: `inset 0 0 0 1px ${m.color}66, 0 0 24px -6px ${m.color}` }} />
+                      )}
+                      <Icon className="relative z-10 h-5 w-5" style={{ color: active ? m.color : undefined }} />
+                      <span className="relative z-10">{m.label}</span>
+                    </Press>
+                  )
+                })}
               </div>
-            </div>
-          </div>
+            </Panel>
 
-          {/* Fan speed */}
-          <div className="rounded-3xl bg-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Wind className="h-4 w-4 text-zinc-500" />
-              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Ventilatorsnelheid</p>
-            </div>
-            <div className="flex gap-2">
-              {FAN_SPEEDS.map(s => (
-                <button key={s.id} onClick={() => setFan.mutate(s.id)}
-                  disabled={!device.isOn || setFan.isPending}
-                  className={cn(
-                    'flex-1 rounded-xl py-2 text-xs font-medium transition-all disabled:opacity-30',
-                    device.fanSpeed === s.id
-                      ? 'bg-white text-black'
-                      : 'bg-elev text-zinc-400 hover:text-zinc-200'
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+            {/* Fan speed */}
+            <Panel index={2} className="p-5">
+              <Label icon={<Wind />} className="mb-3">Ventilator</Label>
+              <Segmented layoutId="ac-fan" size="sm" value={device.fanSpeed} onChange={v => device.isOn && act.setFan(v)}
+                className={cn('w-full', !device.isOn && 'pointer-events-none opacity-40')} itemClassName="flex-1 py-2"
+                items={FAN_SPEEDS.map(s => ({ id: s.id, label: s.label }))} />
+            </Panel>
           </div>
-        </>
-      )}
-
-      <WasherSection washers={washers} />
-      </div>
+        </div>
       </div>
     </div>
   )

@@ -28,6 +28,6 @@ public record HueRoom(
     bool AllOn
 );
 
-public record HueGroupActionRequest(bool On);
+public record HueGroupActionRequest(bool? On, int? Brightness);
 
 public record HueScene(string Id, string Name);

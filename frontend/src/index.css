@@ -2,35 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme CSS variables ───────────────────────────────────────────────────── */
+/* ── Theme tokens ──────────────────────────────────────────────────────────────
+   Dark is the default; light overrides below. Card tokens are translucent so
+   the ambient background glows through the glass panels.
+   ──────────────────────────────────────────────────────────────────────────── */
 :root {
-  --c-bg:      #0f0f0f;
-  --c-card:    #1a1a1a;
-  --c-card2:   #161616;
-  --c-card3:   #1c1c1c;
-  --c-card4:   #1e1e1e;
-  --c-elev:    #242424;
-  --c-elev2:   #2a2a2a;
-  --c-fg:      #ffffff;
+  --c-bg:      #06070a;
+  --c-card:    rgba(20, 22, 28, 0.62);
+  --c-card2:   rgba(20, 22, 28, 0.62);
+  --c-card3:   rgba(255, 255, 255, 0.045);
+  --c-card4:   rgba(255, 255, 255, 0.06);
+  --c-elev:    rgba(255, 255, 255, 0.065);
+  --c-elev2:   rgba(255, 255, 255, 0.10);
+  --c-fg:      #f5f5f7;
   --c-fg2:     #a1a1aa;
   --c-fg3:     #71717a;
-  --c-border:  rgba(255,255,255,0.05);
-  --c-border2: rgba(255,255,255,0.10);
+  --c-border:  rgba(255, 255, 255, 0.06);
+  --c-border2: rgba(255, 255, 255, 0.09);
+  --c-track:   rgba(255, 255, 255, 0.07);
+  --c-solid:   #121318;            /* opaque card color, for fades over images */
+
+  --accent-1:  #ffb86b;            /* warm champagne → amber */
+  --accent-2:  #ff7a45;
+  --accent-glow: rgba(255, 140, 70, 0.45);
+
+  --panel-highlight: rgba(255, 255, 255, 0.07);
+  --panel-shadow: 0 1px 0 0 var(--panel-highlight) inset,
+                  0 20px 40px -24px rgba(0, 0, 0, 0.8),
+                  0 2px 6px -2px rgba(0, 0, 0, 0.4);
+
+  --blob-1: rgba(255, 138, 76, 0.20);
+  --blob-2: rgba(99, 102, 241, 0.18);
+  --blob-3: rgba(20, 184, 166, 0.12);
+  --blob-4: rgba(236, 72, 153, 0.10);
 }
 
 html[data-theme="light"] {
-  --c-bg:      #f0f0f4;
-  --c-card:    #ffffff;
-  --c-card2:   #f7f7fb;
-  --c-card3:   #ececf0;
-  --c-card4:   #f2f2f6;
-  --c-elev:    #e4e4e9;
-  --c-elev2:   #d8d8de;
-  --c-fg:      #1d1d1f;
-  --c-fg2:     #6e6e73;
-  --c-fg3:     #86868b;
-  --c-border:  rgba(0,0,0,0.07);
-  --c-border2: rgba(0,0,0,0.12);
+  --c-bg:      #eceef3;
+  --c-card:    rgba(255, 255, 255, 0.68);
+  --c-card2:   rgba(255, 255, 255, 0.68);
+  --c-card3:   rgba(15, 23, 42, 0.04);
+  --c-card4:   rgba(15, 23, 42, 0.055);
+  --c-elev:    rgba(15, 23, 42, 0.06);
+  --c-elev2:   rgba(15, 23, 42, 0.10);
+  --c-fg:      #111114;
+  --c-fg2:     #5b5b63;
+  --c-fg3:     #85858c;
+  --c-border:  rgba(15, 23, 42, 0.07);
+  --c-border2: rgba(15, 23, 42, 0.10);
+  --c-track:   rgba(15, 23, 42, 0.08);
+  --c-solid:   #f7f7fa;
+
+  --accent-glow: rgba(255, 122, 69, 0.35);
+  --panel-highlight: rgba(255, 255, 255, 0.9);
+  --panel-shadow: 0 1px 0 0 var(--panel-highlight) inset,
+                  0 18px 40px -28px rgba(15, 23, 42, 0.35),
+                  0 2px 6px -3px rgba(15, 23, 42, 0.12);
+
+  --blob-1: rgba(255, 170, 110, 0.35);
+  --blob-2: rgba(129, 140, 248, 0.28);
+  --blob-3: rgba(45, 212, 191, 0.22);
+  --blob-4: rgba(244, 114, 182, 0.18);
 }
 
 /* ── Semantic utility classes (themed) ─────────────────────────────────────── */
@@ -38,12 +70,15 @@ html[data-theme="light"] {
   .scrollbar-hide { scrollbar-width: none; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .bg-surface  { background-color: var(--c-bg); }
-  .bg-card     { background-color: var(--c-card); }
-  .bg-card2    { background-color: var(--c-card2); }
+  .bg-card, .bg-card2 {
+    background-color: var(--c-card);
+    box-shadow: var(--panel-shadow);
+  }
   .bg-card3    { background-color: var(--c-card3); }
   .bg-card4    { background-color: var(--c-card4); }
   .bg-elev     { background-color: var(--c-elev); }
   .bg-elev2    { background-color: var(--c-elev2); }
+  .bg-solid    { background-color: var(--c-solid); }
   .text-fg     { color: var(--c-fg); }
   .text-fg2    { color: var(--c-fg2); }
   .text-fg3    { color: var(--c-fg3); }
@@ -52,15 +87,110 @@ html[data-theme="light"] {
   .divide-subtle > :not([hidden]) ~ :not([hidden]) { border-color: var(--c-border); }
   .bg-tint     { background-color: var(--c-border); }
   .bg-tint2    { background-color: var(--c-border2); }
+
+  /* Frosted glass panel: use on top-level cards only (backdrop-filter is costly) */
+  .panel {
+    background-color: var(--c-card);
+    box-shadow: var(--panel-shadow);
+    border: 1px solid var(--c-border2);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    backdrop-filter: blur(22px) saturate(150%);
+  }
+
+  /* Warm accent gradient for "active" states */
+  .bg-accent {
+    background-image: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #fff;
+    box-shadow: 0 6px 20px -6px var(--accent-glow), 0 1px 0 0 rgba(255,255,255,.35) inset;
+  }
+  .text-accent {
+    background-image: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Small caps section label used throughout widgets */
+  .label-caps {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-fg3);
+  }
+
+  .tabular { font-variant-numeric: tabular-nums; }
 }
 
-/* ── Light mode text overrides ───────────────────────────────────────────────
-   text-fg class handles primary text. For text-white used as primary content
-   text (not on colored buttons), we let the text-fg class do the work.
-   The following ensures zinc scale looks right in light mode too.
-   ──────────────────────────────────────────────────────────────────────────── */
-html[data-theme="light"] .text-fg   { color: var(--c-fg); }
+/* ── Ambient background ────────────────────────────────────────────────────── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--c-bg);
+}
+.ambient .blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  will-change: transform;
+  transition: background 3s ease;
+}
+.ambient .b1 { width: 55vw; height: 55vw; left: -12vw; top: -18vw; background: radial-gradient(circle, var(--blob-1), transparent 65%); animation: drift1 38s ease-in-out infinite; }
+.ambient .b2 { width: 50vw; height: 50vw; right: -14vw; top: -6vw;  background: radial-gradient(circle, var(--blob-2), transparent 65%); animation: drift2 46s ease-in-out infinite; }
+.ambient .b3 { width: 45vw; height: 45vw; left: 22vw;  bottom: -22vw; background: radial-gradient(circle, var(--blob-3), transparent 65%); animation: drift3 52s ease-in-out infinite; }
+.ambient .b4 { width: 35vw; height: 35vw; right: 8vw;  bottom: -12vw; background: radial-gradient(circle, var(--blob-4), transparent 65%); animation: drift1 60s -20s ease-in-out infinite reverse; }
+.ambient .grain {
+  position: absolute; inset: -50%;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+html[data-theme="light"] .ambient .grain { opacity: 0.035; }
+.ambient .vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.45) 100%);
+}
+html[data-theme="light"] .ambient .vignette { background: radial-gradient(ellipse at center, transparent 50%, rgba(15,23,42,.06) 100%); }
 
+@keyframes drift1 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 33% { transform: translate3d(8vw,6vh,0) scale(1.12); } 66% { transform: translate3d(-4vw,10vh,0) scale(.94); } }
+@keyframes drift2 { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-10vw,12vh,0) scale(1.15); } }
+@keyframes drift3 { 0%,100% { transform: translate3d(0,0,0) scale(1.05); } 40% { transform: translate3d(10vw,-8vh,0) scale(.92); } 75% { transform: translate3d(-6vw,-4vh,0) scale(1.1); } }
+
+/* Weather effects */
+@keyframes wrain   { 0% { transform: translateY(-20px) rotate(-12deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(var(--fall, 420px)) rotate(-12deg); opacity: 0; } }
+@keyframes wsnow   { 0% { transform: translate(0,-10px); opacity: 0; } 10% { opacity: .9; } 50% { transform: translate(12px, calc(var(--fall, 420px) * .5)); } 90% { opacity: .9; } 100% { transform: translate(-6px, var(--fall, 420px)); opacity: 0; } }
+@keyframes wflash  { 0%,100% { opacity: 0; } 2%,6% { opacity: .9; } 4% { opacity: .2; } 8% { opacity: 0; } }
+@keyframes wspin   { to { transform: rotate(360deg); } }
+@keyframes wpulse  { 0%,100% { opacity: .7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes wdrift  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(16px); } }
+@keyframes wfloat  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes idrop   { 0% { opacity: .9; transform: translateY(0); } 100% { opacity: 0; transform: translateY(18px); } }
+@keyframes iflash  { 0%,100% { opacity: 1; } 45%,55% { opacity: .25; } }
+
+/* Equalizer bars (music playing indicator) */
+@keyframes eq { 0%,100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.eq-bar { transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
+
+/* Shimmer skeleton */
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.skeleton {
+  background: linear-gradient(90deg, var(--c-card3) 25%, var(--c-elev2) 50%, var(--c-card3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+/* Slow rotating vinyl/art glow */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ── shadcn base tokens (kept for ui/ primitives) ──────────────────────────── */
 @layer base {
   :root {
     --background: 0 0% 6%;
@@ -81,7 +211,6 @@ html[data-theme="light"] .text-fg   { color: var(--c-fg); }
     --input: 0 0% 14%;
     --ring: 0 0% 80%;
     --radius: 1rem;
-    --orange: 25 95% 53%;
   }
 }
 
@@ -89,9 +218,19 @@ html[data-theme="light"] .text-fg   { color: var(--c-fg); }
   * {
     @apply border-border;
   }
+  html, body, #root { height: 100%; }
   body {
-    @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--c-bg);
+    color: var(--c-fg);
+    font-family: 'Inter Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
   }
+  button { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: rgba(255, 140, 70, 0.35); }
 }
+
+/* Leaflet: blend radar map into the dark glass look */
+.leaflet-container { background: transparent !important; font-family: inherit; }

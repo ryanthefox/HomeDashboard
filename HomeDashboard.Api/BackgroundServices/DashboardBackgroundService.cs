@@ -55,6 +55,7 @@ public class DashboardBackgroundService : BackgroundService
     private async Task PushWeatherAsync()
     {
         var data = await _weather.GetCurrentWeatherAsync();
+        if (data == null) return; // keep showing the last good data
         var json = System.Text.Json.JsonSerializer.Serialize(data);
         if (json == _lastWeatherJson) return;
         _lastWeatherJson = json;

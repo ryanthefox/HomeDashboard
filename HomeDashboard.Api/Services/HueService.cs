@@ -17,6 +17,8 @@ public class HueService
         _logger = logger;
     }
 
+    private bool _warnedNotConfigured;
+
     private string? BaseUrl
     {
         get
@@ -26,7 +28,12 @@ public class HueService
             if (string.IsNullOrWhiteSpace(ip) || ip.Contains("xxx") ||
                 string.IsNullOrWhiteSpace(key) || key.Contains("your-"))
             {
-                _logger.LogWarning("Hue bridge niet geconfigureerd. Vul BridgeIp en ApiKey in appsettings.json in.");
+                // Polled every few seconds — only warn once instead of flooding the log
+                if (!_warnedNotConfigured)
+                {
+                    _warnedNotConfigured = true;
+                    _logger.LogWarning("Hue bridge niet geconfigureerd. Vul BridgeIp en ApiKey in appsettings.json in.");
+                }
                 return null;
             }
             return $"http://{ip}/api/{key}";
@@ -170,13 +177,15 @@ public class HueService
         catch (Exception ex) { _logger.LogError(ex, "Failed to activate scene {Id}", sceneId); return false; }
     }
 
-    public async Task<bool> SetGroupStateAsync(string groupId, bool on)
+    public async Task<bool> SetGroupStateAsync(string groupId, bool? on, int? brightness = null)
     {
         try
         {
             if (BaseUrl is null) return false;
             var client = CreateClient();
-            var body = new JsonObject { ["on"] = on };
+            var body = new JsonObject();
+            if (on.HasValue) body["on"] = on.Value;
+            if (brightness.HasValue) body["bri"] = Math.Clamp(brightness.Value, 1, 254);
             var response = await client.PutAsJsonAsync($"{BaseUrl}/groups/{groupId}/action", body);
             return response.IsSuccessStatusCode;
         }

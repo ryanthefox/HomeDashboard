@@ -12,6 +12,8 @@ public class MusicService
 
 #if WINDOWS
     private GlobalSystemMediaTransportControlsSessionManager? _sessionManager;
+    private string? _artKey;
+    private string? _artDataUrl;
 
     public MusicService(ILogger<MusicService> logger)
     {
@@ -44,8 +46,10 @@ public class MusicService
             var mediaProperties = await session.TryGetMediaPropertiesAsync();
             var playbackInfo    = session.GetPlaybackInfo();
 
-            string? albumArtDataUrl = null;
-            if (mediaProperties.Thumbnail != null)
+            // Thumbnail encoding is relatively expensive; only redo it when the track changes
+            var artKey = $"{mediaProperties.Title}|{mediaProperties.Artist}|{mediaProperties.AlbumTitle}";
+            string? albumArtDataUrl = artKey == _artKey ? _artDataUrl : null;
+            if (albumArtDataUrl == null && mediaProperties.Thumbnail != null)
             {
                 try
                 {
@@ -55,6 +59,8 @@ public class MusicService
                     var bytes = ms.ToArray();
                     var mime  = stream.ContentType is { Length: > 0 } ct ? ct : "image/jpeg";
                     albumArtDataUrl = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                    _artKey = artKey;
+                    _artDataUrl = albumArtDataUrl;
                 }
                 catch { /* thumbnail unavailable */ }
             }

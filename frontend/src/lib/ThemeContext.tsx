@@ -10,13 +10,15 @@ interface ThemeCtxValue {
 const ThemeCtx = createContext<ThemeCtxValue>({ theme: 'dark', toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() =>
-    (localStorage.getItem('theme') as Theme) ?? 'dark'
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('theme')
+    if (fromUrl === 'dark' || fromUrl === 'light') return fromUrl
+    try { return (localStorage.getItem('theme') as Theme) ?? 'dark' } catch { return 'dark' }
+  })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
+    try { localStorage.setItem('theme', theme) } catch { /* private mode */ }
   }, [theme])
 
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')

@@ -41,7 +41,8 @@ public class HueController : ControllerBase
     [HttpPut("groups/{groupId}/action")]
     public async Task<IActionResult> SetGroupAction(string groupId, [FromBody] HueGroupActionRequest request)
     {
-        var success = await _service.SetGroupStateAsync(groupId, request.On);
+        if (request.On is null && request.Brightness is null) return BadRequest();
+        var success = await _service.SetGroupStateAsync(groupId, request.On, request.Brightness);
         return success ? Ok() : StatusCode(503, "Failed to update group");
     }
 }

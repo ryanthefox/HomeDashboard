@@ -41,6 +41,9 @@ builder.Services.AddSingleton<LgThinqClient>();
 builder.Services.AddSingleton<AircoService>();
 builder.Services.AddSingleton<WasherService>();
 
+builder.Services.AddSingleton<AfvalService>();
+builder.Services.AddSingleton<PlexService>();
+
 builder.Services.AddHostedService<DashboardBackgroundService>();
 
 var app = builder.Build();

@@ -1,332 +1,166 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight, Sun } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { AnimatePresence, motion } from 'motion/react'
+import { ChevronDown, Lightbulb, Power, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { hueApi, type HueRoom, type HueLight, type HueScene } from '@/lib/api'
+import { hueApi, type HueRoom, type HueLight } from '@/lib/api'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { roomAccent, avgBrightnessPct, litLights, useHueActions } from '@/lib/hue'
+import { Toggle, Panel, Press, spring, EmptyState, Skeleton } from '@/components/ui/motion'
+import { BrightnessSlider } from '@/components/ui/BrightnessSlider'
+import { SceneChips, BulbBadge, HUE_FAVORITE_KEY } from './home/MiniHue'
 
-// ── Color helpers ─────────────────────────────────────────────────────────────
-function roomGradient(room: HueRoom): string {
-  if (!room.anyOn) return 'linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%)'
-
-  const onLights = room.lights.filter(l => l.isOn)
-  if (onLights.length === 0) return 'linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%)'
-
-  // Check if any lights have color
-  const colorLight = onLights.find(l => l.colorHue != null && l.colorSat != null && (l.colorSat ?? 0) > 50)
-  if (colorLight && colorLight.colorHue != null && colorLight.colorSat != null) {
-    const h = Math.round((colorLight.colorHue / 65535) * 360)
-    const s = Math.round((colorLight.colorSat / 254) * 80)
-    return `linear-gradient(135deg, hsl(${h},${s}%,18%) 0%, hsl(${h},${s}%,30%) 100%)`
-  }
-
-  // Use average color temp
-  const ctLights = onLights.filter(l => l.colorTemp != null)
-  if (ctLights.length > 0) {
-    const avgCt = ctLights.reduce((sum, l) => sum + (l.colorTemp ?? 300), 0) / ctLights.length
-    // 153=cool/blue, 500=warm/amber
-    const t = (avgCt - 153) / (500 - 153) // 0=cool, 1=warm
-    if (t > 0.6) {
-      return 'linear-gradient(135deg, #2d1f0a 0%, #3d2a10 100%)'
-    } else if (t > 0.3) {
-      return 'linear-gradient(135deg, #221a0e 0%, #332614 100%)'
-    } else {
-      return 'linear-gradient(135deg, #0d1a2d 0%, #122040 100%)'
-    }
-  }
-
-  // Default warm
-  return 'linear-gradient(135deg, #221a0e 0%, #332614 100%)'
-}
-
-function roomAccentColor(room: HueRoom): string {
-  if (!room.anyOn) return '#6b6b6b'
-
-  const onLights = room.lights.filter(l => l.isOn)
-  const colorLight = onLights.find(l => l.colorHue != null && (l.colorSat ?? 0) > 50)
-  if (colorLight && colorLight.colorHue != null && colorLight.colorSat != null) {
-    const h = Math.round((colorLight.colorHue / 65535) * 360)
-    const s = Math.round((colorLight.colorSat / 254) * 90)
-    return `hsl(${h},${s}%,55%)`
-  }
-
-  const ctLights = onLights.filter(l => l.colorTemp != null)
-  if (ctLights.length > 0) {
-    const avgCt = ctLights.reduce((sum, l) => sum + (l.colorTemp ?? 300), 0) / ctLights.length
-    const t = (avgCt - 153) / (500 - 153)
-    if (t > 0.5) return '#f5a623'
-  }
-
-  return '#f5a623'
-}
-
-function avgBrightnessPct(room: HueRoom): number {
-  const on = room.lights.filter(l => l.isOn && l.isReachable)
-  if (on.length === 0) return 0
-  return Math.round(on.reduce((s, l) => s + l.brightness, 0) / on.length / 254 * 100)
-}
-
-// ── iOS Toggle ────────────────────────────────────────────────────────────────
-function IOSToggle({ on, accent, onChange }: { on: boolean; accent: string; onChange: (v: boolean) => void }) {
+function LightRow({ light, accent }: { light: HueLight; accent: string }) {
+  const { toggleLight, dimLight } = useHueActions()
   return (
-    <button
-      type="button"
-      onClick={e => { e.stopPropagation(); onChange(!on) }}
-      className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none"
-      style={{ background: on ? accent : '#3a3a3c' }}
-    >
-      <span
-        className="inline-block h-[22px] w-[22px] transform rounded-full bg-white shadow-md transition-transform duration-200"
-        style={{ transform: on ? 'translateX(22px)' : 'translateX(2px)' }}
-      />
-    </button>
-  )
-}
-
-// ── Brightness bar ────────────────────────────────────────────────────────────
-function BrightnessSlider({ value, accent, onChange }: { value: number; accent: string; onChange: (v: number) => void }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Sun className="h-3 w-3 shrink-0 text-zinc-500" />
-      <div className="relative flex-1 h-1.5 rounded-full bg-white/10">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full transition-all"
-          style={{ width: `${value}%`, background: accent }}
-        />
-        <input
-          type="range"
-          min={1} max={100}
-          value={value}
-          onClick={e => e.stopPropagation()}
-          onChange={e => onChange(Number(e.target.value))}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
-        />
-      </div>
-      <span className="w-8 text-right text-xs text-zinc-400">{value}%</span>
-    </div>
-  )
-}
-
-// ── Light row (inside expanded room) ──────────────────────────────────────────
-function LightRow({ light, roomId, accent }: { light: HueLight; roomId: string; accent: string }) {
-  const qc = useQueryClient()
-
-  const toggle = useMutation({
-    mutationFn: (on: boolean) => hueApi.setLightState(light.id, { on }),
-    onMutate: async (on) => {
-      const prev = qc.getQueryData<HueRoom[]>(['hue', 'rooms'])
-      qc.setQueryData<HueRoom[]>(['hue', 'rooms'], old =>
-        old?.map(r => r.id === roomId
-          ? { ...r, lights: r.lights.map(l => l.id === light.id ? { ...l, isOn: on } : l) }
-          : r) ?? [])
-      return { prev }
-    },
-    onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(['hue', 'rooms'], ctx.prev),
-  })
-
-  const dim = useMutation({
-    mutationFn: (pct: number) => hueApi.setLightState(light.id, { brightness: Math.round((pct / 100) * 254) }),
-    onMutate: async (pct) => {
-      const prev = qc.getQueryData<HueRoom[]>(['hue', 'rooms'])
-      qc.setQueryData<HueRoom[]>(['hue', 'rooms'], old =>
-        old?.map(r => r.id === roomId
-          ? { ...r, lights: r.lights.map(l => l.id === light.id ? { ...l, brightness: Math.round((pct / 100) * 254) } : l) }
-          : r) ?? [])
-      return { prev }
-    },
-    onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(['hue', 'rooms'], ctx.prev),
-  })
-
-  return (
-    <div className="py-2">
+    <div className="py-2.5">
       <div className="flex items-center gap-3">
-        <div
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{
-            background: light.isOn ? accent : '#3a3a3c',
-            boxShadow: light.isOn ? `0 0 6px ${accent}` : 'none',
-          }}
-        />
-        <span className={cn('flex-1 text-sm truncate', light.isOn ? 'text-fg' : 'text-zinc-500')}>
+        <span className="h-2 w-2 shrink-0 rounded-full transition-all duration-500"
+          style={{ background: light.isOn ? accent : 'var(--c-elev2)', boxShadow: light.isOn ? `0 0 10px ${accent}` : 'none' }} />
+        <span className={cn('flex-1 truncate text-sm', light.isOn ? 'text-fg' : 'text-fg3', !light.isReachable && 'line-through opacity-60')}>
           {light.name}
         </span>
-        <IOSToggle on={light.isOn} accent={accent} onChange={v => toggle.mutate(v)} />
+        <Toggle size="sm" on={light.isOn} accent={accent} disabled={!light.isReachable} onChange={v => toggleLight(light.id, v)} />
       </div>
-      {light.isOn && (
-        <div className="mt-2 pl-5">
-          <BrightnessSlider
-            value={Math.round((light.brightness / 254) * 100)}
-            accent={accent}
-            onChange={v => dim.mutate(v)}
-          />
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Scene chips ────────────────────────────────────────────────────────────────
-function SceneChips({ roomId }: { roomId: string }) {
-  const qc = useQueryClient()
-
-  const { data: scenes } = useQuery<HueScene[]>({
-    queryKey: ['hue', 'scenes', roomId],
-    queryFn: () => hueApi.getScenes(roomId),
-    staleTime: 60_000,
-  })
-
-  const activate = useMutation({
-    mutationFn: (sceneId: string) => hueApi.activateScene(roomId, sceneId),
-    onSuccess: () => {
-      setTimeout(() => qc.invalidateQueries({ queryKey: ['hue', 'rooms'] }), 600)
-    },
-  })
-
-  if (!scenes || scenes.length === 0) return null
-
-  return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
-      {scenes.map(scene => (
-        <button
-          key={scene.id}
-          onClick={e => { e.stopPropagation(); activate.mutate(scene.id) }}
-          className="rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-zinc-300 transition-colors hover:border-white/30 hover:text-fg active:scale-95"
-          style={{ background: 'rgba(255,255,255,0.06)' }}
-        >
-          {scene.name}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ── Room card ─────────────────────────────────────────────────────────────────
-function RoomCard({ room, expanded, onToggle }: {
-  room: HueRoom
-  expanded: boolean
-  onToggle: () => void
-}) {
-  const qc = useQueryClient()
-  const accent = roomAccentColor(room)
-  const bri = avgBrightnessPct(room)
-  const onCount = room.lights.filter(l => l.isOn && l.isReachable).length
-
-  const toggleRoom = useMutation({
-    mutationFn: (on: boolean) => hueApi.setGroupAction(room.id, on),
-    onMutate: async (on) => {
-      const prev = qc.getQueryData<HueRoom[]>(['hue', 'rooms'])
-      qc.setQueryData<HueRoom[]>(['hue', 'rooms'], old =>
-        old?.map(r => r.id === room.id
-          ? { ...r, anyOn: on, allOn: on, lights: r.lights.map(l => ({ ...l, isOn: on })) }
-          : r) ?? [])
-      return { prev }
-    },
-    onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(['hue', 'rooms'], ctx.prev),
-  })
-
-  const dimRoom = useMutation({
-    mutationFn: async (pct: number) => {
-      const bri = Math.round((pct / 100) * 254)
-      await Promise.all(
-        room.lights
-          .filter(l => l.isOn && l.isReachable)
-          .map(l => hueApi.setLightState(l.id, { brightness: bri }))
-      )
-    },
-    onMutate: async (pct) => {
-      const prev = qc.getQueryData<HueRoom[]>(['hue', 'rooms'])
-      const bri = Math.round((pct / 100) * 254)
-      qc.setQueryData<HueRoom[]>(['hue', 'rooms'], old =>
-        old?.map(r => r.id === room.id
-          ? { ...r, lights: r.lights.map(l => l.isOn ? { ...l, brightness: bri } : l) }
-          : r) ?? [])
-      return { prev }
-    },
-    onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(['hue', 'rooms'], ctx.prev),
-  })
-
-  return (
-    <div
-      className="overflow-hidden rounded-2xl transition-all duration-300 select-none"
-      style={{ background: roomGradient(room) }}
-    >
-      {/* Card header — always visible */}
-      <div
-        className="cursor-pointer px-5 pt-5 pb-4"
-        onClick={onToggle}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              {expanded
-                ? <ChevronDown className="h-4 w-4 shrink-0 text-zinc-400" />
-                : <ChevronRight className="h-4 w-4 shrink-0 text-zinc-400" />
-              }
-              <span className="font-semibold text-fg truncate">{room.name}</span>
+      <AnimatePresence initial={false}>
+        {light.isOn && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden pl-5">
+            <div className="pt-2">
+              <BrightnessSlider compact value={Math.round((light.brightness / 254) * 100)} accent={accent} onChange={v => dimLight(light.id, v)} />
             </div>
-            <p className="mt-0.5 pl-6 text-xs text-zinc-400">
-              {room.anyOn ? `${onCount} lamp${onCount !== 1 ? 'en' : ''} aan` : 'Uit'}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function RoomCard({ room, expanded, onToggle, index, favorite, onFavorite }: {
+  room: HueRoom; expanded: boolean; onToggle: () => void; index: number; favorite: boolean; onFavorite: () => void
+}) {
+  const { toggleRoom, dimRoom } = useHueActions()
+  const accent  = roomAccent(room)
+  const bri     = avgBrightnessPct(room)
+  const onCount = litLights(room).length
+
+  return (
+    <Panel index={index} layout transition={spring} className="relative select-none overflow-hidden">
+      {/* Coloured light wash that scales with brightness */}
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        animate={{ opacity: room.anyOn ? 0.35 + bri / 250 : 0 }}
+        transition={{ duration: 0.8 }}
+        style={{ background: `radial-gradient(120% 90% at 0% 0%, ${accent}55 0%, ${accent}14 45%, transparent 75%)` }}
+      />
+
+      <div className="relative cursor-pointer px-5 pb-4 pt-5" onClick={onToggle}>
+        <div className="flex items-center gap-3">
+          <BulbBadge on={room.anyOn} accent={accent} size={44} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold text-fg">{room.name}</p>
+            <p className="text-xs text-fg3 tabular">
+              {room.anyOn ? `${onCount} lamp${onCount !== 1 ? 'en' : ''} aan · ${bri}%` : `${room.lights.length} lampen · uit`}
             </p>
           </div>
-          <IOSToggle on={room.anyOn} accent={accent} onChange={v => toggleRoom.mutate(v)} />
+          <button onClick={e => { e.stopPropagation(); onFavorite() }}
+            title={favorite ? 'Favoriet verwijderen' : 'Als favoriet instellen'}
+            className={cn('shrink-0 rounded-lg p-1.5 transition-colors', favorite ? 'text-amber-400' : 'text-fg3 hover:text-fg2')}>
+            <Star className={cn('h-4 w-4', favorite && 'fill-current')} />
+          </button>
+          <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={spring} className="text-fg3">
+            <ChevronDown className="h-4 w-4" />
+          </motion.span>
+          <Toggle on={room.anyOn} accent={accent} onChange={v => toggleRoom(room.id, v)} />
         </div>
 
-        {/* Brightness slider (only when on) */}
-        {room.anyOn && (
-          <div className="mt-4 pl-6">
-            <BrightnessSlider
-              value={bri}
-              accent={accent}
-              onChange={v => dimRoom.mutate(v)}
-            />
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {room.anyOn && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden">
+              <div className="pt-4"><BrightnessSlider value={bri} accent={accent} onChange={v => dimRoom(room.id, v)} /></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Scene chips */}
-        {expanded && room.anyOn && (
-          <div className="pl-6" onClick={e => e.stopPropagation()}>
-            <SceneChips roomId={room.id} />
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {expanded && room.anyOn && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden">
+              <div className="pt-4"><SceneChips roomId={room.id} size="md" /></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Individual lights (expanded) */}
-      {expanded && room.lights.length > 0 && (
-        <div className="border-t border-white/5 px-5 pb-4">
-          <div className="divide-y divide-white/5">
-            {room.lights.map(light => (
-              <LightRow key={light.id} light={light} roomId={room.id} accent={accent} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      <AnimatePresence initial={false}>
+        {expanded && room.lights.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden border-t border-subtle"
+          >
+            <div className="divide-y divide-subtle px-5 pb-3">
+              {room.lights.map(light => <LightRow key={light.id} light={light} accent={accent} />)}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Panel>
   )
 }
 
-// ── Main widget ───────────────────────────────────────────────────────────────
 export function HueWidget() {
   const { data: rooms, isLoading, isError } = useQuery<HueRoom[]>({
-    queryKey: ['hue', 'rooms'],
-    queryFn: hueApi.getRooms,
-    staleTime: 10_000,
+    queryKey: ['hue', 'rooms'], queryFn: hueApi.getRooms, staleTime: 10_000,
   })
-
   const [expanded, setExpanded] = useLocalStorage<Record<string, boolean>>('hue-expanded', {})
+  const [favoriteId, setFavoriteId] = useLocalStorage<string>(HUE_FAVORITE_KEY, '')
+  const { toggleRoom } = useHueActions()
 
-  if (isLoading) return <div className="flex h-48 items-center justify-center text-zinc-500">Laden…</div>
-  if (isError)   return <div className="flex h-48 items-center justify-center text-zinc-500">Bridge niet bereikbaar</div>
-  if (!rooms || rooms.length === 0) return <div className="flex h-48 items-center justify-center text-zinc-500">Geen lampen gevonden</div>
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-3 p-1 sm:grid-cols-2 lg:grid-cols-3">
+        {[0, 1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+      </div>
+    )
+  }
+  if (isError || !rooms || rooms.length === 0) {
+    return (
+      <div className="flex h-full">
+        <EmptyState icon={<Lightbulb className="h-5 w-5" />}
+          title={isError ? 'Bridge niet bereikbaar' : 'Geen lampen gevonden'}
+          hint="Controleer HueBridge.BridgeIp en ApiKey in appsettings.json" />
+      </div>
+    )
+  }
+
+  const sorted = [...rooms].sort((a, b) => Number(b.id === favoriteId) - Number(a.id === favoriteId))
+  const anyOn = rooms.some(r => r.anyOn)
+  const litRooms = rooms.filter(r => r.anyOn).length
 
   return (
     <div className="h-full overflow-y-auto scrollbar-hide">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 p-1">
-        {rooms.map(room => (
-          <RoomCard
-            key={room.id}
-            room={room}
+      {/* Summary bar */}
+      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+        className="mb-3 flex items-center justify-between px-1">
+        <p className="text-sm text-fg2">
+          <span className="font-semibold text-fg">{litRooms}</span> van {rooms.length} ruimtes aan
+        </p>
+        <Press
+          onClick={() => rooms.filter(r => r.anyOn === anyOn).forEach(r => toggleRoom(r.id, !anyOn))}
+          className={cn('flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold', anyOn ? 'bg-card3 text-fg2 hover:text-fg' : 'bg-accent')}
+        >
+          <Power className="h-3.5 w-3.5" />{anyOn ? 'Alles uit' : 'Alles aan'}
+        </Press>
+      </motion.div>
+
+      <div className="grid grid-cols-1 items-start gap-3 p-1 sm:grid-cols-2 lg:grid-cols-3">
+        {sorted.map((room, i) => (
+          <RoomCard key={room.id} room={room} index={i}
+            favorite={room.id === favoriteId}
+            onFavorite={() => setFavoriteId(id => id === room.id ? '' : room.id)}
             expanded={!!expanded[room.id]}
-            onToggle={() => setExpanded(e => ({ ...e, [room.id]: !e[room.id] }))}
-          />
+            onToggle={() => setExpanded(e => ({ ...e, [room.id]: !e[room.id] }))} />
         ))}
       </div>
     </div>

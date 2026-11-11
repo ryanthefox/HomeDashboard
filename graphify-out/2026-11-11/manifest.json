@@ -1,0 +1,524 @@
+{
+  ".claude/settings.local.json": {
+    "mtime": 1774019257.4957254,
+    "seen": 1794395115.4604452,
+    "ast_hash": "46e77275a6ccb6282c24c84774de472b",
+    "semantic_hash": "46e77275a6ccb6282c24c84774de472b"
+  },
+  "HomeDashboard.Api/BackgroundServices/DashboardBackgroundService.cs": {
+    "mtime": 1794394341.0835376,
+    "seen": 1794395115.4604514,
+    "ast_hash": "eb94927ae62c2920a45a36e8213292d9",
+    "semantic_hash": "eb94927ae62c2920a45a36e8213292d9"
+  },
+  "HomeDashboard.Api/Controllers/AfvalController.cs": {
+    "mtime": 1774012753.2746892,
+    "seen": 1794395115.4604533,
+    "ast_hash": "a31250e5871a32276a18a81f02721c25",
+    "semantic_hash": "a31250e5871a32276a18a81f02721c25"
+  },
+  "HomeDashboard.Api/Controllers/AircoController.cs": {
+    "mtime": 1773922801.784009,
+    "seen": 1794395115.4604542,
+    "ast_hash": "6ce601621d1e01be0126c7d0ce8392b7",
+    "semantic_hash": "6ce601621d1e01be0126c7d0ce8392b7"
+  },
+  "HomeDashboard.Api/Controllers/AudioController.cs": {
+    "mtime": 1773868799.839008,
+    "seen": 1794395115.4604552,
+    "ast_hash": "b2787a943d2706574cd89e26201dcec5",
+    "semantic_hash": "b2787a943d2706574cd89e26201dcec5"
+  },
+  "HomeDashboard.Api/Controllers/HueController.cs": {
+    "mtime": 1794394341.084539,
+    "seen": 1794395115.460456,
+    "ast_hash": "24d9f77c70c41729f3c2fd0af85526ac",
+    "semantic_hash": "24d9f77c70c41729f3c2fd0af85526ac"
+  },
+  "HomeDashboard.Api/Controllers/MusicController.cs": {
+    "mtime": 1773863621.9361103,
+    "seen": 1794395115.4604566,
+    "ast_hash": "8beee1a030f37420286199dcdd0d455f",
+    "semantic_hash": "8beee1a030f37420286199dcdd0d455f"
+  },
+  "HomeDashboard.Api/Controllers/PlexController.cs": {
+    "mtime": 1794394341.0825374,
+    "seen": 1794395115.4604576,
+    "ast_hash": "8823e4025e2aa5ac4e413626742e28ca",
+    "semantic_hash": "8823e4025e2aa5ac4e413626742e28ca"
+  },
+  "HomeDashboard.Api/Controllers/SystemController.cs": {
+    "mtime": 1773866883.9041996,
+    "seen": 1794395115.4604583,
+    "ast_hash": "135ac63b1d24d3e78eaab2573571781a",
+    "semantic_hash": "135ac63b1d24d3e78eaab2573571781a"
+  },
+  "HomeDashboard.Api/Controllers/WasherController.cs": {
+    "mtime": 1773936180.320846,
+    "seen": 1794395115.4604588,
+    "ast_hash": "49b3553e7ff6282bed8d616c01b031e6",
+    "semantic_hash": "49b3553e7ff6282bed8d616c01b031e6"
+  },
+  "HomeDashboard.Api/Controllers/WeatherController.cs": {
+    "mtime": 1773863616.9802747,
+    "seen": 1794395115.4604595,
+    "ast_hash": "8c493639146bab21ed29a75538a9180d",
+    "semantic_hash": "8c493639146bab21ed29a75538a9180d"
+  },
+  "HomeDashboard.Api/HomeDashboard.Api.csproj": {
+    "mtime": 1773941343.2923193,
+    "seen": 1794395115.4604602,
+    "ast_hash": "0b8a131bac74e95407356d8c2026fc46",
+    "semantic_hash": "0b8a131bac74e95407356d8c2026fc46"
+  },
+  "HomeDashboard.Api/Hubs/DashboardHub.cs": {
+    "mtime": 1773872017.9276645,
+    "seen": 1794395115.4604611,
+    "ast_hash": "cf3a0ffdfe89818fa83d86f5e4d8687d",
+    "semantic_hash": "cf3a0ffdfe89818fa83d86f5e4d8687d"
+  },
+  "HomeDashboard.Api/Models/AfvalItem.cs": {
+    "mtime": 1774012652.9530988,
+    "seen": 1794395115.4604616,
+    "ast_hash": "d4812ae926b55437b0f2903602dcf679",
+    "semantic_hash": "d4812ae926b55437b0f2903602dcf679"
+  },
+  "HomeDashboard.Api/Models/AircoDevice.cs": {
+    "mtime": 1773871937.753334,
+    "seen": 1794395115.4604623,
+    "ast_hash": "1218be41977710b0893a459dfe41b352",
+    "semantic_hash": "1218be41977710b0893a459dfe41b352"
+  },
+  "HomeDashboard.Api/Models/AudioOutputDevice.cs": {
+    "mtime": 1773868787.0710683,
+    "seen": 1794395115.4604628,
+    "ast_hash": "eaf790f5a524419c1d143d6905d85814",
+    "semantic_hash": "eaf790f5a524419c1d143d6905d85814"
+  },
+  "HomeDashboard.Api/Models/HueLight.cs": {
+    "mtime": 1794394341.0835376,
+    "seen": 1794395115.4604635,
+    "ast_hash": "1e594e085f97eacb67d1b478bff38f0d",
+    "semantic_hash": "1e594e085f97eacb67d1b478bff38f0d"
+  },
+  "HomeDashboard.Api/Models/MediaInfo.cs": {
+    "mtime": 1773863534.3390117,
+    "seen": 1794395115.4604645,
+    "ast_hash": "9b1cb7bcbf25f64d7e38b57864b9a023",
+    "semantic_hash": "9b1cb7bcbf25f64d7e38b57864b9a023"
+  },
+  "HomeDashboard.Api/Models/PlexItem.cs": {
+    "mtime": 1774012654.8111663,
+    "seen": 1794395115.460465,
+    "ast_hash": "6e4ac26033d29d01c63603f15ef4c83d",
+    "semantic_hash": "6e4ac26033d29d01c63603f15ef4c83d"
+  },
+  "HomeDashboard.Api/Models/PlexSession.cs": {
+    "mtime": 1774018278.7204947,
+    "seen": 1794395115.4604654,
+    "ast_hash": "f0f9bdbe80d4630ab6b3a470d76efca1",
+    "semantic_hash": "f0f9bdbe80d4630ab6b3a470d76efca1"
+  },
+  "HomeDashboard.Api/Models/SystemStats.cs": {
+    "mtime": 1773879056.5553176,
+    "seen": 1794395115.4604661,
+    "ast_hash": "bde6956a1a12494fc27a8f283c5215f0",
+    "semantic_hash": "bde6956a1a12494fc27a8f283c5215f0"
+  },
+  "HomeDashboard.Api/Models/WasherDevice.cs": {
+    "mtime": 1773936148.9146345,
+    "seen": 1794395115.4604666,
+    "ast_hash": "96777df631c46882063283f540d5b81d",
+    "semantic_hash": "96777df631c46882063283f540d5b81d"
+  },
+  "HomeDashboard.Api/Models/WeatherData.cs": {
+    "mtime": 1773914235.309932,
+    "seen": 1794395115.4604678,
+    "ast_hash": "b440ee41c3a3df8428195d1555645360",
+    "semantic_hash": "b440ee41c3a3df8428195d1555645360"
+  },
+  "HomeDashboard.Api/Program.cs": {
+    "mtime": 1774017725.4230824,
+    "seen": 1794395115.4604683,
+    "ast_hash": "05798fd2fbd931be5d56e186e717fe9b",
+    "semantic_hash": "05798fd2fbd931be5d56e186e717fe9b"
+  },
+  "HomeDashboard.Api/Properties/launchSettings.json": {
+    "mtime": 1773864765.55338,
+    "seen": 1794395115.460469,
+    "ast_hash": "858ed332b3f72ef71d7112355164a330",
+    "semantic_hash": "858ed332b3f72ef71d7112355164a330"
+  },
+  "HomeDashboard.Api/Services/AfvalService.cs": {
+    "mtime": 1774018938.34048,
+    "seen": 1794395115.4604695,
+    "ast_hash": "59345d2d408959f2bc8da56998af3679",
+    "semantic_hash": "59345d2d408959f2bc8da56998af3679"
+  },
+  "HomeDashboard.Api/Services/AircoService.cs": {
+    "mtime": 1773923993.3102272,
+    "seen": 1794395115.4604702,
+    "ast_hash": "dd20a744c4869fe3d7a34802ee5a0cc7",
+    "semantic_hash": "dd20a744c4869fe3d7a34802ee5a0cc7"
+  },
+  "HomeDashboard.Api/Services/AudioService.cs": {
+    "mtime": 1773941177.1131468,
+    "seen": 1794395115.4604707,
+    "ast_hash": "8cd8653969852eb8d8987bcdbb3fbff1",
+    "semantic_hash": "8cd8653969852eb8d8987bcdbb3fbff1"
+  },
+  "HomeDashboard.Api/Services/HueService.cs": {
+    "mtime": 1794394341.0855386,
+    "seen": 1794395115.4604716,
+    "ast_hash": "3b45e8be91597388938dc06b9c28815e",
+    "semantic_hash": "3b45e8be91597388938dc06b9c28815e"
+  },
+  "HomeDashboard.Api/Services/LgThinqClient.cs": {
+    "mtime": 1773924001.2556586,
+    "seen": 1794395115.460472,
+    "ast_hash": "5ee2b77243cde5b430fe2602a8672f2f",
+    "semantic_hash": "5ee2b77243cde5b430fe2602a8672f2f"
+  },
+  "HomeDashboard.Api/Services/LgThinqOptions.cs": {
+    "mtime": 1773920940.2352636,
+    "seen": 1794395115.4604728,
+    "ast_hash": "e7b5ac7412b15c47d948d199e72a77af",
+    "semantic_hash": "e7b5ac7412b15c47d948d199e72a77af"
+  },
+  "HomeDashboard.Api/Services/MusicService.cs": {
+    "mtime": 1794394341.0855386,
+    "seen": 1794395115.4604733,
+    "ast_hash": "50ce79e5f299d59cfc6c1fd5065fb008",
+    "semantic_hash": "50ce79e5f299d59cfc6c1fd5065fb008"
+  },
+  "HomeDashboard.Api/Services/PlexService.cs": {
+    "mtime": 1794394351.324473,
+    "seen": 1794395115.460474,
+    "ast_hash": "986ff7f48851ca07651ac31bf36d53e4",
+    "semantic_hash": "986ff7f48851ca07651ac31bf36d53e4"
+  },
+  "HomeDashboard.Api/Services/SystemMonitorService.cs": {
+    "mtime": 1773941216.1932268,
+    "seen": 1794395115.4604747,
+    "ast_hash": "1e14bb5e16691491c95029ef772f9f72",
+    "semantic_hash": "1e14bb5e16691491c95029ef772f9f72"
+  },
+  "HomeDashboard.Api/Services/WasherService.cs": {
+    "mtime": 1773936173.2789361,
+    "seen": 1794395115.4604754,
+    "ast_hash": "e4c6a7bd5449257f7690f5ca4bc2eb6d",
+    "semantic_hash": "e4c6a7bd5449257f7690f5ca4bc2eb6d"
+  },
+  "HomeDashboard.Api/Services/WeatherService.cs": {
+    "mtime": 1773938073.2656054,
+    "seen": 1794395115.460476,
+    "ast_hash": "2bbb46e6759eb687d0021a3fc359b85c",
+    "semantic_hash": "2bbb46e6759eb687d0021a3fc359b85c"
+  },
+  "HomeDashboard.Api/appsettings.example.json": {
+    "mtime": 1794394341.0855386,
+    "seen": 1794395115.4604764,
+    "ast_hash": "de5fc98921615d6bda9fbccbf6ec2d9d",
+    "semantic_hash": "de5fc98921615d6bda9fbccbf6ec2d9d"
+  },
+  "HomeDashboard.sln": {
+    "mtime": 1774012238.1657372,
+    "seen": 1794395115.460477,
+    "ast_hash": "0f82b03f512ddfd40e7fb199473cb0c2",
+    "semantic_hash": "0f82b03f512ddfd40e7fb199473cb0c2"
+  },
+  "docker-compose.yml": {
+    "mtime": 1773941229.8327394,
+    "seen": 1794395115.4604776,
+    "ast_hash": "8f5935ec79f5f57d21cf8566e67c74f3",
+    "semantic_hash": "8f5935ec79f5f57d21cf8566e67c74f3"
+  },
+  "frontend/package.json": {
+    "mtime": 1794393500.9216545,
+    "seen": 1794395115.4604785,
+    "ast_hash": "c8801f34865095ddb7b835ba9a702f8e",
+    "semantic_hash": "c8801f34865095ddb7b835ba9a702f8e"
+  },
+  "frontend/postcss.config.js": {
+    "mtime": 1773863654.153701,
+    "seen": 1794395115.460479,
+    "ast_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
+  },
+  "frontend/src/App.tsx": {
+    "mtime": 1794393729.5100079,
+    "seen": 1794395115.4604797,
+    "ast_hash": "0af1d21b8d173a715e191a94b0584d62",
+    "semantic_hash": "0af1d21b8d173a715e191a94b0584d62"
+  },
+  "frontend/src/components/Dashboard.tsx": {
+    "mtime": 1794394577.5282478,
+    "seen": 1794395115.4604805,
+    "ast_hash": "fae05eaa930ab6c2b167dd9ffbf149c5",
+    "semantic_hash": "fae05eaa930ab6c2b167dd9ffbf149c5"
+  },
+  "frontend/src/components/ui/ArcGauge.tsx": {
+    "mtime": 1794393689.2699373,
+    "seen": 1794395115.4604816,
+    "ast_hash": "168c8f12baf28b6c0c8d2898f48e419f",
+    "semantic_hash": "168c8f12baf28b6c0c8d2898f48e419f"
+  },
+  "frontend/src/components/ui/BrightnessSlider.tsx": {
+    "mtime": 1794393669.881115,
+    "seen": 1794395115.4604824,
+    "ast_hash": "c74f8654ff0aba6729dd4e63f64b2dc8",
+    "semantic_hash": "c74f8654ff0aba6729dd4e63f64b2dc8"
+  },
+  "frontend/src/components/ui/ThermostatRing.tsx": {
+    "mtime": 1794393794.1604593,
+    "seen": 1794395115.4604828,
+    "ast_hash": "64f3f2ed42b108f6661db1c11b7dc4d2",
+    "semantic_hash": "64f3f2ed42b108f6661db1c11b7dc4d2"
+  },
+  "frontend/src/components/ui/motion.tsx": {
+    "mtime": 1794393604.1526518,
+    "seen": 1794395115.4604836,
+    "ast_hash": "310e2ba87d32458cceece24c0c340cc9",
+    "semantic_hash": "310e2ba87d32458cceece24c0c340cc9"
+  },
+  "frontend/src/components/weather/WeatherFx.tsx": {
+    "mtime": 1794394766.054527,
+    "seen": 1794395115.460484,
+    "ast_hash": "6f606e9ce46f34fc7da908eb266cab53",
+    "semantic_hash": "6f606e9ce46f34fc7da908eb266cab53"
+  },
+  "frontend/src/components/widgets/AfvalWidget.tsx": {
+    "mtime": 1794394245.0186317,
+    "seen": 1794395115.4604845,
+    "ast_hash": "3955e0504677e2ccc6fb80d47bc9dd91",
+    "semantic_hash": "3955e0504677e2ccc6fb80d47bc9dd91"
+  },
+  "frontend/src/components/widgets/AircoWidget.tsx": {
+    "mtime": 1794394244.8439217,
+    "seen": 1794395115.4604855,
+    "ast_hash": "d25ccf410fedff552f96469067d82f96",
+    "semantic_hash": "d25ccf410fedff552f96469067d82f96"
+  },
+  "frontend/src/components/widgets/HomeWidget.tsx": {
+    "mtime": 1794394100.1125953,
+    "seen": 1794395115.460486,
+    "ast_hash": "0524b82920cfdb2f72aac501755c0b6b",
+    "semantic_hash": "0524b82920cfdb2f72aac501755c0b6b"
+  },
+  "frontend/src/components/widgets/HueWidget.tsx": {
+    "mtime": 1794394766.0361056,
+    "seen": 1794395115.4604867,
+    "ast_hash": "6e3f18729c8a863383eea6f69207f5fa",
+    "semantic_hash": "6e3f18729c8a863383eea6f69207f5fa"
+  },
+  "frontend/src/components/widgets/MusicWidget.tsx": {
+    "mtime": 1794394155.4805994,
+    "seen": 1794395115.4604871,
+    "ast_hash": "275394bdc23909cbcb165dfa86cb69b9",
+    "semantic_hash": "275394bdc23909cbcb165dfa86cb69b9"
+  },
+  "frontend/src/components/widgets/PlexWidget.tsx": {
+    "mtime": 1794394245.1571207,
+    "seen": 1794395115.4604878,
+    "ast_hash": "39541a4ce832e1db24834de7a41e0d1a",
+    "semantic_hash": "39541a4ce832e1db24834de7a41e0d1a"
+  },
+  "frontend/src/components/widgets/SystemWidget.tsx": {
+    "mtime": 1794394244.6933503,
+    "seen": 1794395115.4604886,
+    "ast_hash": "27474f52077e0f99d1be2aadf201d8ff",
+    "semantic_hash": "27474f52077e0f99d1be2aadf201d8ff"
+  },
+  "frontend/src/components/widgets/WeatherWidget.tsx": {
+    "mtime": 1794394705.4547417,
+    "seen": 1794395115.4604893,
+    "ast_hash": "b9231ef2ac8f67c26ed59dbdb7ad1931",
+    "semantic_hash": "b9231ef2ac8f67c26ed59dbdb7ad1931"
+  },
+  "frontend/src/components/widgets/home/MiniAfval.tsx": {
+    "mtime": 1794394030.6045692,
+    "seen": 1794395115.4604897,
+    "ast_hash": "bec031f0d9c61d917ac83e4b0ac042d0",
+    "semantic_hash": "bec031f0d9c61d917ac83e4b0ac042d0"
+  },
+  "frontend/src/components/widgets/home/MiniAirco.tsx": {
+    "mtime": 1794394030.4903786,
+    "seen": 1794395115.4604902,
+    "ast_hash": "2dfbbedf6183a8b13fced4c10e2b5b92",
+    "semantic_hash": "2dfbbedf6183a8b13fced4c10e2b5b92"
+  },
+  "frontend/src/components/widgets/home/MiniHue.tsx": {
+    "mtime": 1794394774.0789683,
+    "seen": 1794395115.460491,
+    "ast_hash": "6c1d1a1b04a7f99c638c0159acf0fddc",
+    "semantic_hash": "6c1d1a1b04a7f99c638c0159acf0fddc"
+  },
+  "frontend/src/components/widgets/home/MiniMusic.tsx": {
+    "mtime": 1794393935.768921,
+    "seen": 1794395115.4604914,
+    "ast_hash": "aa16862f1fffe3d6e20bb1d056ac911f",
+    "semantic_hash": "aa16862f1fffe3d6e20bb1d056ac911f"
+  },
+  "frontend/src/components/widgets/home/MiniPlex.tsx": {
+    "mtime": 1794394030.70872,
+    "seen": 1794395115.4604924,
+    "ast_hash": "28cd48b89c8a3488d95803a115d6bf2a",
+    "semantic_hash": "28cd48b89c8a3488d95803a115d6bf2a"
+  },
+  "frontend/src/components/widgets/home/MiniSystem.tsx": {
+    "mtime": 1794393975.628008,
+    "seen": 1794395115.4604928,
+    "ast_hash": "c1da0127dcda8292d222e0981bbe1193",
+    "semantic_hash": "c1da0127dcda8292d222e0981bbe1193"
+  },
+  "frontend/src/components/widgets/home/MiniWeather.tsx": {
+    "mtime": 1794393935.717177,
+    "seen": 1794395115.4604936,
+    "ast_hash": "53a37a6b5857da5a138f10c259ef6419",
+    "semantic_hash": "53a37a6b5857da5a138f10c259ef6419"
+  },
+  "frontend/src/components/widgets/home/shared.tsx": {
+    "mtime": 1794393935.6010292,
+    "seen": 1794395115.460494,
+    "ast_hash": "9d10dfd6e986573b5c99ddce07d37b43",
+    "semantic_hash": "9d10dfd6e986573b5c99ddce07d37b43"
+  },
+  "frontend/src/hooks/useLocalStorage.ts": {
+    "mtime": 1773867441.4852057,
+    "seen": 1794395115.4604945,
+    "ast_hash": "6faeb52001021ee7bb14460bd75dddbb",
+    "semantic_hash": "6faeb52001021ee7bb14460bd75dddbb"
+  },
+  "frontend/src/hooks/useSignalR.ts": {
+    "mtime": 1794394659.853688,
+    "seen": 1794395115.4604955,
+    "ast_hash": "2032a2e2d1deb8739f60cd8816435f9a",
+    "semantic_hash": "2032a2e2d1deb8739f60cd8816435f9a"
+  },
+  "frontend/src/lib/ThemeContext.tsx": {
+    "mtime": 1794394473.6446104,
+    "seen": 1794395115.460496,
+    "ast_hash": "37e05f445dbc0110c6784b7d23287f50",
+    "semantic_hash": "37e05f445dbc0110c6784b7d23287f50"
+  },
+  "frontend/src/lib/afval.ts": {
+    "mtime": 1794393811.040461,
+    "seen": 1794395115.4604964,
+    "ast_hash": "3d347a4efd243839b5913fb435917151",
+    "semantic_hash": "3d347a4efd243839b5913fb435917151"
+  },
+  "frontend/src/lib/airco.ts": {
+    "mtime": 1794393764.9304898,
+    "seen": 1794395115.4604971,
+    "ast_hash": "85694697f4c460e6f89d16ccb0122222",
+    "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
+  },
+  "frontend/src/lib/api.ts": {
+    "mtime": 1794393619.724077,
+    "seen": 1794395115.4604976,
+    "ast_hash": "52181f5dbf48b97ec3caa3a35cd18716",
+    "semantic_hash": "52181f5dbf48b97ec3caa3a35cd18716"
+  },
+  "frontend/src/lib/format.ts": {
+    "mtime": 1794393811.0254114,
+    "seen": 1794395115.4604983,
+    "ast_hash": "e7464c1b2b2bebca882a7e9d26f1e544",
+    "semantic_hash": "e7464c1b2b2bebca882a7e9d26f1e544"
+  },
+  "frontend/src/lib/hue.ts": {
+    "mtime": 1794394766.0265434,
+    "seen": 1794395115.460499,
+    "ast_hash": "d1673c1279df1d60ade5cc68dfd5f505",
+    "semantic_hash": "d1673c1279df1d60ade5cc68dfd5f505"
+  },
+  "frontend/src/lib/plex.ts": {
+    "mtime": 1794393811.056508,
+    "seen": 1794395115.4604998,
+    "ast_hash": "cfd9ec5cb722f8060d9091e2d6d2d173",
+    "semantic_hash": "cfd9ec5cb722f8060d9091e2d6d2d173"
+  },
+  "frontend/src/lib/queryClient.ts": {
+    "mtime": 1773863658.5048103,
+    "seen": 1794395115.4605002,
+    "ast_hash": "cc3ae53d48b90fd897b36ab20dd4882a",
+    "semantic_hash": "cc3ae53d48b90fd897b36ab20dd4882a"
+  },
+  "frontend/src/lib/signalrClient.ts": {
+    "mtime": 1794393634.297912,
+    "seen": 1794395115.460501,
+    "ast_hash": "508b5911816c060b39be0db479cfccc6",
+    "semantic_hash": "508b5911816c060b39be0db479cfccc6"
+  },
+  "frontend/src/lib/utils.ts": {
+    "mtime": 1773863657.273945,
+    "seen": 1794395115.4605017,
+    "ast_hash": "bd7f1534696295bfbab094ac93447322",
+    "semantic_hash": "bd7f1534696295bfbab094ac93447322"
+  },
+  "frontend/src/main.tsx": {
+    "mtime": 1794393734.9177406,
+    "seen": 1794395115.4605026,
+    "ast_hash": "253a5b523e2752d04dcd462a72b83074",
+    "semantic_hash": "253a5b523e2752d04dcd462a72b83074"
+  },
+  "frontend/src/vite-env.d.ts": {
+    "mtime": 1794394155.1588032,
+    "seen": 1794395115.460503,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "frontend/tailwind.config.js": {
+    "mtime": 1773863653.910132,
+    "seen": 1794395115.4605038,
+    "ast_hash": "973b38ee969eec4af7d8b9e1edb9633d",
+    "semantic_hash": "973b38ee969eec4af7d8b9e1edb9633d"
+  },
+  "frontend/tsconfig.app.json": {
+    "mtime": 1773863644.5412984,
+    "seen": 1794395115.4605043,
+    "ast_hash": "dbfcf9cefcbb34101924e3a39dd2270b",
+    "semantic_hash": "dbfcf9cefcbb34101924e3a39dd2270b"
+  },
+  "frontend/tsconfig.json": {
+    "mtime": 1773863642.0028195,
+    "seen": 1794395115.4605048,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "frontend/tsconfig.node.json": {
+    "mtime": 1773865135.3124673,
+    "seen": 1794395115.4605055,
+    "ast_hash": "2237851e7155f755e307791233494b9a",
+    "semantic_hash": "2237851e7155f755e307791233494b9a"
+  },
+  "frontend/vite.config.ts": {
+    "mtime": 1773865074.6426742,
+    "seen": 1794395115.4605062,
+    "ast_hash": "493e31b739c04d82e044da49b9d3ce12",
+    "semantic_hash": "493e31b739c04d82e044da49b9d3ce12"
+  },
+  "publish/HomeDashboard.Api.deps.json": {
+    "mtime": 1773881913.6705582,
+    "seen": 1794395115.460507,
+    "ast_hash": "830b88aa9b696111756ada5805207962",
+    "semantic_hash": "830b88aa9b696111756ada5805207962"
+  },
+  "publish/HomeDashboard.Api.runtimeconfig.json": {
+    "mtime": 1773881913.7072215,
+    "seen": 1794395115.4605074,
+    "ast_hash": "d7b91424ba491ff93c9b8d71a29d2ec2",
+    "semantic_hash": "d7b91424ba491ff93c9b8d71a29d2ec2"
+  },
+  "publish/HomeDashboard.Api.staticwebassets.endpoints.json": {
+    "mtime": 1773865174.1961937,
+    "seen": 1794395115.460508,
+    "ast_hash": "c257f74d704f9d4fdd2c1313d6fd7a72",
+    "semantic_hash": "c257f74d704f9d4fdd2c1313d6fd7a72"
+  },
+  "setup_lg_auth.py": {
+    "mtime": 1773919819.5607426,
+    "seen": 1794395115.4605093,
+    "ast_hash": "be61f4a7b401a308f16d9193eb389a66",
+    "semantic_hash": "be61f4a7b401a308f16d9193eb389a66"
+  }
+}

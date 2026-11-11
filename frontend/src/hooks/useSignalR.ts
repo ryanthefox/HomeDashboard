@@ -1,18 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import * as signalR from '@microsoft/signalr'
-import { connection, startConnection } from '@/lib/signalrClient'
+import { connection, startConnection, subscribeConnection, getConnectionState } from '@/lib/signalrClient'
 import { queryClient } from '@/lib/queryClient'
 import type { WeatherData, HueRoom, MediaInfo, SystemStats, AircoDevice } from '@/lib/api'
 
+/** Wires SignalR push messages into the React Query cache. Mount once. */
 export function useSignalR() {
   useEffect(() => {
-    startConnection().catch(console.error)
+    void startConnection()
 
-    const onWeather = (data: WeatherData)    => queryClient.setQueryData(['weather'], data)
-    const onHue     = (data: HueRoom[])      => queryClient.setQueryData(['hue', 'rooms'], data)
-    const onMusic   = (data: MediaInfo)      => queryClient.setQueryData(['music'], data)
-    const onSystem  = (data: SystemStats)    => queryClient.setQueryData(['system'], data)
-    const onAirco   = (data: AircoDevice[])  => queryClient.setQueryData(['airco', 'devices'], data)
+    // Handlers must return void: SignalR treats a returned value as a client result and errors
+    const onWeather = (data: WeatherData | null) => { if (data) queryClient.setQueryData(['weather'], data) }
+    const onHue     = (data: HueRoom[])     => { queryClient.setQueryData(['hue', 'rooms'], data) }
+    const onMusic   = (data: MediaInfo)     => { queryClient.setQueryData(['music'], data) }
+    const onSystem  = (data: SystemStats)   => { queryClient.setQueryData(['system'], data) }
+    const onAirco   = (data: AircoDevice[]) => { queryClient.setQueryData(['airco', 'devices'], data) }
 
     connection.on('WeatherUpdate', onWeather)
     connection.on('HueUpdate',     onHue)
@@ -28,6 +30,13 @@ export function useSignalR() {
       connection.off('AircoUpdate',   onAirco)
     }
   }, [])
+}
 
-  return { isConnected: connection.state === signalR.HubConnectionState.Connected }
+/** Reactive connection state (re-renders only when it changes). */
+export function useConnectionState() {
+  const state = useSyncExternalStore(subscribeConnection, getConnectionState)
+  return {
+    state,
+    isConnected: state === signalR.HubConnectionState.Connected,
+  }
 }
