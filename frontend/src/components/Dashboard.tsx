@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
+import { DoorbellAlert } from './widgets/ring/DoorbellAlert'
 
 // Other tabs are code-split: e.g. Leaflet only loads when the weather tab opens
 const WeatherWidget = lazy(() => import('./widgets/WeatherWidget').then(m => ({ default: m.WeatherWidget })))
@@ -250,6 +251,7 @@ export function Dashboard() {
   return (
     <>
       <AmbientBackground />
+      <DoorbellAlert />
       <div className="relative z-10 flex h-[100dvh] flex-col p-3 sm:p-5 short:p-3 overflow-hidden" style={{ colorScheme: theme }}>
 
         <header className="mb-3 sm:mb-5 short:mb-3 shrink-0">

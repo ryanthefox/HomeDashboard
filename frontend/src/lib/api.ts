@@ -323,3 +323,35 @@ export interface EnergyUsage {
   hours: EnergyUsagePoint[]
   hoursDate: string | null
 }
+
+// ── Ring ──────────────────────────────────────────────────────────────────────
+export interface RingCamera {
+  id: string; name: string
+  isDoorbell: boolean; hasBattery: boolean; batteryLevel: number | null
+  isOffline: boolean; hasLight: boolean; snapshotsBlocked: boolean
+  lastEvent: { kind: string; at: string } | null
+}
+export interface RingStatus {
+  connected: boolean; needsLogin: boolean; awaiting2fa: boolean
+  error: string | null; bridgeDown?: boolean
+  cameras: RingCamera[]
+}
+export interface RingEventItem { id: string; kind: string; createdAt: string; answered: boolean; recorded: boolean }
+export interface RingLiveEvent { type: 'ding' | 'motion'; cameraId: string; cameraName: string; at: string }
+export interface RingLoginResult { ok?: boolean; needs2fa?: boolean; prompt?: string; wrongCode?: boolean; error?: string }
+
+async function ringJson<T>(input: string, init?: RequestInit): Promise<T> {
+  // The bridge answers errors as JSON too (e.g. bridge down = 503); surface them as data
+  const res = await apiFetch(input, init)
+  return res.json() as Promise<T>
+}
+export const ringApi = {
+  getStatus:   () => ringJson<RingStatus>(`${BASE}/ring/status`),
+  getEvents:   (id: string, limit = 15) => ringJson<RingEventItem[] | { error: string }>(`${BASE}/ring/events/${encodeURIComponent(id)}?limit=${limit}`),
+  getRecording:(id: string, dingId: string) => ringJson<{ url?: string; error?: string }>(`${BASE}/ring/recording/${encodeURIComponent(id)}/${encodeURIComponent(dingId)}`),
+  snapshotUrl: (id: string, t: number) => `${BASE}/ring/snapshot/${encodeURIComponent(id)}?t=${t}`,
+  login: (body: { email: string; password: string; code?: string }) =>
+    ringJson<RingLoginResult>(`${BASE}/ring/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  logout: () => ringJson<{ ok: boolean }>(`${BASE}/ring/logout`, { method: 'POST' }),
+  test:   (type: 'ding' | 'motion') => ringJson<{ ok?: boolean; error?: string }>(`${BASE}/ring/test?type=${type}`, { method: 'POST' }),
+}

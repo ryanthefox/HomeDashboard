@@ -36,6 +36,8 @@ services:
       # Frank Energie: prijzen werken altijd, eigen verbruik/kosten met je Frank-login
       - FrankEnergie__Email=${FRANK_EMAIL:-}
       - FrankEnergie__Password=${FRANK_PASSWORD:-}
+      # Ring-deurbel: via de ring-bridge hieronder (inloggen doe je in het dashboard)
+      - Ring__BridgeUrl=http://127.0.0.1:${RING_PORT:-5057}
       # PC: stats + aan/uit (zie HomeDashboard.Agent/install-agent.ps1)
       - Pc__Name=${PC_NAME:-PC}
       - Pc__AgentUrl=${PC_AGENT_URL}
@@ -47,6 +49,20 @@ services:
       - Google__ClientId=${GOOGLE_CLIENT_ID:-}
       - Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
       - Google__DeviceName=${GOOGLE_DEVICE_NAME:-}
+
+  # ── Ring-deurbel ──────────────────────────────────────────────────────────────
+  # Houdt de verbinding met Ring open (aanbellen/beweging, snapshots). Alleen
+  # bereikbaar vanaf de server zelf; het dashboard praat ermee. Log in via de
+  # Ring-tegel in het dashboard; de sleutel wordt in het volume ring-data bewaard.
+  ring:
+    build: ./ring-bridge
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - RING_PORT=${RING_PORT:-5057}
+      - RING_BIND=127.0.0.1
+    volumes:
+      - ring-data:/data
 
   # ── HTTPS via DuckDNS (optioneel) ─────────────────────────────────────────────
   # Aanzetten met COMPOSE_PROFILES=https in .env, plus DUCKDNS_DOMAIN en DUCKDNS_TOKEN.
@@ -77,5 +93,6 @@ services:
 
 volumes:
   dashboard-keys:
+  ring-data:
   caddy-data:
   caddy-config:

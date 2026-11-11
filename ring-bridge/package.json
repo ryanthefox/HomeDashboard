@@ -1,0 +1,11 @@
+{
+  "name": "homedashboard-ring-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tiny local HTTP bridge between the dashboard and Ring (via ring-client-api)",
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": {
+    "ring-client-api": "14.3.0"
+  }
+}

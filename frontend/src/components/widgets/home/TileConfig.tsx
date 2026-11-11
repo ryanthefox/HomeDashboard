@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { hueApi, aircoApi, type HueRoom, type AircoDevice } from '@/lib/api'
+import { hueApi, aircoApi, ringApi, type HueRoom, type AircoDevice, type RingStatus } from '@/lib/api'
+import { RING_MOTION_ALERT_KEY } from '@/lib/ring'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 // Which rooms / airco units a home tile shows. Empty list = show all.
@@ -20,6 +21,7 @@ export const SYSTEM_ITEMS = [
 ] as const
 export type SystemItem = typeof SYSTEM_ITEMS[number]['id']
 
+export const RING_VISIBLE_KEY = 'home-ring-cameras'
 export const ENERGY_VISIBLE_KEY = 'home-energy-items'
 export const ENERGY_ITEMS = [
   { id: 'price',    label: 'Stroomprijs nu' },
@@ -104,6 +106,38 @@ export function EnergyTileConfig() {
   return (
     <ItemPicker hint="Kies wat de Energie-tegel toont. Verbruik en kosten werken alleen met je Frank-login."
       items={ENERGY_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
+  )
+}
+
+export function RingTileConfig() {
+  const { data: status } = useQuery<RingStatus>({ queryKey: ['ring', 'status'], queryFn: ringApi.getStatus, staleTime: 20_000 })
+  const [selected, setSelected] = useLocalStorage<string[]>(RING_VISIBLE_KEY, [])
+  const [motionAlerts, setMotionAlerts] = useLocalStorage<boolean>(RING_MOTION_ALERT_KEY, true)
+  const cams = status?.cameras ?? []
+  return (
+    <div className="flex flex-col gap-4">
+      {cams.length > 0
+        ? <ItemPicker hint="Kies welke camera's deze tegel toont. Eén camera = geen tabbladen."
+            items={cams.map(c => ({ id: c.id, label: c.name }))} selected={selected} onChange={setSelected} />
+        : <p className="text-xs text-fg3">Koppel eerst je Ring-account via de tegel.</p>}
+      <div>
+        <p className="mb-1.5 text-xs text-fg3">Meldingen op dit scherm</p>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => setMotionAlerts(v => !v)}
+          className={cn('flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors',
+            motionAlerts ? 'bg-card4 text-fg' : 'bg-card3 text-fg3')}>
+          <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+            motionAlerts ? 'border-transparent bg-accent' : 'border-subtle2')}>
+            {motionAlerts && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+          </span>
+          Melding bij beweging
+        </motion.button>
+        <p className="mt-1.5 text-[11px] text-fg3">Bij aanbellen krijg je altijd een melding.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => void ringApi.test('ding')} className="rounded-xl bg-card4 px-3 py-1.5 text-xs font-medium text-fg2 hover:text-fg">Test aanbellen</button>
+        <button onClick={() => void ringApi.test('motion')} className="rounded-xl bg-card4 px-3 py-1.5 text-xs font-medium text-fg2 hover:text-fg">Test beweging</button>
+      </div>
+    </div>
   )
 }
 

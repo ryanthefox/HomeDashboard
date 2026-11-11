@@ -100,11 +100,13 @@ builder.Services.AddSingleton<WasherService>();
 
 builder.Services.AddSingleton<AfvalService>();
 builder.Services.AddSingleton<FrankEnergieService>();
+builder.Services.AddSingleton<RingService>();
 builder.Services.AddSingleton<PlexService>();
 builder.Services.AddSingleton<PcService>();
 builder.Services.AddSingleton<GoogleHomeService>();
 
 builder.Services.AddHostedService<DashboardBackgroundService>();
+builder.Services.AddHostedService<RingEventListener>();
 
 var app = builder.Build();
 

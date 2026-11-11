@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
 import { useCompactColumns } from './home/shared'
-import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig } from './home/TileConfig'
+import { HueTileConfig, AircoTileConfig, SystemTileConfig, EnergyTileConfig, RingTileConfig } from './home/TileConfig'
+import { MiniRing } from './home/MiniRing'
 import { MiniWeather } from './home/MiniWeather'
 import { MiniMusic } from './home/MiniMusic'
 import { MiniHue } from './home/MiniHue'
@@ -17,7 +18,7 @@ import { MiniEnergy } from './home/MiniEnergy'
 
 // ── Layout types ───────────────────────────────────────────────────────────────
 type Column     = 'left' | 'middle' | 'right'
-type WidgetId   = 'weather' | 'music' | 'lighting' | 'system' | 'airco' | 'afval' | 'plex' | 'energy'
+type WidgetId   = 'weather' | 'music' | 'lighting' | 'system' | 'airco' | 'afval' | 'plex' | 'energy' | 'ring'
 type WidgetSpan = 'full' | 'half'
 
 interface HomeLayout {
@@ -57,6 +58,8 @@ const WIDGET_META: Record<WidgetId, {
   plex:     { label: 'Plex',          flex: 2, mobileHeight: 280, render: () => <MiniPlex /> },
   energy:   { label: 'Energie',       flex: 1, mobileHeight: 300, render: () => <MiniEnergy />,
               config: { title: 'Onderdelen', render: () => <EnergyTileConfig /> } },
+  ring:     { label: 'Deurbel',       flex: 2, mobileHeight: 280, render: () => <MiniRing />,
+              config: { title: 'Camera & meldingen', render: () => <RingTileConfig /> } },
 }
 const ALL_IDS = Object.keys(WIDGET_META) as WidgetId[]
 
