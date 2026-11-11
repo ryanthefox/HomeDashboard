@@ -9,8 +9,13 @@ services:
     # zodat de systeem-widget de echte schijven en vrije ruimte toont.
     volumes:
       - /:/hostfs:ro,rslave
+      # Sleutels voor de inlog-cookie: zo blijf je ingelogd na een herstart/redeploy
+      - dashboard-keys:/app/keys
     environment:
       - HOST_ROOT=/hostfs
+      # Inloggen: één wachtwoord voor het hele dashboard (leeg = geen login)
+      - Auth__Password=${DASHBOARD_PASSWORD:-}
+      - Auth__KeysPath=/app/keys
       # Hue
       - HueBridge__BridgeIp=${HUE_BRIDGE_IP}
       - HueBridge__ApiKey=${HUE_API_KEY}
@@ -35,3 +40,6 @@ services:
       - Pc__MacAddress=${PC_MAC}
       - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}
       - Pc__MediaUrl=${PC_MEDIA_URL:-}
+
+volumes:
+  dashboard-keys:

@@ -23,3 +23,6 @@ appsettings.*.json
 ## OS
 .DS_Store
 Thumbs.db
+
+## Inlog-cookie sleutels (lokaal)
+keys/

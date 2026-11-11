@@ -1,10 +1,66 @@
 using HomeDashboard.Api.BackgroundServices;
 using HomeDashboard.Api.Hubs;
+using System.Threading.RateLimiting;
 using HomeDashboard.Api.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.FileProviders;
 // SystemMonitorService is registered below
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Login ────────────────────────────────────────────────────────────────────
+// One shared password (Auth:Password). When set, every API call and the SignalR hub
+// require the login cookie; when empty, the dashboard stays open (local dev).
+var dashboardAuth = new DashboardAuth(builder.Configuration);
+builder.Services.AddSingleton(dashboardAuth);
+
+// Persist the cookie-encryption keys, otherwise every restart/redeploy logs everyone out.
+var keysPath = builder.Configuration["Auth:KeysPath"];
+if (string.IsNullOrWhiteSpace(keysPath)) keysPath = Path.Combine(AppContext.BaseDirectory, "keys");
+builder.Services.AddDataProtection()
+    .SetApplicationName("HomeDashboard")
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.Cookie.Name = "hd_auth";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        o.ExpireTimeSpan = TimeSpan.FromDays(365);
+        o.SlidingExpiration = true;
+        // API: answer 401/403 instead of redirecting to a login page
+        o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = 401; return Task.CompletedTask; };
+        o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = 403; return Task.CompletedTask; };
+        // Password changed → old cookies are no longer valid
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            if (ctx.Principal?.FindFirst(DashboardAuth.StampClaim)?.Value != dashboardAuth.Stamp)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(o =>
+{
+    if (dashboardAuth.Required)
+        o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+});
+
+// Max 5 login attempts per minute per IP
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("login", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -81,11 +137,16 @@ else
     app.Logger.LogWarning("frontend/dist niet gevonden – draai eerst publish.bat");
 }
 
+if (!dashboardAuth.Required)
+    app.Logger.LogWarning("Geen Auth:Password ingesteld – het dashboard is zonder inloggen bereikbaar");
+
+app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<DashboardHub>("/hubs/dashboard");
 
-// SPA fallback: serve index.html for unknown routes
+// SPA fallback: serve index.html for unknown routes (the login screen lives in the SPA)
 app.MapFallback(async ctx =>
 {
     if (frontendDist == null)
@@ -96,7 +157,7 @@ app.MapFallback(async ctx =>
     }
     ctx.Response.ContentType = "text/html";
     await ctx.Response.SendFileAsync(Path.Combine(frontendDist, "index.html"));
-});
+}).AllowAnonymous();
 
 if (!builder.Environment.IsDevelopment())
 {

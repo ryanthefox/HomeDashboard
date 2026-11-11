@@ -1,7 +1,7 @@
 import { useState, useEffect, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check,
+  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
@@ -17,6 +17,7 @@ const PlexWidget    = lazy(() => import('./widgets/PlexWidget').then(m => ({ def
 import { useSignalR, useConnectionState } from '@/hooks/useSignalR'
 import { useTheme } from '@/lib/ThemeContext'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useAuth, logout } from '@/hooks/useAuth'
 import { spring, easeOutExpo } from '@/components/ui/motion'
 
 type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'afval' | 'plex'
@@ -33,7 +34,7 @@ const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
 ]
 
 // ── Ambient animated background ───────────────────────────────────────────────
-const AmbientBackground = memo(function AmbientBackground() {
+export const AmbientBackground = memo(function AmbientBackground() {
   return (
     <div className="ambient" aria-hidden>
       <div className="blob b1" />
@@ -175,6 +176,7 @@ const pageVariants = {
 export function Dashboard() {
   useSignalR()
   const { theme, toggle: toggleTheme } = useTheme()
+  const { data: auth } = useAuth()
   const [storedTab, setActiveTab] = useLocalStorage<Tab>('active-tab', 'home')
   // Deep link: ?tab=weer opens that tab (handy for a wall-tablet bookmark)
   const [urlTab, setUrlTab] = useState<Tab | null>(() => {
@@ -244,6 +246,18 @@ export function Dashboard() {
                   </motion.span>
                 </AnimatePresence>
               </motion.button>
+
+              {auth?.required && (
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => { void logout() }}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-card3 text-fg2 hover:text-fg transition-colors"
+                  title="Uitloggen"
+                  aria-label="Uitloggen"
+                >
+                  <LogOut className="h-4 w-4" />
+                </motion.button>
+              )}
 
               <ConnectionDot />
             </motion.div>

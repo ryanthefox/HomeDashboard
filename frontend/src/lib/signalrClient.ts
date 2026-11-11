@@ -27,11 +27,13 @@ connection.onreconnected(async () => {
 })
 connection.onclose(() => {
   notify()
-  scheduleStart(5_000)
+  if (wanted) scheduleStart(5_000)
 })
 
 let startTimer: ReturnType<typeof setTimeout> | null = null
 let starting = false
+/** False after logout: don't reconnect until startConnection() is called again. */
+let wanted = false
 
 function scheduleStart(delay: number) {
   if (startTimer) return
@@ -39,6 +41,7 @@ function scheduleStart(delay: number) {
 }
 
 export async function startConnection() {
+  wanted = true
   if (starting || connection.state !== signalR.HubConnectionState.Disconnected) return
   starting = true
   notify()
@@ -47,9 +50,15 @@ export async function startConnection() {
     await connection.invoke('SubscribeToAll')
   } catch (e) {
     console.warn('SignalR start failed, retrying…', e)
-    scheduleStart(5_000)
+    if (wanted) scheduleStart(5_000)
   } finally {
     starting = false
     notify()
   }
+}
+
+export async function stopConnection() {
+  wanted = false
+  if (startTimer) { clearTimeout(startTimer); startTimer = null }
+  try { await connection.stop() } catch { /* already stopped */ }
 }

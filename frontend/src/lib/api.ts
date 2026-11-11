@@ -1,14 +1,26 @@
+import { UnauthorizedError, notifyAuthRequired } from './auth'
+
 const BASE = '/api'
 
-async function json<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+/** fetch that turns a 401 (not / no longer logged in) into the login screen. */
+async function apiFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, init)
+  if (res.status === 401) {
+    notifyAuthRequired()
+    throw new UnauthorizedError()
+  }
+  return res
+}
+
+async function json<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await apiFetch(input, init)
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   return res.json() as Promise<T>
 }
 
 /** Fire a command; throws on non-2xx so mutations can roll back optimistic updates. */
 async function send(url: string, method: 'POST' | 'PUT', body?: unknown): Promise<void> {
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method,
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -132,7 +144,7 @@ export type PcPowerCommand = 'shutdown' | 'sleep' | 'restart'
 export const pcApi = {
   getStatus: () => json<PcStatus>(`${BASE}/pc/status`),
   getStats:  async (): Promise<SystemStats | null> => {
-    const res = await fetch(`${BASE}/pc/stats`)
+    const res = await apiFetch(`${BASE}/pc/stats`)
     if (res.status === 204) return null
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
     return res.json() as Promise<SystemStats>
@@ -235,7 +247,7 @@ export const plexApi = {
   getRecent:   () => json<PlexItem[]>(`${BASE}/plex/recent`),
   getSessions: () => json<PlexSession[]>(`${BASE}/plex/sessions`),
   getStats:    async (): Promise<PlexStats | null> => {
-    const res = await fetch(`${BASE}/plex/stats`)
+    const res = await apiFetch(`${BASE}/plex/stats`)
     if (res.status === 204) return null
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
     return res.json() as Promise<PlexStats>
