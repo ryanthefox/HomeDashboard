@@ -396,6 +396,17 @@ export interface TravelData {
   direction: TravelDirection; fromName: string; toName: string; carConfigured: boolean; trainConfigured: boolean
   car: CarRoute | null; carError: string | null; trains: TrainTrip[]; trainError: string | null
 }
+export interface StationRef { code: string; name: string }
+export interface TravelSettings { homeStation: StationRef | null; workStation: StationRef | null; envHomeStation: string | null; envWorkStation: string | null; nsConfigured: boolean }
 export const travelApi = {
   get: (dir: TravelDirection, refresh = false) => json<TravelData>(`${BASE}/travel?dir=${dir}${refresh ? '&refresh=true' : ''}`),
+  getSettings: () => json<TravelSettings>(`${BASE}/travel/settings`),
+  saveStations: (homeStation: StationRef | null, workStation: StationRef | null) =>
+    json<TravelSettings>(`${BASE}/travel/settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ homeStation, workStation }) }),
+  searchStations: async (q: string) => {
+    const res = await apiFetch(`${BASE}/travel/stations?q=${encodeURIComponent(q)}`)
+    const body = await res.json()
+    if (!res.ok) throw new Error(body?.error ?? 'Zoeken mislukt')
+    return Array.isArray(body) ? body as StationRef[] : []
+  },
 }

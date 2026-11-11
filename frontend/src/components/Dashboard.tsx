@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing, CalendarDays,
+  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap, BellRing, CalendarDays, Route,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
@@ -17,6 +17,7 @@ const AfvalWidget   = lazy(() => import('./widgets/AfvalWidget').then(m => ({ de
 const PlexWidget    = lazy(() => import('./widgets/PlexWidget').then(m => ({ default: m.PlexWidget })))
 const EnergyWidget  = lazy(() => import('./widgets/EnergyWidget').then(m => ({ default: m.EnergyWidget })))
 const CalendarWidget = lazy(() => import('./widgets/CalendarWidget').then(m => ({ default: m.CalendarWidget })))
+const TravelWidget  = lazy(() => import('./widgets/TravelWidget').then(m => ({ default: m.TravelWidget })))
 const RingWidget    = lazy(() => import('./widgets/RingWidget').then(m => ({ default: m.RingWidget })))
 import { useSignalR, useConnectionState } from '@/hooks/useSignalR'
 import { useTheme } from '@/lib/ThemeContext'
@@ -24,7 +25,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useAuth, logout } from '@/hooks/useAuth'
 import { spring, easeOutExpo } from '@/components/ui/motion'
 
-type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'agenda' | 'energie' | 'deurbel' | 'afval' | 'plex'
+type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'agenda' | 'reistijd' | 'energie' | 'deurbel' | 'afval' | 'plex'
 
 const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'home',        label: 'Home',        icon: Home },
@@ -34,6 +35,7 @@ const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'systeem',     label: 'Systeem',     icon: Cpu },
   { id: 'airco',       label: 'Airco',       icon: Wind },
   { id: 'agenda',      label: 'Agenda',      icon: CalendarDays },
+  { id: 'reistijd',    label: 'Reistijd',    icon: Route },
   { id: 'energie',     label: 'Energie',     icon: Zap },
   { id: 'deurbel',     label: 'Deurbel',     icon: BellRing },
   { id: 'afval',       label: 'Afval',       icon: Trash2 },
@@ -207,7 +209,7 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
             onClick={() => onChange(tab.id)}
             className={cn(
               'relative flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 short:py-1.5 text-sm font-medium transition-colors duration-200',
-              mobile ? 'shrink-0 sm:flex-1 sm:justify-center sm:px-2' : '2xl:px-4',
+              mobile ? 'shrink-0 sm:flex-1 sm:justify-center sm:px-2' : 'px-2.5 min-[1440px]:px-3.5 min-[1840px]:px-4',
               isActive ? 'text-zinc-950' : 'text-fg2 hover:text-fg',
             )}
           >
@@ -219,7 +221,7 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
                 style={{ boxShadow: '0 6px 18px -6px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.8)' }}
               />
             )}
-            <Icon className={cn('relative z-10 h-4 w-4', !mobile && 'hidden 2xl:block')} />
+            <Icon className={cn('relative z-10 h-4 w-4', !mobile && 'hidden min-[1840px]:block')} />
             <span className="relative z-10">{tab.label}</span>
           </button>
         )
@@ -349,6 +351,7 @@ export function Dashboard() {
               {activeTab === 'systeem'     && <SystemWidget />}
               {activeTab === 'airco'       && <AircoWidget />}
               {activeTab === 'agenda'      && <CalendarWidget />}
+              {activeTab === 'reistijd'    && <TravelWidget />}
               {activeTab === 'energie'     && <EnergyWidget />}
               {activeTab === 'deurbel'     && <RingWidget />}
               {activeTab === 'afval'       && <AfvalWidget />}

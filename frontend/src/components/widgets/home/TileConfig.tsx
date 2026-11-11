@@ -1,11 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { Check } from 'lucide-react'
+import { Check, Search, Loader2, Home, Briefcase, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { hueApi, aircoApi, ringApi, type HueRoom, type AircoDevice, type RingStatus } from '@/lib/api'
+import { hueApi, aircoApi, ringApi, travelApi, type HueRoom, type AircoDevice, type RingStatus, type StationRef, type TravelSettings } from '@/lib/api'
 import { RING_MOTION_ALERT_KEY } from '@/lib/ring'
 import { useCalendar, CALENDAR_VISIBLE_KEY } from '@/lib/calendar'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { Dialog } from '@/components/ui/Dialog'
 
 // Which rooms / airco units a home tile shows. Empty list = show all.
 export const HUE_VISIBLE_KEY   = 'home-hue-rooms'
@@ -115,11 +117,99 @@ export function EnergyTileConfig() {
   )
 }
 
+function StationField({ label, icon, value, envCode, onChange }: {
+  label: string; icon: React.ReactNode; value: StationRef | null; envCode: string | null; onChange: (s: StationRef | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState<StationRef[]>([])
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open || q.trim().length < 2) { setResults([]); return }
+    const t = setTimeout(async () => {
+      setBusy(true); setErr(null)
+      try { setResults(await travelApi.searchStations(q)) } catch (e) { setErr(e instanceof Error ? e.message : 'Zoeken mislukt'); setResults([]) }
+      setBusy(false)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [q, open])
+
+  const close = () => { setOpen(false); setQ('') }
+  const pick = (s: StationRef | null) => { onChange(s); close() }
+  const current = value ? `${value.name} (${value.code})` : envCode ? `${envCode} (uit .env)` : 'Niet ingesteld'
+
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl bg-card3 p-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card4 text-fg2 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] text-fg3">{label}</p>
+        <p className="truncate text-sm font-medium text-fg">{current}</p>
+      </div>
+      <button onClick={() => setOpen(true)} className="shrink-0 rounded-lg bg-card4 px-2.5 py-1 text-xs font-medium text-fg2 hover:text-fg">Wijzigen</button>
+
+      <Dialog open={open} onClose={close} title={`Station ${label.toLowerCase()}`} className="max-w-md">
+        <div className="p-4 pt-1">
+          <div className="flex items-center gap-2 rounded-xl bg-card3 px-3">
+            <Search className="h-4 w-4 shrink-0 text-fg3" />
+            <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Zoek station, bijv. Arnhem"
+              className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-fg outline-none placeholder:text-fg3" />
+            {busy && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-fg3" />}
+          </div>
+          {err && <p className="mt-2 text-xs text-red-400">{err}</p>}
+          <div className="mt-2 flex max-h-[50vh] min-h-[120px] flex-col gap-0.5 overflow-y-auto">
+            {results.map(s => (
+              <button key={s.code} onClick={() => pick(s)}
+                className={cn('flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-fg hover:bg-card3', value?.code === s.code && 'bg-card3')}>
+                <span className="truncate">{s.name}</span><span className="shrink-0 text-xs text-fg3">{s.code}</span>
+              </button>
+            ))}
+            {!busy && !err && q.trim().length >= 2 && results.length === 0 && <p className="px-3 py-3 text-sm text-fg3">Geen station gevonden</p>}
+            {q.trim().length < 2 && <p className="px-3 py-3 text-sm text-fg3">Typ minstens twee letters</p>}
+          </div>
+          {value && envCode && (
+            <button onClick={() => pick(null)} className="mt-2 flex items-center gap-1.5 px-1 text-xs text-fg3 hover:text-fg">
+              <X className="h-3 w-3" /> Terug naar {envCode} uit .env
+            </button>
+          )}
+        </div>
+      </Dialog>
+    </div>
+  )
+}
+
+export function StationSettings() {
+  const qc = useQueryClient()
+  const { data } = useQuery<TravelSettings>({ queryKey: ['travel', 'settings'], queryFn: travelApi.getSettings })
+  const [saving, setSaving] = useState(false)
+  if (!data) return null
+  if (!data.nsConfigured) return <p className="text-xs text-fg3">Zet eerst NS_API_KEY in de .env op de server om stations te kunnen kiezen.</p>
+
+  const save = async (home: StationRef | null, work: StationRef | null) => {
+    setSaving(true)
+    try {
+      qc.setQueryData(['travel', 'settings'], await travelApi.saveStations(home, work))
+      await qc.invalidateQueries({ queryKey: ['travel'] })
+    } finally { setSaving(false) }
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="mb-1 flex items-center gap-1.5 text-xs text-fg3">Treinstations (geldt voor al je schermen){saving && <Loader2 className="h-3 w-3 animate-spin" />}</p>
+      <StationField label="Thuis" icon={<Home />} value={data.homeStation} envCode={data.envHomeStation} onChange={s => void save(s, data.workStation)} />
+      <StationField label="Werk" icon={<Briefcase />} value={data.workStation} envCode={data.envWorkStation} onChange={s => void save(data.homeStation, s)} />
+    </div>
+  )
+}
+
 export function TravelTileConfig() {
   const [selected, setSelected] = useLocalStorage<string[]>(TRAVEL_VISIBLE_KEY, [])
   return (
-    <ItemPicker hint="Kies wat de Reistijd-tegel toont. 's Ochtends toont hij de reis naar je werk, 's middags naar huis."
-      items={TRAVEL_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
+    <div className="flex flex-col gap-5">
+      <ItemPicker hint="Kies wat de Reistijd-tegel toont. 's Ochtends toont hij de reis naar je werk, 's middags naar huis."
+        items={TRAVEL_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
+      <StationSettings />
+    </div>
   )
 }
 

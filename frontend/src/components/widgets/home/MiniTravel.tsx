@@ -87,7 +87,10 @@ export function MiniTravel() {
           {showTrain && (
             <div className="flex min-h-0 flex-1 flex-col gap-1.5">
               <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-fg3">
-                <TrainFront className="h-3.5 w-3.5" /> Trein
+                <TrainFront className="h-3.5 w-3.5 shrink-0" /> <span className="shrink-0">Trein</span>
+                {data.trains[0] && (
+                  <span className="truncate normal-case tracking-normal">· {data.trains[0].legs[0]?.from} → {data.trains[0].legs.at(-1)?.to}</span>
+                )}
               </p>
               {data.trains.length === 0
                 ? <p className="text-xs text-fg3">{data.trainError ?? 'Geen treinen gevonden'}</p>

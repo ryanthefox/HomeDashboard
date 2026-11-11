@@ -8,6 +8,9 @@ namespace HomeDashboard.Api.Services;
 public record CarRoute(int Minutes, int TypicalMinutes, int DelayMinutes, double Km, string? Via, DateTime UpdatedAt);
 public record TrainLeg(string Product, string Direction, string From, string To, DateTime Departure, DateTime? DepartureActual, DateTime Arrival, DateTime? ArrivalActual, string? Track, bool Cancelled);
 public record TrainTrip(DateTime Departure, DateTime? DepartureActual, DateTime Arrival, DateTime? ArrivalActual, int Minutes, int Transfers, int DelayMinutes, bool Cancelled, string Status, string? Crowd, List<TrainLeg> Legs);
+public record StationRef(string Code, string Name);
+public record StationSettings(StationRef? Home, StationRef? Work);
+public record TravelSettingsDto(StationRef? HomeStation, StationRef? WorkStation, string? EnvHomeStation, string? EnvWorkStation, bool NsConfigured);
 public record TravelResponse(string Direction, string FromName, string ToName, bool CarConfigured, bool TrainConfigured,
     CarRoute? Car, string? CarError, List<TrainTrip> Trains, string? TrainError);
 
@@ -22,8 +25,87 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
 
     private string Home => config["Travel:HomeAddress"] ?? "";
     private string Work => config["Travel:WorkAddress"] ?? "";
-    private string HomeStation => config["Travel:HomeStation"] ?? "";
-    private string WorkStation => config["Travel:WorkStation"] ?? "";
+    private string EnvHomeStation => config["Travel:HomeStation"] ?? "";
+    private string EnvWorkStation => config["Travel:WorkStation"] ?? "";
+    // Stations chosen in the dashboard win over the .env values
+    private string HomeStation => Stations.Home?.Code ?? EnvHomeStation;
+    private string WorkStation => Stations.Work?.Code ?? EnvWorkStation;
+
+    // ── Stations chosen in the dashboard (stored next to the login keys, which live in a volume) ──
+    private string SettingsFile
+    {
+        get
+        {
+            var dir = config["Auth:KeysPath"];
+            if (string.IsNullOrWhiteSpace(dir)) dir = Path.Combine(AppContext.BaseDirectory, "keys");
+            return Path.Combine(dir, "travel-settings.json");
+        }
+    }
+    private StationSettings? _stations;
+    private StationSettings Stations
+    {
+        get
+        {
+            if (_stations != null) return _stations;
+            try { _stations = File.Exists(SettingsFile) ? JsonSerializer.Deserialize<StationSettings>(File.ReadAllText(SettingsFile), JsonOpts) : null; }
+            catch (Exception ex) { log.LogWarning("Could not read travel settings: {Message}", ex.Message); }
+            return _stations ??= new StationSettings(null, null);
+        }
+    }
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
+
+    public TravelSettingsDto GetSettings() => new(Stations.Home, Stations.Work,
+        EnvHomeStation.Length > 0 ? EnvHomeStation : null, EnvWorkStation.Length > 0 ? EnvWorkStation : null, NsKey.Length > 0);
+
+    public async Task<TravelSettingsDto> SaveStationsAsync(StationRef? home, StationRef? work)
+    {
+        static StationRef? Clean(StationRef? s) => s is { Code.Length: > 0 } ? new(s.Code.Trim().ToUpperInvariant(), string.IsNullOrWhiteSpace(s.Name) ? s.Code.Trim() : s.Name.Trim()) : null;
+        var next = new StationSettings(Clean(home), Clean(work));
+        Directory.CreateDirectory(Path.GetDirectoryName(SettingsFile)!);
+        await File.WriteAllTextAsync(SettingsFile, JsonSerializer.Serialize(next, JsonOpts));
+        await _lock.WaitAsync();
+        try { _stations = next; _train.Clear(); } finally { _lock.Release(); }
+        return GetSettings();
+    }
+
+    /// <summary>Station search for the settings screen (NS stations list, cached for a day).</summary>
+    public async Task<List<StationRef>> SearchStationsAsync(string q)
+    {
+        q = q.Trim();
+        if (q.Length < 2 || NsKey.Length == 0) return [];
+        var all = await AllStationsAsync();
+        var ql = q.ToLowerInvariant();
+        return all
+            .Select(s => (s, score: s.Code.Equals(q, StringComparison.OrdinalIgnoreCase) ? 0
+                : s.Name.StartsWith(q, StringComparison.OrdinalIgnoreCase) ? 1
+                : s.Name.Contains(ql, StringComparison.OrdinalIgnoreCase) ? 2 : 9))
+            .Where(x => x.score < 9).OrderBy(x => x.score).ThenBy(x => x.s.Name).Take(12).Select(x => x.s).ToList();
+    }
+
+    private (DateTime At, List<StationRef> List)? _allStations;
+    private async Task<List<StationRef>> AllStationsAsync()
+    {
+        if (_allStations is { } c && DateTime.UtcNow - c.At < TimeSpan.FromDays(1)) return c.List;
+        var req = new HttpRequestMessage(HttpMethod.Get, "https://gateway.apiportal.ns.nl/reisinformatie-api/api/v2/stations");
+        req.Headers.Add("Ocp-Apim-Subscription-Key", NsKey);
+        using var res = await http.CreateClient().SendAsync(req);
+        if (!res.IsSuccessStatusCode)
+            throw new InvalidOperationException(res.StatusCode == System.Net.HttpStatusCode.Unauthorized ? "NS: ongeldige API-sleutel" : $"NS: {(int)res.StatusCode}");
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var list = new List<StationRef>();
+        var arr = doc.RootElement.TryGetProperty("payload", out var p) ? p : doc.RootElement;
+        if (arr.ValueKind == JsonValueKind.Array)
+            foreach (var s in arr.EnumerateArray())
+            {
+                // v2: { code, land, namen: { lang } } — v3: { id: { code }, country, names: { long } }
+                var code = Str(s, "code") ?? (s.TryGetProperty("id", out var id) ? Str(id, "code") : null);
+                var name = s.TryGetProperty("namen", out var n) ? Str(n, "lang") : s.TryGetProperty("names", out var n3) ? Str(n3, "long") : null;
+                var country = Str(s, "land") ?? Str(s, "country");
+                if (code != null && name != null && (country == null || country == "NL")) list.Add(new StationRef(code.ToUpperInvariant(), name));
+            }
+        _allStations = (DateTime.UtcNow, list);
+        return list;
+    }
     private string GoogleKey => config["Travel:GoogleMapsKey"] ?? "";
     private string TomTomKey => config["Travel:TomTomKey"] ?? "";
     private bool UseGoogle => GoogleKey.Length > 0;
@@ -89,7 +171,7 @@ public sealed partial class TravelService(IHttpClientFactory http, IConfiguratio
 
         // Drop trains that have left already
         var now = DateTime.UtcNow;
-        trains = trains.Where(t => (t.DepartureActual ?? t.Departure) > now.AddMinutes(-1)).Take(5).ToList();
+        trains = trains.Where(t => (t.DepartureActual ?? t.Departure) > now.AddMinutes(-1)).Take(8).ToList();
 
         return new TravelResponse(dir, toWork ? "Thuis" : "Werk", toWork ? "Werk" : "Thuis",
             CarConfigured, TrainConfigured, car, carError, trains, trainError);
