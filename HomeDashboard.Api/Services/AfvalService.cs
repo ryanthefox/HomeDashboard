@@ -85,6 +85,10 @@ public sealed class AfvalService
     /// </summary>
     private async Task<string> LoadICalAsync(string source)
     {
+        // webcal:// is just https:// for calendar apps
+        if (source.StartsWith("webcal://", StringComparison.OrdinalIgnoreCase))
+            source = "https://" + source["webcal://".Length..];
+
         if (Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
         {
