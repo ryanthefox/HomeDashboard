@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface Bar {
@@ -24,6 +24,15 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
   compact?: boolean        // no axes/ticks (for small tiles)
 }) {
   const [hover, setHover] = useState<number | null>(null)
+  // Finger: press and slide over the bars to read them (the tooltip stays a moment after lifting)
+  const barsRef = useRef<HTMLDivElement>(null)
+  const hideTimer = useRef<number | undefined>(undefined)
+  const indexAt = (x: number) => {
+    const r = barsRef.current?.getBoundingClientRect()
+    if (!r || r.width === 0) return null
+    return Math.max(0, Math.min(bars.length - 1, Math.floor(((x - r.left) / r.width) * bars.length)))
+  }
+  const point = (e: React.PointerEvent) => { window.clearTimeout(hideTimer.current); setHover(indexAt(e.clientX)) }
   if (bars.length === 0) return <div style={{ height }} />
 
   const max = Math.max(0, ...bars.map(b => b.value))
@@ -34,7 +43,7 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
   const active = hover != null ? bars[hover] : null
 
   return (
-    <div className="relative select-none" onPointerLeave={() => setHover(null)}>
+    <div className="relative select-none" onPointerLeave={e => { if (e.pointerType === 'mouse') setHover(null) }}>
       {/* Tooltip */}
       {active && (
         <div
@@ -63,7 +72,10 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
           {min < 0 && <div className="absolute inset-x-0 border-t border-subtle2" style={{ top: `${zero}%` }} />}
 
           {/* Bars */}
-          <div className="absolute inset-0 flex gap-[2px]">
+          <div ref={barsRef} className="absolute inset-0 flex gap-[2px]" style={{ touchAction: 'pan-y' }}
+            onPointerDown={point} onPointerMove={point}
+            onPointerUp={e => { if (e.pointerType !== 'mouse') hideTimer.current = window.setTimeout(() => setHover(null), 2500) }}
+            onPointerCancel={() => setHover(null)}>
             {bars.map((b, i) => {
               const h = (Math.abs(b.value) / range) * 100
               const neg = b.value < 0
@@ -72,8 +84,6 @@ export function BarChart({ bars, color, height = 160, yFormat, gridLines = 3, co
                 <div
                   key={b.key}
                   className="relative h-full min-w-0 flex-1 cursor-pointer"
-                  onPointerEnter={() => setHover(i)}
-                  onPointerDown={() => setHover(i)}
                 >
                   <div
                     className={cn('absolute inset-x-0 transition-[height,opacity] duration-500', neg ? 'rounded-b-[4px]' : 'rounded-t-[4px]')}

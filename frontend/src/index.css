@@ -234,3 +234,12 @@ html[data-theme="light"] .ambient .vignette { background: radial-gradient(ellips
 
 /* Leaflet: blend radar map into the dark glass look */
 .leaflet-container { background: transparent !important; font-family: inherit; }
+
+/* ── Touch screens: behave like an app, not a web page ────────────────────────
+   No text-selection / callout / "save image" menu on long-press; inputs stay normal. */
+html { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) {
+  body { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  input, textarea, [contenteditable="true"] { -webkit-touch-callout: default; -webkit-user-select: text; user-select: text; }
+}
+img { -webkit-user-drag: none; }

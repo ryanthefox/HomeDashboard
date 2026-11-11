@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { GripVertical, X, Plus, Minus, ChevronDown, ChevronUp, Columns2, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
+import { GripVertical, X, Plus, Columns2, Square, EyeOff, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
@@ -122,6 +123,45 @@ function ConfigSheet({ id, onClose }: { id: WidgetId; onClose: () => void }) {
   )
 }
 
+/** Follows one pointer (mouse, finger or pen) until it is released. */
+function trackPointer(e: React.PointerEvent, onMove: (ev: PointerEvent) => void, onEnd: (ev: PointerEvent | null) => void) {
+  e.preventDefault()
+  e.stopPropagation()
+  const id = e.pointerId
+  const move = (ev: PointerEvent) => { if (ev.pointerId === id) onMove(ev) }
+  const up = (ev: PointerEvent) => {
+    if (ev.pointerId !== id) return
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', up)
+    window.removeEventListener('pointercancel', up)
+    onEnd(ev.type === 'pointercancel' ? null : ev)
+  }
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', up)
+  window.addEventListener('pointercancel', up)
+}
+
+type DropLine = { left: number; top: number; width: number }
+type DragState = { id: WidgetId; x: number; y: number }
+
+/** Floating label that follows the finger/mouse while moving a tile, plus the drop indicator. */
+function DragOverlay({ drag, line }: { drag: DragState | null; line: DropLine | null }) {
+  if (!drag) return null
+  return createPortal(
+    <>
+      {line && (
+        <div className="pointer-events-none fixed z-[90] h-1 rounded-full bg-orange-400 shadow-[0_0_16px_rgba(251,146,60,.8)] transition-[top,left,width] duration-100"
+          style={{ left: line.left, top: line.top - 2, width: line.width }} />
+      )}
+      <div className="pointer-events-none fixed z-[91] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-2xl border border-orange-400/50 bg-[var(--c-solid)] px-4 py-2.5 text-sm font-semibold text-fg shadow-2xl"
+        style={{ left: drag.x, top: drag.y }}>
+        <GripVertical className="h-4 w-4 text-orange-400" />{WIDGET_META[drag.id].label}
+      </div>
+    </>,
+    document.body,
+  )
+}
+
 export function HomeWidget({ editMode }: { editMode: boolean }) {
   const compactCols = useCompactColumns()
   const [configId, setConfigId] = useState<WidgetId | null>(null)
@@ -132,7 +172,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
       whileTap={{ scale: 0.85 }}
       onClick={() => setConfigId(c => c === id ? null : id)}
-      className={cn(chip, 'absolute top-2.5 p-1.5 hover:text-orange-300', className)}
+      className={cn(chip, 'absolute top-2.5 p-2 hover:text-orange-300', className)}
       title="Instellingen"
     >
       <SlidersHorizontal className="h-4 w-4" />
@@ -145,8 +185,18 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   const [mobileOrder,   setMobileOrder]   = useLocalStorage<WidgetId[]>('mobile-widget-order', [])
   const [mobileHeights, setMobileHeights] = useLocalStorage<Partial<Record<WidgetId, number>>>('mobile-widget-heights', {})
 
-  const [drag, setDrag] = useState<{ id: WidgetId; col: Column } | null>(null)
-  const [drop, setDrop] = useState<{ col: Column; idx: number } | null>(null)
+  // Dragging a tile + where it would land
+  const [drag, setDrag] = useState<DragState | null>(null)
+  const [dropLine, setDropLine] = useState<DropLine | null>(null)
+  // Live sizes while resizing (committed to storage on release)
+  const [liveRows, setLiveRows] = useState<Record<string, number> | null>(null)
+  const [liveCols, setLiveCols] = useState<HomeLayout['colFlex'] | null>(null)
+  const [liveH, setLiveH] = useState<{ id: WidgetId; h: number } | null>(null)
+  const resizing = !!(liveRows || liveCols || liveH)
+
+  const colRefs = useRef<Partial<Record<Column, HTMLDivElement | null>>>({})
+  const colWrapRefs = useRef<Partial<Record<Column, HTMLDivElement | null>>>({})
+  const compactRef = useRef<HTMLDivElement | null>(null)
 
   const allUsed       = [...layout.left, ...layout.middle, ...layout.right]
   const hiddenWidgets = ALL_IDS.filter(id => !allUsed.includes(id))
@@ -154,12 +204,12 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   // ── Layout mutations ─────────────────────────────────────────────────────────
   const getFlex = (id: WidgetId) => layout.flexMap[id] ?? WIDGET_META[id].flex
   const getSpan = (id: WidgetId): WidgetSpan => layout.spanMap[id] ?? 'full'
-  const getColFlex = (col: Column) => layout.colFlex[col]
+  const getColFlex = (col: Column) => (liveCols ?? layout.colFlex)[col]
 
-  function handleDrop(col: Column, idx: number) {
-    if (!drag) return
-    const { id, col: from } = drag
+  function moveWidget(id: WidgetId, col: Column, idx: number) {
     setLayout(prev => {
+      const from = COLUMNS.find(c => prev[c].includes(id))
+      if (!from) return prev
       const n: HomeLayout = { ...prev, left: [...prev.left], middle: [...prev.middle], right: [...prev.right] }
       n[from] = n[from].filter(w => w !== id)
       let at = from === col && prev[col].indexOf(id) < idx ? idx - 1 : idx
@@ -167,15 +217,10 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       n[col].splice(at, 0, id)
       return n
     })
-    setDrag(null); setDrop(null)
   }
 
   const removeWidget = (id: WidgetId, col: Column) => setLayout(p => ({ ...p, [col]: p[col].filter(w => w !== id) }))
   const addWidget    = (id: WidgetId, col: Column) => setLayout(p => ({ ...p, [col]: [...p[col], id] }))
-  const adjustFlex   = (id: WidgetId, d: number) =>
-    setLayout(p => ({ ...p, flexMap: { ...p.flexMap, [id]: Math.max(1, Math.min(6, (p.flexMap[id] ?? WIDGET_META[id].flex) + d)) } }))
-  const adjustColFlex = (col: Column, d: number) =>
-    setLayout(p => ({ ...p, colFlex: { ...p.colFlex, [col]: Math.max(0.5, Math.min(4, Math.round((p.colFlex[col] + d * 0.5) * 10) / 10)) } }))
   const toggleSpan = (id: WidgetId) =>
     setLayout(p => ({ ...p, spanMap: { ...p.spanMap, [id]: (p.spanMap[id] ?? 'full') === 'full' ? 'half' : 'full' } }))
 
@@ -195,24 +240,102 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     return rows
   }
 
-  // ── Renderers ────────────────────────────────────────────────────────────────
-  const renderDropLine = (col: Column, idx: number) => {
-    const isTarget = drop?.col === col && drop.idx === idx
-    return (
-      <motion.div
-        key={`drop-${col}-${idx}`}
-        layout
-        className={cn(
-          'shrink-0 rounded-2xl transition-colors',
-          isTarget ? 'flex h-12 items-center justify-center border-2 border-dashed border-orange-400/80 bg-orange-400/10' : 'h-3',
-        )}
-        onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isTarget) setDrop({ col, idx }) }}
-        onDrop={e => { e.preventDefault(); handleDrop(col, idx) }}
-      >
-        {isTarget && <Plus className="h-4 w-4 text-orange-400" />}
-      </motion.div>
-    )
+  // ── Desktop: drag a tile to another place ────────────────────────────────────
+  function computeDrop(x: number, y: number): { col: Column; idx: number; line: DropLine } | null {
+    let col: Column | null = null, best = Infinity
+    for (const c of COLUMNS) {
+      const r = colRefs.current[c]?.getBoundingClientRect()
+      if (!r) continue
+      const d = x < r.left ? r.left - x : x > r.right ? x - r.right : 0
+      if (d < best) { best = d; col = c }
+    }
+    if (!col) return null
+    const list = colRefs.current[col]!
+    const lr = list.getBoundingClientRect()
+    const rows = [...list.querySelectorAll<HTMLElement>(':scope > [data-row]')]
+    if (rows.length === 0) return { col, idx: 0, line: { left: lr.left, top: lr.top + 6, width: lr.width } }
+    for (const el of rows) {
+      const r = el.getBoundingClientRect()
+      if (y < r.top + r.height / 2) return { col, idx: Number(el.dataset.start), line: { left: r.left, top: r.top - 6, width: r.width } }
+    }
+    const last = rows[rows.length - 1].getBoundingClientRect()
+    return { col, idx: layout[col].length, line: { left: last.left, top: last.bottom + 6, width: last.width } }
   }
+
+  function startMove(e: React.PointerEvent, id: WidgetId) {
+    let target: { col: Column; idx: number } | null = null
+    setDrag({ id, x: e.clientX, y: e.clientY })
+    trackPointer(e, ev => {
+      setDrag({ id, x: ev.clientX, y: ev.clientY })
+      const d = computeDrop(ev.clientX, ev.clientY)
+      target = d && { col: d.col, idx: d.idx }
+      setDropLine(d?.line ?? null)
+    }, ev => {
+      if (ev && target) moveWidget(id, target.col, target.idx)
+      setDrag(null); setDropLine(null)
+    })
+  }
+
+  // ── Desktop: drag the gap between two tiles to change their heights ─────────
+  function startRowResize(e: React.PointerEvent, col: Column, r: number) {
+    const list = colRefs.current[col]
+    if (!list) return
+    const els = [...list.querySelectorAll<HTMLElement>(':scope > [data-row]')]
+    const heights = els.map(el => el.getBoundingClientRect().height)
+    const rows = buildRows(layout[col])
+    const y0 = e.clientY, MIN = 90
+    let hs = heights
+    const toFlex = (h: number[]) => Object.fromEntries(rows.map((row, i) => [row.items.join('+'), Math.round(h[i]) / 100]))
+    trackPointer(e, ev => {
+      const dy = ev.clientY - y0
+      let a = heights[r] + dy, b = heights[r + 1] - dy
+      if (a < MIN) { b -= MIN - a; a = MIN }
+      if (b < MIN) { a -= MIN - b; b = MIN }
+      hs = [...heights]; hs[r] = a; hs[r + 1] = b
+      setLiveRows(toFlex(hs))
+    }, ev => {
+      if (ev) {
+        const flex = toFlex(hs)
+        setLayout(p => {
+          const fm = { ...p.flexMap }
+          for (const row of rows) for (const id of row.items) fm[id] = flex[row.items.join('+')]
+          return { ...p, flexMap: fm }
+        })
+      }
+      setLiveRows(null)
+    })
+  }
+
+  // ── Desktop: drag the gap between two columns to change their widths ────────
+  function startColResize(e: React.PointerEvent, i: number) {
+    const widths = COLUMNS.map(c => colWrapRefs.current[c]?.getBoundingClientRect().width ?? 0)
+    const x0 = e.clientX, MIN = 220
+    let ws = widths
+    const toFlex = (w: number[]) => ({ left: Math.round(w[0]) / 100, middle: Math.round(w[1]) / 100, right: Math.round(w[2]) / 100 })
+    trackPointer(e, ev => {
+      const dx = ev.clientX - x0
+      let a = widths[i] + dx, b = widths[i + 1] - dx
+      if (a < MIN) { b -= MIN - a; a = MIN }
+      if (b < MIN) { a -= MIN - b; b = MIN }
+      ws = [...widths]; ws[i] = a; ws[i + 1] = b
+      setLiveCols(toFlex(ws))
+    }, ev => {
+      if (ev) setLayout(p => ({ ...p, colFlex: toFlex(ws) }))
+      setLiveCols(null)
+    })
+  }
+
+  // ── Renderers ────────────────────────────────────────────────────────────────
+  const gripChip = (onDown: (e: React.PointerEvent) => void, className?: string) => (
+    <motion.div
+      initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
+      onPointerDown={onDown}
+      className={cn(chip, 'absolute left-2.5 top-2.5 cursor-grab touch-none p-2 active:cursor-grabbing', className)}
+      title="Slepen om te verplaatsen"
+    >
+      <GripVertical className="h-4 w-4" />
+    </motion.div>
+  )
 
   let cellIndex = 0
   function renderCell(id: WidgetId, col: Column) {
@@ -220,7 +343,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     return (
       <motion.div
         key={id}
-        layout="position"
+        layout={resizing ? false : 'position'}
         transition={softSpring}
         variants={fadeUp}
         initial="hidden"
@@ -240,40 +363,29 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="pointer-events-none absolute inset-0 z-20 rounded-3xl bg-black/10"
             >
-              <motion.div
-                initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
-                className="absolute left-2.5 top-2.5"
-              >
-                <div
-                  draggable
-                  onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDrag({ id, col }) }}
-                  onDragEnd={() => { setDrag(null); setDrop(null) }}
-                  className={cn(chip, 'cursor-grab p-1.5 active:cursor-grabbing')}
-                  title="Slepen om te verplaatsen"
-                >
-                  <GripVertical className="h-4 w-4" />
-                </div>
-              </motion.div>
+              {gripChip(e => startMove(e, id))}
               <motion.button
                 initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}
                 whileTap={{ scale: 0.85 }}
                 onClick={() => removeWidget(id, col)}
-                className={cn(chip, 'absolute right-2.5 top-2.5 p-1.5 hover:text-red-400')}
+                className={cn(chip, 'absolute right-2.5 top-2.5 p-2 hover:text-red-400')}
                 title="Verbergen"
               >
                 <X className="h-4 w-4" />
               </motion.button>
-              {configButton(id, 'right-12')}
+              {configButton(id, 'right-[3.25rem]')}
               <motion.div
                 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={spring}
-                className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 px-1.5 py-0.5')}
+                className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1 py-0.5 pl-1 pr-1.5')}
               >
-                <IconBtn onClick={() => adjustFlex(id, -1)} disabled={getFlex(id) <= 1} title="Lager"><Minus className="h-3 w-3" /></IconBtn>
-                <span className="w-20 truncate text-center text-xs font-medium">{WIDGET_META[id].label}</span>
-                <IconBtn onClick={() => adjustFlex(id, 1)} disabled={getFlex(id) >= 6} title="Hoger"><Plus className="h-3 w-3" /></IconBtn>
+                <span onPointerDown={e => startMove(e, id)} title="Slepen om te verplaatsen"
+                  className="flex cursor-grab touch-none items-center gap-1 px-1.5 py-1 active:cursor-grabbing">
+                  <GripVertical className="h-3 w-3 text-zinc-400" />
+                  <span className="max-w-[7rem] truncate text-xs font-medium">{WIDGET_META[id].label}</span>
+                </span>
                 <span className="mx-0.5 h-3 w-px bg-white/20" />
-                <IconBtn onClick={() => toggleSpan(id)} title={getSpan(id) === 'half' ? 'Volle breedte' : 'Halve breedte'}>
-                  {getSpan(id) === 'half' ? <Square className="h-3 w-3" /> : <Columns2 className="h-3 w-3" />}
+                <IconBtn onClick={() => toggleSpan(id)} title={getSpan(id) === 'half' ? 'Volle breedte' : 'Halve breedte (naast elkaar)'}>
+                  {getSpan(id) === 'half' ? <Square className="h-3.5 w-3.5" /> : <Columns2 className="h-3.5 w-3.5" />}
                 </IconBtn>
               </motion.div>
             </motion.div>
@@ -286,49 +398,42 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     )
   }
 
+  /** Gap between two rows/columns; in edit mode it is a grab bar for resizing. */
+  const resizeGap = (key: string, dir: 'row' | 'col', onDown?: (e: React.PointerEvent) => void) => {
+    const row = dir === 'row'
+    if (!editMode || !onDown) return <div key={key} className={row ? 'h-3 shrink-0' : 'w-3 shrink-0'} />
+    return (
+      <div key={key} onPointerDown={onDown} title={row ? 'Sleep om de hoogte aan te passen' : 'Sleep om de breedte aan te passen'}
+        className={cn('group relative z-10 flex shrink-0 touch-none items-center justify-center',
+          row ? 'h-3 cursor-row-resize' : 'w-3 cursor-col-resize')}>
+        {/* Larger invisible hit area for fingers */}
+        <span className={cn('absolute', row ? '-inset-y-2 inset-x-0' : '-inset-x-2 inset-y-0')} />
+        <span className={cn('rounded-full bg-orange-400/50 transition-all group-hover:bg-orange-400 group-active:bg-orange-400',
+          row ? 'h-1 w-12 group-hover:w-20' : 'h-12 w-1 group-hover:h-20')} />
+      </div>
+    )
+  }
+
   function renderColumn(col: Column) {
     const widgets  = layout[col]
     const rows     = buildRows(widgets)
-    const dragging = editMode && !!drag
 
     return (
-      <div key={col} className="flex min-h-0 min-w-0 flex-col" style={{ flex: getColFlex(col), transition: 'flex .4s cubic-bezier(.16,1,.3,1)' }}>
-        <AnimatePresence initial={false}>
-          {editMode && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="panel flex shrink-0 items-center justify-center gap-1 overflow-hidden rounded-xl px-2 py-1"
-            >
-              <IconBtn onClick={() => adjustColFlex(col, -1)} disabled={getColFlex(col) <= 0.5} className="text-fg2 hover:text-fg"><Minus className="h-3 w-3" /></IconBtn>
-              <span className="w-24 text-center text-xs text-fg2 tabular">{COL_LABEL[col]} · {getColFlex(col).toFixed(1)}</span>
-              <IconBtn onClick={() => adjustColFlex(col, 1)} disabled={getColFlex(col) >= 4} className="text-fg2 hover:text-fg"><Plus className="h-3 w-3" /></IconBtn>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="flex min-h-0 flex-1 flex-col">
-          {dragging && renderDropLine(col, 0)}
-          {rows.map(({ items, startIdx, rowFlex }) => (
+      <div key={col} ref={el => { colWrapRefs.current[col] = el }} className="flex min-h-0 min-w-0 flex-col"
+        style={{ flex: getColFlex(col), transition: liveCols ? 'none' : 'flex .4s cubic-bezier(.16,1,.3,1)' }}>
+        <div ref={el => { colRefs.current[col] = el }} className="flex min-h-0 flex-1 flex-col">
+          {rows.map(({ items, startIdx, rowFlex }, r) => (
             <React.Fragment key={items.join('+')}>
-              {startIdx > 0 && !dragging && <div className="h-3 shrink-0" />}
-              <div className="flex min-h-0 gap-3" style={{ flex: rowFlex }}>
+              {r > 0 && resizeGap('g', 'row', e => startRowResize(e, col, r - 1))}
+              <div data-row data-start={startIdx} className="flex min-h-0 gap-3" style={{ flex: liveRows?.[items.join('+')] ?? rowFlex }}>
                 {items.map(id => renderCell(id, col))}
               </div>
-              {dragging && renderDropLine(col, startIdx + items.length)}
             </React.Fragment>
           ))}
 
           {editMode && widgets.length === 0 && (
-            <div
-              className={cn(
-                'flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed text-fg3 transition-colors',
-                drop?.col === col ? 'border-orange-400 bg-orange-400/10' : 'border-subtle2',
-              )}
-              onDragOver={e => { e.preventDefault(); setDrop({ col, idx: 0 }) }}
-              onDrop={e => { e.preventDefault(); handleDrop(col, 0) }}
-            >
+            <div className={cn('flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed text-fg3 transition-colors',
+              drag ? 'border-orange-400/70 bg-orange-400/5' : 'border-subtle2')}>
               <Plus className="h-5 w-5" />
               <p className="text-xs">Sleep hier een widget</p>
             </div>
@@ -376,20 +481,83 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     const base = mobileOrder.length > 0 ? mobileOrder : allUsed
     const ordered = [...base.filter(id => allUsed.includes(id)), ...allUsed.filter(id => !base.includes(id))]
     const getH = (id: WidgetId) => mobileHeights[id] ?? WIDGET_META[id].mobileHeight
-    const adjustH = (id: WidgetId, d: number) => setMobileHeights(h => ({ ...h, [id]: Math.max(120, Math.min(600, getH(id) + d)) }))
-    const move = (id: WidgetId, dir: -1 | 1) => {
-      const cur = [...ordered]
-      const idx = cur.indexOf(id), to = idx + dir
-      if (to < 0 || to >= cur.length) return
-      ;[cur[idx], cur[to]] = [cur[to], cur[idx]]
-      setMobileOrder(cur)
-    }
+    const shownH = (id: WidgetId) => (liveH?.id === id ? liveH.h : getH(id))
     const removeCompact = (id: WidgetId) => {
       const col = COLUMNS.find(c => layout[c].includes(id))
       if (col) removeWidget(id, col)
     }
 
-    // Greedy masonry: each tile goes into the currently shortest column
+    function computeCompactDrop(x: number, y: number, dragged: WidgetId) {
+      const cells = [...(compactRef.current?.querySelectorAll<HTMLElement>('[data-ccell]') ?? [])]
+      let best: { el: HTMLElement; d: number } | null = null
+      for (const el of cells) {
+        const r = el.getBoundingClientRect()
+        const dx = x < r.left ? r.left - x : x > r.right ? x - r.right : 0
+        const dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0
+        const d = dx * 3 + dy // prefer the column under the finger
+        if (!best || d < best.d) best = { el, d }
+      }
+      if (!best) return null
+      const target = best.el.dataset.ccell as WidgetId
+      if (target === dragged) return null
+      const r = best.el.getBoundingClientRect()
+      const before = y < r.top + r.height / 2
+      return { target, before, line: { left: r.left, top: before ? r.top - 6 : r.bottom + 6, width: r.width } }
+    }
+
+    function startCompactMove(e: React.PointerEvent, id: WidgetId) {
+      let target: { target: WidgetId; before: boolean } | null = null
+      let last = { x: e.clientX, y: e.clientY }
+      let raf = 0
+      // Scroll the page when the finger is near the top/bottom edge
+      const autoScroll = () => {
+        const sc = compactRef.current
+        if (sc) {
+          const r = sc.getBoundingClientRect(), edge = 70
+          const speed = last.y < r.top + edge ? -(r.top + edge - last.y) / 8 : last.y > r.bottom - edge ? (last.y - (r.bottom - edge)) / 8 : 0
+          if (speed) {
+            sc.scrollTop += speed
+            const d = computeCompactDrop(last.x, last.y, id)
+            target = d && { target: d.target, before: d.before }
+            setDropLine(d?.line ?? null)
+          }
+        }
+        raf = requestAnimationFrame(autoScroll)
+      }
+      raf = requestAnimationFrame(autoScroll)
+      setDrag({ id, x: e.clientX, y: e.clientY })
+      trackPointer(e, ev => {
+        last = { x: ev.clientX, y: ev.clientY }
+        setDrag({ id, x: ev.clientX, y: ev.clientY })
+        const d = computeCompactDrop(ev.clientX, ev.clientY, id)
+        target = d && { target: d.target, before: d.before }
+        setDropLine(d?.line ?? null)
+      }, ev => {
+        cancelAnimationFrame(raf)
+        if (ev && target) {
+          const next = ordered.filter(w => w !== id)
+          const at = next.indexOf(target.target) + (target.before ? 0 : 1)
+          next.splice(at, 0, id)
+          setMobileOrder(next)
+        }
+        setDrag(null); setDropLine(null)
+      })
+    }
+
+    function startHeightResize(e: React.PointerEvent, id: WidgetId) {
+      const h0 = getH(id), y0 = e.clientY
+      let h = h0
+      setLiveH({ id, h })
+      trackPointer(e, ev => {
+        h = Math.max(120, Math.min(900, Math.round((h0 + ev.clientY - y0) / 10) * 10))
+        setLiveH({ id, h })
+      }, ev => {
+        if (ev) setMobileHeights(m => ({ ...m, [id]: h }))
+        setLiveH(null)
+      })
+    }
+
+    // Greedy masonry: each tile goes into the currently shortest column (stored heights, so it doesn't reshuffle mid-resize)
     const columns: WidgetId[][] = Array.from({ length: compactCols }, () => [])
     const colH = Array<number>(compactCols).fill(0)
     for (const id of ordered) {
@@ -403,34 +571,34 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
       return (
         <motion.div
           key={id}
-          layout
+          data-ccell={id}
+          layout={resizing ? false : true}
           transition={softSpring}
           variants={fadeUp} initial="hidden" animate="show" custom={idx}
-          className={cn('panel relative shrink-0 overflow-hidden rounded-3xl', editMode && 'ring-1 ring-orange-400/30')}
-          style={{ height: getH(id) }}
+          className={cn('panel relative shrink-0 overflow-hidden rounded-3xl transition-opacity', editMode && 'ring-1 ring-orange-400/30', drag?.id === id && 'opacity-30')}
+          style={{ height: shownH(id) }}
         >
           {WIDGET_META[id].render()}
           <AnimatePresence>
             {editMode && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="pointer-events-none absolute inset-0 z-20 bg-black/10">
-                <div className="absolute left-2.5 top-2.5 flex flex-col gap-1">
-                  <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, -1)} disabled={idx === 0} className={cn(chip, 'p-1.5 disabled:opacity-30')} title="Omhoog">
-                    <ChevronUp className="h-4 w-4" />
-                  </motion.button>
-                  <motion.button whileTap={{ scale: 0.85 }} onClick={() => move(id, 1)} disabled={idx === ordered.length - 1} className={cn(chip, 'p-1.5 disabled:opacity-30')} title="Omlaag">
-                    <ChevronDown className="h-4 w-4" />
-                  </motion.button>
-                </div>
+                {gripChip(e => startCompactMove(e, id))}
                 <motion.button whileTap={{ scale: 0.85 }} onClick={() => removeCompact(id)}
-                  className={cn(chip, 'absolute right-2.5 top-2.5 p-1.5 hover:text-red-400')} title="Verbergen">
+                  className={cn(chip, 'absolute right-2.5 top-2.5 p-2 hover:text-red-400')} title="Verbergen">
                   <X className="h-4 w-4" />
                 </motion.button>
-                {configButton(id, 'right-12')}
-                <div className={cn(chip, 'absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 px-1.5 py-0.5')}>
-                  <IconBtn onClick={() => adjustH(id, -30)} disabled={getH(id) <= 120} title="Lager"><Minus className="h-3 w-3" /></IconBtn>
-                  <span className="w-24 truncate text-center text-xs font-medium">{WIDGET_META[id].label}</span>
-                  <IconBtn onClick={() => adjustH(id, 30)} disabled={getH(id) >= 600} title="Hoger"><Plus className="h-3 w-3" /></IconBtn>
+                {configButton(id, 'right-[3.25rem]')}
+                <div onPointerDown={e => startCompactMove(e, id)}
+                  className={cn(chip, 'absolute bottom-5 left-1/2 flex -translate-x-1/2 cursor-grab touch-none items-center gap-1.5 px-2.5 py-1')}>
+                  <GripVertical className="h-3 w-3 text-zinc-400" />
+                  <span className="max-w-[8rem] truncate text-xs font-medium">{WIDGET_META[id].label}</span>
+                  {liveH?.id === id && <span className="text-[11px] text-orange-300 tabular">{liveH.h}px</span>}
+                </div>
+                {/* Bottom edge: pull to change the height */}
+                <div onPointerDown={e => startHeightResize(e, id)} title="Sleep om de hoogte aan te passen"
+                  className="pointer-events-auto absolute inset-x-0 bottom-0 flex h-4 cursor-row-resize touch-none items-end justify-center pb-1">
+                  <span className={cn('h-1 rounded-full transition-all', liveH?.id === id ? 'w-24 bg-orange-400' : 'w-14 bg-orange-400/60')} />
                 </div>
               </motion.div>
             )}
@@ -443,8 +611,9 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
     }
 
     return (
-      <div className="flex h-full flex-col gap-3 overflow-y-auto pb-6 scrollbar-hide">
+      <div ref={compactRef} className="flex h-full flex-col gap-3 overflow-y-auto pb-6 scrollbar-hide">
         {hiddenTray}
+        {editMode && <p className="px-1 text-xs text-fg3">Sleep een tegel aan het grip-icoon naar een andere plek. Trek de onderrand omlaag om hem hoger te maken.</p>}
         <div className="flex items-start gap-3">
           {columns.map((ids, c) => (
             <div key={c} className="flex min-w-0 flex-1 flex-col gap-3">
@@ -452,6 +621,7 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
             </div>
           ))}
         </div>
+        <DragOverlay drag={drag} line={dropLine} />
       </div>
     )
   }
@@ -459,10 +629,17 @@ export function HomeWidget({ editMode }: { editMode: boolean }) {
   // ── Desktop: three flexible columns ──────────────────────────────────────────
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex min-h-0 flex-1 gap-3">
-        {COLUMNS.map(renderColumn)}
+      <div className="flex min-h-0 flex-1">
+        {COLUMNS.map((col, i) => (
+          <React.Fragment key={col}>
+            {i > 0 && resizeGap('g', 'col', e => startColResize(e, i - 1))}
+            {renderColumn(col)}
+          </React.Fragment>
+        ))}
       </div>
+      {editMode && <p className="-mt-1 shrink-0 text-center text-xs text-fg3">Sleep tegels aan het grip-icoon · sleep de oranje streepjes tussen tegels en kolommen om de grootte aan te passen</p>}
       {hiddenTray}
+      <DragOverlay drag={drag} line={dropLine} />
     </div>
   )
 }
