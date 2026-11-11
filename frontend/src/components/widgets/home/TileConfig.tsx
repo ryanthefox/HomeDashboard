@@ -8,6 +8,17 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 // Which rooms / airco units a home tile shows. Empty list = show all.
 export const HUE_VISIBLE_KEY   = 'home-hue-rooms'
 export const AIRCO_VISIBLE_KEY = 'home-ac-devices'
+export const SYSTEM_VISIBLE_KEY = 'home-system-items'
+
+export const SYSTEM_ITEMS = [
+  { id: 'cpu',     label: 'CPU' },
+  { id: 'gpu',     label: 'GPU' },
+  { id: 'ram',     label: 'Geheugen (RAM)' },
+  { id: 'disk',    label: 'Schijf (totaal)' },
+  { id: 'network', label: 'Netwerk' },
+  { id: 'drives',  label: 'Schijven per stuk' },
+] as const
+export type SystemItem = typeof SYSTEM_ITEMS[number]['id']
 
 /** Items the user picked; falls back to all when nothing (still existing) is picked. */
 export function pickVisible<T>(all: T[] | undefined, selected: string[], id: (x: T) => string): T[] {
@@ -65,6 +76,14 @@ export function HueTileConfig() {
   return (
     <ItemPicker hint="Kies welke ruimtes deze tegel toont. Eén ruimte = geen tabbladen."
       items={rooms.map(r => ({ id: r.id, label: r.name }))} selected={selected} onChange={setSelected} />
+  )
+}
+
+export function SystemTileConfig() {
+  const [selected, setSelected] = useLocalStorage<string[]>(SYSTEM_VISIBLE_KEY, [])
+  return (
+    <ItemPicker hint="Kies wat deze tegel toont. Minder onderdelen = grotere meters."
+      items={SYSTEM_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
   )
 }
 

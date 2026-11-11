@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { fadeUp, softSpring, spring } from '@/components/ui/motion'
 import { useCompactColumns } from './home/shared'
-import { HueTileConfig, AircoTileConfig } from './home/TileConfig'
+import { HueTileConfig, AircoTileConfig, SystemTileConfig } from './home/TileConfig'
 import { MiniWeather } from './home/MiniWeather'
 import { MiniMusic } from './home/MiniMusic'
 import { MiniHue } from './home/MiniHue'
@@ -48,7 +48,8 @@ const WIDGET_META: Record<WidgetId, {
   music:    { label: 'Muziek',        flex: 2, mobileHeight: 260, render: () => <MiniMusic /> },
   lighting: { label: 'Verlichting',   flex: 1, mobileHeight: 300, render: () => <MiniHue />,
               config: { title: 'Ruimtes', render: () => <HueTileConfig /> } },
-  system:   { label: 'Systeem',       flex: 2, mobileHeight: 270, render: () => <MiniSystem /> },
+  system:   { label: 'Systeem',       flex: 2, mobileHeight: 270, render: () => <MiniSystem />,
+              config: { title: 'Onderdelen', render: () => <SystemTileConfig /> } },
   airco:    { label: 'Airco',         flex: 1, mobileHeight: 300, render: () => <MiniAirco />,
               config: { title: "Airco's", render: () => <AircoTileConfig /> } },
   afval:    { label: 'Afvalkalender', flex: 1, mobileHeight: 220, render: () => <MiniAfval /> },
