@@ -34,4 +34,4 @@ services:
       - Pc__AgentKey=${PC_AGENT_KEY}
       - Pc__MacAddress=${PC_MAC}
       - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}
-      - Pc__MediaUrl=${PC_MEDIA_URL}
+      - Pc__MediaUrl=${PC_MEDIA_URL:-}
