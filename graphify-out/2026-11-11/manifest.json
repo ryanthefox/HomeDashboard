@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HomeWidget.tsx": {
-    "mtime": 1794408331.4554691,
-    "seen": 1794408807.996793,
-    "ast_hash": "6f1e0422b1d6de51e76eca7ac9ad73a0",
+    "mtime": 1794409737.1940944,
+    "seen": 1794409902.988082,
+    "ast_hash": "fadbc4d58b106a1f8382d3be54f13c7c",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniSystem.tsx": {
-    "mtime": 1794409600.1822593,
-    "seen": 1794409653.576471,
-    "ast_hash": "a1d73711001bde78f2b34491ba3fa3ba",
+    "mtime": 1794409849.2938266,
+    "seen": 1794409902.988092,
+    "ast_hash": "f482079a4ffdedc5198381228e49ea01",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/MiniWeather.tsx": {
@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/TileConfig.tsx": {
-    "mtime": 1794408238.3706121,
-    "seen": 1794408807.996804,
-    "ast_hash": "9c2a6fa36bdfc83f223115f4ec9ecced",
+    "mtime": 1794409737.1940944,
+    "seen": 1794409902.9880936,
+    "ast_hash": "d951e6f8e1a6966d6570be466d03f71b",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

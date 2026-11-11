@@ -20,6 +20,17 @@ export const SYSTEM_ITEMS = [
 ] as const
 export type SystemItem = typeof SYSTEM_ITEMS[number]['id']
 
+export const ENERGY_VISIBLE_KEY = 'home-energy-items'
+export const ENERGY_ITEMS = [
+  { id: 'price',    label: 'Stroomprijs nu' },
+  { id: 'cheapest', label: 'Goedkoopste 3 uur' },
+  { id: 'gas',      label: 'Gasprijs' },
+  { id: 'chart',    label: 'Prijsgrafiek vandaag' },
+  { id: 'usage',    label: 'Verbruik laatste dag' },
+  { id: 'month',    label: 'Kosten deze maand' },
+] as const
+export type EnergyItem = typeof ENERGY_ITEMS[number]['id']
+
 /** Items the user picked; falls back to all when nothing (still existing) is picked. */
 export function pickVisible<T>(all: T[] | undefined, selected: string[], id: (x: T) => string): T[] {
   if (!all) return []
@@ -84,6 +95,14 @@ export function SystemTileConfig() {
   return (
     <ItemPicker hint="Kies wat deze tegel toont. Minder onderdelen = grotere meters."
       items={SYSTEM_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
+  )
+}
+
+export function EnergyTileConfig() {
+  const [selected, setSelected] = useLocalStorage<string[]>(ENERGY_VISIBLE_KEY, [])
+  return (
+    <ItemPicker hint="Kies wat de Energie-tegel toont. Verbruik en kosten werken alleen met je Frank-login."
+      items={ENERGY_ITEMS.map(i => ({ id: i.id, label: i.label }))} selected={selected} onChange={setSelected} />
   )
 }
 

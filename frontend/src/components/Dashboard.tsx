@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize,
+  Settings2, Sun, Moon, Home, CloudSun, Lightbulb, Music, Cpu, Wind, Trash2, Tv, Check, LogOut, Maximize, Minimize, Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { HomeWidget } from './widgets/HomeWidget'
@@ -14,13 +14,14 @@ const SystemWidget  = lazy(() => import('./widgets/SystemWidget').then(m => ({ d
 const AircoWidget   = lazy(() => import('./widgets/AircoWidget').then(m => ({ default: m.AircoWidget })))
 const AfvalWidget   = lazy(() => import('./widgets/AfvalWidget').then(m => ({ default: m.AfvalWidget })))
 const PlexWidget    = lazy(() => import('./widgets/PlexWidget').then(m => ({ default: m.PlexWidget })))
+const EnergyWidget  = lazy(() => import('./widgets/EnergyWidget').then(m => ({ default: m.EnergyWidget })))
 import { useSignalR, useConnectionState } from '@/hooks/useSignalR'
 import { useTheme } from '@/lib/ThemeContext'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useAuth, logout } from '@/hooks/useAuth'
 import { spring, easeOutExpo } from '@/components/ui/motion'
 
-type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'afval' | 'plex'
+type Tab = 'home' | 'weer' | 'verlichting' | 'muziek' | 'systeem' | 'airco' | 'energie' | 'afval' | 'plex'
 
 const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'home',        label: 'Home',        icon: Home },
@@ -29,6 +30,7 @@ const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'muziek',      label: 'Muziek',      icon: Music },
   { id: 'systeem',     label: 'Systeem',     icon: Cpu },
   { id: 'airco',       label: 'Airco',       icon: Wind },
+  { id: 'energie',     label: 'Energie',     icon: Zap },
   { id: 'afval',       label: 'Afval',       icon: Trash2 },
   { id: 'plex',        label: 'Plex',        icon: Tv },
 ]
@@ -187,7 +189,7 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
       ref={navRef}
       className={cn(
         'panel relative flex gap-0.5 rounded-2xl p-1',
-        mobile ? 'lg:hidden mt-3 short:mt-2 overflow-x-auto scrollbar-hide' : 'hidden lg:flex',
+        mobile ? 'xl:hidden mt-3 short:mt-2 overflow-x-auto scrollbar-hide' : 'hidden xl:flex',
       )}
     >
       {TABS.map(tab => {
@@ -200,7 +202,7 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
             onClick={() => onChange(tab.id)}
             className={cn(
               'relative flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 short:py-1.5 text-sm font-medium transition-colors duration-200',
-              mobile ? 'shrink-0 sm:flex-1 sm:justify-center sm:px-2' : 'xl:px-4',
+              mobile ? 'shrink-0 sm:flex-1 sm:justify-center sm:px-2' : '2xl:px-4',
               isActive ? 'text-zinc-950' : 'text-fg2 hover:text-fg',
             )}
           >
@@ -212,7 +214,7 @@ function NavTabs({ active, onChange, mobile }: { active: Tab; onChange: (t: Tab)
                 style={{ boxShadow: '0 6px 18px -6px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.8)' }}
               />
             )}
-            <Icon className={cn('relative z-10 h-4 w-4', !mobile && 'hidden xl:block')} />
+            <Icon className={cn('relative z-10 h-4 w-4', !mobile && 'hidden 2xl:block')} />
             <span className="relative z-10">{tab.label}</span>
           </button>
         )
@@ -340,6 +342,7 @@ export function Dashboard() {
               {activeTab === 'muziek'      && <MusicWidget />}
               {activeTab === 'systeem'     && <SystemWidget />}
               {activeTab === 'airco'       && <AircoWidget />}
+              {activeTab === 'energie'     && <EnergyWidget />}
               {activeTab === 'afval'       && <AfvalWidget />}
               {activeTab === 'plex'        && <PlexWidget />}
               </Suspense>
