@@ -66,9 +66,9 @@
     "semantic_hash": "8c493639146bab21ed29a75538a9180d"
   },
   "HomeDashboard.Api/HomeDashboard.Api.csproj": {
-    "mtime": 1794396020.3223002,
-    "seen": 1794396308.6483717,
-    "ast_hash": "d3d5a8945ef4c28918add469dd3a5315",
+    "mtime": 1794413634.3377442,
+    "seen": 1794419464.72767,
+    "ast_hash": "754be755b94705f3e595d002d78ce63f",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Hubs/DashboardHub.cs": {
@@ -138,9 +138,9 @@
     "semantic_hash": "b440ee41c3a3df8428195d1555645360"
   },
   "HomeDashboard.Api/Program.cs": {
-    "mtime": 1794411807.265861,
-    "seen": 1794412228.537737,
-    "ast_hash": "1e715b61cb69894110ee74ce42639f7f",
+    "mtime": 1794419000.178921,
+    "seen": 1794419464.727684,
+    "ast_hash": "72f5256414358593a34869e328dfa05e",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Properties/launchSettings.json": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1794411829.1171176,
-    "seen": 1794412228.5377533,
-    "ast_hash": "32787a2e12beb2f507cf89fe863d2fa7",
+    "mtime": 1794419000.1799195,
+    "seen": 1794419464.7277043,
+    "ast_hash": "feda669130ebe589b993647385910b8b",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Dashboard.tsx": {
-    "mtime": 1794412026.1983285,
-    "seen": 1794412228.5377567,
-    "ast_hash": "07b98d49f445e70a5467223d55f2613c",
+    "mtime": 1794416280.6726089,
+    "seen": 1794419464.7277074,
+    "ast_hash": "726372e385e88d912a1be729b9978823",
     "semantic_hash": ""
   },
   "frontend/src/components/ui/ArcGauge.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HomeWidget.tsx": {
-    "mtime": 1794412026.1983285,
-    "seen": 1794412228.537766,
-    "ast_hash": "ae2c62f80324cfecdaab9327dc52bd88",
+    "mtime": 1794418809.863246,
+    "seen": 1794419464.7277193,
+    "ast_hash": "cb7b373f71ff55f7c42d0232c24258d0",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/HueWidget.tsx": {
@@ -312,10 +312,10 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/MusicWidget.tsx": {
-    "mtime": 1794394155.4805994,
-    "seen": 1794395115.4604871,
-    "ast_hash": "275394bdc23909cbcb165dfa86cb69b9",
-    "semantic_hash": "275394bdc23909cbcb165dfa86cb69b9"
+    "mtime": 1794419388.6899855,
+    "seen": 1794419464.727721,
+    "ast_hash": "b76dd2937d3e457c7d861a8e807454de",
+    "semantic_hash": ""
   },
   "frontend/src/components/widgets/PlexWidget.tsx": {
     "mtime": 1794397386.7470322,
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/SystemWidget.tsx": {
-    "mtime": 1794409642.5736887,
-    "seen": 1794409653.5764647,
-    "ast_hash": "53e71b9cc77fe7a969e3274d7beb6a63",
+    "mtime": 1794413988.402014,
+    "seen": 1794419464.7277236,
+    "ast_hash": "848da1c68b99f8db766f40acd4f75779",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/WeatherWidget.tsx": {
@@ -414,9 +414,9 @@
     "semantic_hash": "85694697f4c460e6f89d16ccb0122222"
   },
   "frontend/src/lib/api.ts": {
-    "mtime": 1794412052.4566216,
-    "seen": 1794412228.5377886,
-    "ast_hash": "2d40628d666d97675c43ceabedee7b4b",
+    "mtime": 1794419071.8695254,
+    "seen": 1794419464.7277484,
+    "ast_hash": "324f4c11cf13f9787b8e00dbcde49dc3",
     "semantic_hash": ""
   },
   "frontend/src/lib/format.ts": {
@@ -456,10 +456,10 @@
     "semantic_hash": "bd7f1534696295bfbab094ac93447322"
   },
   "frontend/src/main.tsx": {
-    "mtime": 1794393734.9177406,
-    "seen": 1794395115.4605026,
-    "ast_hash": "253a5b523e2752d04dcd462a72b83074",
-    "semantic_hash": "253a5b523e2752d04dcd462a72b83074"
+    "mtime": 1794418734.9810307,
+    "seen": 1794419464.7277608,
+    "ast_hash": "8f77052896ac36d3a66775529e3a87a6",
+    "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
     "mtime": 1794394155.1588032,
@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/home/TileConfig.tsx": {
-    "mtime": 1794412052.4636252,
-    "seen": 1794412228.5377781,
-    "ast_hash": "f402451258b1d7c167cef9ad66203262",
+    "mtime": 1794416144.435493,
+    "seen": 1794419464.7277353,
+    "ast_hash": "ab1b9493b8b38270e13226740ea3eadd",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/EnergyController.cs": {
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ui/BarChart.tsx": {
-    "mtime": 1794411324.9959176,
-    "seen": 1794411374.6448083,
-    "ast_hash": "535021b3ca3703f2aa015c0a44ddb43b",
+    "mtime": 1794418748.1383998,
+    "seen": 1794419464.7277102,
+    "ast_hash": "a2d76f700635d56b2d56d495736aa280",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/EnergyWidget.tsx": {
@@ -708,9 +708,9 @@
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Controllers/RingController.cs": {
-    "mtime": 1794412052.4566216,
-    "seen": 1794412228.5377202,
-    "ast_hash": "03cb5b097a83b3865c80949a23ca1891",
+    "mtime": 1794412602.1251557,
+    "seen": 1794419464.7276635,
+    "ast_hash": "734e65d46ceb23a184c6716e228f145d",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/RingService.cs": {
@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/ring/RingDetail.tsx": {
-    "mtime": 1794411931.8693056,
-    "seen": 1794412228.5377815,
-    "ast_hash": "9035c555f5c0a8e8af7c1dc5389c60d2",
+    "mtime": 1794412616.6599245,
+    "seen": 1794419464.7277396,
+    "ast_hash": "656dbaf21acd1a0c4f001aa604888c76",
     "semantic_hash": ""
   },
   "frontend/src/components/widgets/ring/RingLogin.tsx": {
@@ -762,9 +762,123 @@
     "semantic_hash": ""
   },
   "ring-bridge/server.mjs": {
-    "mtime": 1794412052.4556172,
-    "seen": 1794412228.5378063,
-    "ast_hash": "71775bd4510ee8a87afff11301bb0084",
+    "mtime": 1794412588.6642735,
+    "seen": 1794419464.72777,
+    "ast_hash": "1b29c5690e21a641921b16016e166403",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/CalendarController.cs": {
+    "mtime": 1794413778.7198288,
+    "seen": 1794419464.7276552,
+    "ast_hash": "be8e80ec292ea20fc96708adb6207ad1",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/ServerController.cs": {
+    "mtime": 1794413778.7343361,
+    "seen": 1794419464.7276645,
+    "ast_hash": "683d306b11dd94852c435a2bc38e5499",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/SpotifyController.cs": {
+    "mtime": 1794419034.9430356,
+    "seen": 1794419464.7276652,
+    "ast_hash": "6e210e0706b95fca6b862b341e46d272",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Controllers/TravelController.cs": {
+    "mtime": 1794415818.2633834,
+    "seen": 1794419464.7276669,
+    "ast_hash": "4b070cc41315fca99b9d4101ab4b6465",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/CalendarService.cs": {
+    "mtime": 1794413658.0940795,
+    "seen": 1794419464.7276878,
+    "ast_hash": "4d9fb13cb3de6bdd6f0144f2cb09bf66",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/ServerStatusService.cs": {
+    "mtime": 1794413678.2743075,
+    "seen": 1794419464.7276978,
+    "ast_hash": "abc82f60bcc4a54535ea0ac636234094",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/SpotifyService.cs": {
+    "mtime": 1794419034.9430356,
+    "seen": 1794419464.7276988,
+    "ast_hash": "a0a5f04332d7f7def2f71ef490c0bb38",
+    "semantic_hash": ""
+  },
+  "HomeDashboard.Api/Services/TravelService.cs": {
+    "mtime": 1794416144.435493,
+    "seen": 1794419464.7277002,
+    "ast_hash": "6d1f5b8dd44b83f6b6b4e355fcc06b77",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/CalendarWidget.tsx": {
+    "mtime": 1794414072.8140888,
+    "seen": 1794419464.7277174,
+    "ast_hash": "2203a1b4a32a6e9f30be5afdd9d7a8e4",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/RingWidget.tsx": {
+    "mtime": 1794412798.4987307,
+    "seen": 1794419464.7277224,
+    "ast_hash": "26be5f9552fc69fec3afe711cb007fa3",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/TravelWidget.tsx": {
+    "mtime": 1794416280.6726089,
+    "seen": 1794419464.727724,
+    "ast_hash": "5172b49613599317ae9ae09bb09a22e6",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/home/MiniCalendar.tsx": {
+    "mtime": 1794413904.6875753,
+    "seen": 1794419464.7277272,
+    "ast_hash": "3f22e272a030bdee11d85bbe92106074",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/home/MiniTravel.tsx": {
+    "mtime": 1794415883.1327972,
+    "seen": 1794419464.7277331,
+    "ast_hash": "2fb01a903336cdfa194fa0193a49ea94",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/music/SpotifyView.tsx": {
+    "mtime": 1794419156.759021,
+    "seen": 1794419464.7277365,
+    "ast_hash": "9b615ad4c1cdeb5c8d5e0ae6a4a0c760",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/widgets/system/ServerStatus.tsx": {
+    "mtime": 1794413988.2747025,
+    "seen": 1794419464.7277422,
+    "ast_hash": "261820793b5af649d2ed5c174e178cd3",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/calendar.ts": {
+    "mtime": 1794413845.9515517,
+    "seen": 1794419464.7277498,
+    "ast_hash": "ed4b9069e8eae93948899769bcf3a0dd",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/ringLive.ts": {
+    "mtime": 1794412650.8031173,
+    "seen": 1794419464.7277567,
+    "ast_hash": "673cf24a939e1aee538411201578c643",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/touch.ts": {
+    "mtime": 1794418734.8834112,
+    "seen": 1794419464.7277586,
+    "ast_hash": "c5dae75cf6bcc6002d10c002769ee430",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/travel.ts": {
+    "mtime": 1794413931.716365,
+    "seen": 1794419464.7277591,
+    "ast_hash": "1b68cef68c53c954d4c7467307f50a5c",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

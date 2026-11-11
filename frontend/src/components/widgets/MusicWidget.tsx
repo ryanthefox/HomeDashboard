@@ -1,12 +1,15 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { Play, Pause, SkipBack, SkipForward, Music, Volume2 } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Music, Music2, Monitor, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { musicApi, audioApi, type MediaInfo, type AudioOutputDevice } from '@/lib/api'
-import { Panel, Press, Skeleton, spring, easeOutExpo } from '@/components/ui/motion'
+import { Panel, Press, Segmented, Skeleton, spring, easeOutExpo } from '@/components/ui/motion'
 import { ArtBackdrop, DeviceIcon, Equalizer, useMusicControls } from './home/MiniMusic'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { SpotifyView } from './music/SpotifyView'
 
-export function MusicWidget() {
+function LocalMusic() {
   const { data, isLoading } = useQuery<MediaInfo>({ queryKey: ['music'], queryFn: musicApi.getCurrent, refetchInterval: 5_000 })
   const { data: outputs = [] } = useQuery<AudioOutputDevice[]>({ queryKey: ['audio', 'outputs'], queryFn: audioApi.getOutputs, staleTime: 30_000 })
   const { play, pause, next, prev, setOutput } = useMusicControls()
@@ -122,6 +125,31 @@ export function MusicWidget() {
           </Panel>
         )}
       </div>
+    </div>
+  )
+}
+
+type Source = 'pc' | 'spotify'
+
+export function MusicWidget() {
+  const [source, setSource] = useLocalStorage<Source>('music-source', 'pc')
+  // Back from the Spotify login (?spotify=ok|error) -> open the Spotify tab and tidy the URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('spotify')) return
+    setSource('spotify')
+    params.delete('spotify')
+    const qs = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Segmented layoutId="music-source" value={source} onChange={setSource} className="self-start" items={[
+        { id: 'pc', label: <span className="flex items-center gap-1.5"><Monitor className="h-4 w-4" />Deze pc</span> },
+        { id: 'spotify', label: <span className="flex items-center gap-1.5"><Music2 className="h-4 w-4" />Spotify</span> },
+      ]} />
+      {source === 'spotify' ? <SpotifyView /> : <LocalMusic />}
     </div>
   )
 }

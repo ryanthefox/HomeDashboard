@@ -50,6 +50,10 @@ services:
       - Travel__HomeStation=${TRAVEL_HOME_STATION:-}
       - Travel__WorkStation=${TRAVEL_WORK_STATION:-}
       - Travel__NsKey=${NS_API_KEY:-}
+      # Spotify: eigen app op developer.spotify.com (zie .env.example)
+      - Spotify__ClientId=${SPOTIFY_CLIENT_ID:-}
+      - Spotify__ClientSecret=${SPOTIFY_CLIENT_SECRET:-}
+      - Spotify__RedirectUri=${SPOTIFY_REDIRECT_URI:-}
       # PC: stats + aan/uit (zie HomeDashboard.Agent/install-agent.ps1)
       - Pc__Name=${PC_NAME:-PC}
       - Pc__AgentUrl=${PC_AGENT_URL}

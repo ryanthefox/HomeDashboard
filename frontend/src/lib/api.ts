@@ -410,3 +410,41 @@ export const travelApi = {
     return Array.isArray(body) ? body as StationRef[] : []
   },
 }
+
+// ── Spotify ───────────────────────────────────────────────────────────────────
+export interface SpotifyStatus { configured: boolean; connected: boolean; redirectUri: string; user: string | null; product: string | null; error: string | null }
+export interface SpotifyDevice { id: string; name: string; type: string; isActive: boolean; volume: number | null; restricted: boolean }
+export interface SpotifyTrack { id: string; uri: string; name: string; artists: string; album: string | null; image: string | null; durationMs: number }
+export interface SpotifyPlayback { isPlaying: boolean; progressMs: number; track: SpotifyTrack | null; device: SpotifyDevice | null; shuffle: boolean; repeat: 'off' | 'track' | 'context'; contextUri: string | null; idle?: boolean }
+export interface SpotifyItem { id: string; uri: string; kind: 'track' | 'artist' | 'album' | 'playlist'; name: string; subtitle: string | null; image: string | null }
+
+/** Spotify calls answer errors as { error }; turn them into exceptions with that message. */
+async function spotifyCall<T>(path: string, method: 'GET' | 'PUT' | 'POST' = 'GET', body?: unknown): Promise<T> {
+  const res = await apiFetch(`${BASE}/spotify/${path}`, {
+    method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error((data as { error?: string }).error ?? `Spotify: ${res.status}`)
+  return data as T
+}
+export const spotifyApi = {
+  status:    () => spotifyCall<SpotifyStatus>('status'),
+  loginUrl:  () => spotifyCall<{ url: string; redirectUri: string }>('login'),
+  sendCode:  (code: string) => spotifyCall<{ ok: boolean }>('code', 'POST', { code }),
+  logout:    () => spotifyCall<{ ok: boolean }>('logout', 'POST'),
+  player:    () => spotifyCall<SpotifyPlayback>('player'),
+  devices:   () => spotifyCall<SpotifyDevice[]>('devices'),
+  play:      (body: { deviceId?: string; contextUri?: string; uris?: string[]; offset?: number } = {}) => spotifyCall('play', 'PUT', body),
+  pause:     () => spotifyCall('pause', 'PUT'),
+  next:      () => spotifyCall('next', 'POST'),
+  previous:  () => spotifyCall('previous', 'POST'),
+  seek:      (ms: number) => spotifyCall(`seek?ms=${Math.round(ms)}`, 'PUT'),
+  volume:    (pct: number) => spotifyCall(`volume?pct=${Math.round(pct)}`, 'PUT'),
+  shuffle:   (on: boolean) => spotifyCall(`shuffle?on=${on}`, 'PUT'),
+  repeat:    (mode: string) => spotifyCall(`repeat?mode=${mode}`, 'PUT'),
+  transfer:  (deviceId: string, play = true) => spotifyCall('transfer', 'PUT', { deviceId, play }),
+  playlists: () => spotifyCall<SpotifyItem[]>('playlists'),
+  recent:    () => spotifyCall<SpotifyItem[]>('recent'),
+  search:    (q: string) => spotifyCall<SpotifyItem[]>(`search?q=${encodeURIComponent(q)}`),
+}

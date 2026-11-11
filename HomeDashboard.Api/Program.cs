@@ -104,6 +104,7 @@ builder.Services.AddSingleton<RingService>();
 builder.Services.AddSingleton<CalendarService>();
 builder.Services.AddSingleton<ServerStatusService>();
 builder.Services.AddSingleton<TravelService>();
+builder.Services.AddSingleton<SpotifyService>();
 builder.Services.AddSingleton<PlexService>();
 builder.Services.AddSingleton<PcService>();
 builder.Services.AddSingleton<GoogleHomeService>();
