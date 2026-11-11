@@ -11,6 +11,8 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Panel, Press, Segmented, Skeleton, EmptyState, spring } from '@/components/ui/motion'
 import { Dialog } from '@/components/ui/Dialog'
 import { ArtBackdrop } from '../home/MiniMusic'
+import { ThisDeviceRow } from './ThisDevice'
+import { useBrowserPlayer } from '@/lib/spotifyPlayer'
 
 const GREEN = '#1ed760'
 const fmt = (ms: number) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` }
@@ -27,7 +29,7 @@ export function deviceIcon(type: string) {
 }
 
 // ── Connect (one-time login) ──────────────────────────────────────────────────
-function SpotifyConnect({ status }: { status: SpotifyStatus }) {
+function SpotifyConnect({ status, onCancel }: { status: SpotifyStatus; onCancel?: () => void }) {
   const qc = useQueryClient()
   const [step, setStep] = useState<1 | 2>(1)
   const [code, setCode] = useState('')
@@ -65,6 +67,7 @@ function SpotifyConnect({ status }: { status: SpotifyStatus }) {
           <p className="text-lg font-semibold tracking-tight text-fg">Spotify koppelen</p>
           <p className="text-xs text-fg3">Eenmalig — daarna blijft het dashboard gekoppeld</p>
         </div>
+        {onCancel && <button onClick={onCancel} className="ml-auto rounded-lg px-2 py-1 text-xs text-fg3 hover:text-fg">Annuleren</button>}
       </div>
 
       <div className="flex flex-col gap-3">
@@ -100,9 +103,11 @@ function SpotifyConnect({ status }: { status: SpotifyStatus }) {
 function DevicePicker({ open, onClose, current, onPick }: {
   open: boolean; onClose: () => void; current: string | null; onPick: (d: SpotifyDevice) => void
 }) {
-  const { data: devices, isFetching, refetch, error } = useQuery<SpotifyDevice[]>({
+  const { data: allDevices, isFetching, refetch, error } = useQuery<SpotifyDevice[]>({
     queryKey: ['spotify', 'devices'], queryFn: spotifyApi.devices, enabled: open, refetchInterval: open ? 5000 : false,
   })
+  const browser = useBrowserPlayer()
+  const devices = allDevices?.filter(d => d.id !== browser.deviceId)
   return (
     <Dialog open={open} onClose={onClose} title="Afspelen op" className="max-w-md">
       <div className="p-4 pt-1">
@@ -113,6 +118,7 @@ function DevicePicker({ open, onClose, current, onPick }: {
           </button>
         </div>
         <div className="flex flex-col gap-1">
+          <ThisDeviceRow activeId={current} onPick={id => onPick({ id, name: 'Dit apparaat', type: 'Computer', isActive: false, volume: null, restricted: false })} />
           {(devices ?? []).map(d => {
             const Icon = deviceIcon(d.type)
             const active = d.id === current
@@ -338,6 +344,7 @@ export function SpotifyView() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingItem, setPendingItem] = useState<SpotifyItem | null>(null)
+  const [relink, setRelink] = useState(false)
   const playback = pb && !pb.idle ? pb : undefined
 
   useEffect(() => { if (playback?.device?.id) setDeviceId(playback.device.id) }, [playback?.device?.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -371,6 +378,7 @@ export function SpotifyView() {
 
   if (isLoading) return <div className="grid gap-4 lg:grid-cols-2"><Skeleton className="h-[480px] rounded-3xl" /><Skeleton className="h-[480px] rounded-3xl" /></div>
   if (!status || !status.connected) return status ? <SpotifyConnect status={status} /> : null
+  if (relink) return <SpotifyConnect status={status} onCancel={() => setRelink(false)} />
 
   return (
     <div className="flex flex-col gap-3">
@@ -378,6 +386,12 @@ export function SpotifyView() {
         <p className="flex items-center gap-2 rounded-2xl bg-amber-400/10 px-4 py-2.5 text-xs text-amber-300">
           <AlertTriangle className="h-4 w-4 shrink-0" /> Je account is geen Spotify Premium: Spotify staat afspelen en bedienen vanuit andere apps dan alleen met Premium toe.
         </p>
+      )}
+      {!status.canStream && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-4 py-2.5 text-xs" style={{ background: `${GREEN}14`, color: GREEN }}>
+          <span className="flex-1">Nieuw: muziek afspelen op dit apparaat zelf. Koppel Spotify één keer opnieuw om dat aan te zetten.</span>
+          <button onClick={() => setRelink(true)} className="rounded-lg px-2.5 py-1 font-semibold text-black" style={{ background: GREEN }}>Opnieuw koppelen</button>
+        </div>
       )}
       <AnimatePresence>
         {error && (

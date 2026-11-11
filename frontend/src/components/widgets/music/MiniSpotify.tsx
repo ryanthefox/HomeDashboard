@@ -9,6 +9,8 @@ import { Press, spring } from '@/components/ui/motion'
 import { useContainerSize } from '../home/shared'
 import { ArtBackdrop, Equalizer } from '../home/MiniMusic'
 import { deviceIcon } from './SpotifyView'
+import { ThisDeviceRow } from './ThisDevice'
+import { useBrowserPlayer } from '@/lib/spotifyPlayer'
 
 const GREEN = '#1ed760'
 
@@ -30,6 +32,7 @@ export function MiniSpotify() {
     queryKey: ['spotify', 'devices'], queryFn: spotifyApi.devices, enabled: connected, refetchInterval: 30_000, staleTime: 10_000,
   })
 
+  const browser = useBrowserPlayer()
   const pb = raw && !raw.idle ? raw : undefined
   const track = pb?.track ?? null
   const playing = !!pb?.isPlaying
@@ -47,9 +50,9 @@ export function MiniSpotify() {
     try { await fn() } catch (e) { setErr(e instanceof Error ? e.message : 'Mislukt') }
     refresh()
   }
-  const pick = (d: SpotifyDevice) => {
-    setDeviceId(d.id)
-    void act(() => spotifyApi.transfer(d.id, pb?.isPlaying ?? true))
+  const pick = (id: string) => {
+    setDeviceId(id)
+    void act(() => spotifyApi.transfer(id, pb?.isPlaying ?? true))
   }
 
   if (isLoading) return <div ref={ref} className="flex h-full items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-fg3" /></div>
@@ -130,11 +133,12 @@ export function MiniSpotify() {
             </button>
           </div>
           <div className="flex flex-1 flex-col gap-1 overflow-y-auto scrollbar-hide">
-            {(devices ?? []).map(d => {
+            <ThisDeviceRow size="sm" activeId={pb?.device?.id} onPick={pick} />
+            {(devices ?? []).filter(d => d.id !== browser.deviceId).map(d => {
               const Icon = deviceIcon(d.type)
               const active = d.id === pb?.device?.id
               return (
-                <button key={d.id} onClick={() => pick(d)} disabled={d.restricted}
+                <button key={d.id} onClick={() => pick(d.id)} disabled={d.restricted}
                   className={cn('relative flex w-full items-center gap-2 rounded-xl px-2.5 text-left text-xs font-medium transition-colors disabled:opacity-40',
                     compact ? 'py-1' : 'py-1.5', active ? 'text-black' : 'bg-card3 text-fg2 hover:text-fg')}>
                   {active && <motion.span layoutId="mini-spotify-device" transition={spring} className="absolute inset-0 rounded-xl" style={{ background: GREEN }} />}

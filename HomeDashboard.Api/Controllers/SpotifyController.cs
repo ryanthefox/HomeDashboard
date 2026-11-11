@@ -24,6 +24,15 @@ public class SpotifyController(SpotifyService spotify) : ControllerBase
     [HttpGet("status")]
     public async Task<IActionResult> Status() => Ok(await spotify.GetStatusAsync());
 
+    /// <summary>Access token for the browser player (behind the dashboard login, never cached by the browser).</summary>
+    [HttpGet("token")]
+    public Task<IActionResult> Token() => Run(async () =>
+    {
+        Response.Headers.CacheControl = "no-store";
+        var (token, expiresIn) = await spotify.PlayerTokenAsync();
+        return new { accessToken = token, expiresIn };
+    });
+
     [HttpGet("login")]
     public IActionResult Login() => spotify.Configured ? Ok(new { url = spotify.LoginUrl(), redirectUri = spotify.RedirectUri }) : BadRequest(new { error = "Spotify is niet ingesteld" });
 

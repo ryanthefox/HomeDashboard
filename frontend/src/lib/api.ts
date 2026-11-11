@@ -412,7 +412,7 @@ export const travelApi = {
 }
 
 // ── Spotify ───────────────────────────────────────────────────────────────────
-export interface SpotifyStatus { configured: boolean; connected: boolean; redirectUri: string; user: string | null; product: string | null; error: string | null }
+export interface SpotifyStatus { configured: boolean; connected: boolean; redirectUri: string; user: string | null; product: string | null; error: string | null; canStream?: boolean }
 export interface SpotifyDevice { id: string; name: string; type: string; isActive: boolean; volume: number | null; restricted: boolean }
 export interface SpotifyTrack { id: string; uri: string; name: string; artists: string; album: string | null; image: string | null; durationMs: number }
 export interface SpotifyPlayback { isPlaying: boolean; progressMs: number; track: SpotifyTrack | null; device: SpotifyDevice | null; shuffle: boolean; repeat: 'off' | 'track' | 'context'; contextUri: string | null; idle?: boolean }
@@ -431,6 +431,7 @@ async function spotifyCall<T>(path: string, method: 'GET' | 'PUT' | 'POST' = 'GE
 export const spotifyApi = {
   status:    () => spotifyCall<SpotifyStatus>('status'),
   loginUrl:  () => spotifyCall<{ url: string; redirectUri: string }>('login'),
+  token:     () => spotifyCall<{ accessToken: string; expiresIn: number }>('token'),
   sendCode:  (code: string) => spotifyCall<{ ok: boolean }>('code', 'POST', { code }),
   logout:    () => spotifyCall<{ ok: boolean }>('logout', 'POST'),
   player:    () => spotifyCall<SpotifyPlayback>('player'),

@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace HomeDashboard.Api.Services;
 
-public record SpotifyStatus(bool Configured, bool Connected, string RedirectUri, string? User, string? Product, string? Error);
+public record SpotifyStatus(bool Configured, bool Connected, string RedirectUri, string? User, string? Product, string? Error, bool CanStream = false);
 public record SpotifyDevice(string Id, string Name, string Type, bool IsActive, int? Volume, bool Restricted);
 public record SpotifyTrack(string Id, string Uri, string Name, string Artists, string? Album, string? Image, int DurationMs);
 public record SpotifyPlayback(bool IsPlaying, int ProgressMs, SpotifyTrack? Track, SpotifyDevice? Device, bool Shuffle, string Repeat, string? ContextUri);
@@ -21,7 +21,8 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
 {
     private const string Api = "https://api.spotify.com/v1/";
     private const string Scopes = "user-read-playback-state user-modify-playback-state user-read-currently-playing " +
-                                  "playlist-read-private playlist-read-collaborative user-library-read user-read-recently-played user-read-private";
+                                  "playlist-read-private playlist-read-collaborative user-library-read user-read-recently-played user-read-private " +
+                                  "streaming user-read-email"; // streaming + email: play inside the browser (Web Playback SDK)
 
     private string ClientId => config["Spotify:ClientId"] ?? "";
     private string ClientSecret => config["Spotify:ClientSecret"] ?? "";
@@ -44,19 +45,35 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
         }
     }
 
-    private string? RefreshToken
+    private JsonNode? TokenJson
     {
         get
         {
-            try { return File.Exists(TokenFile) ? JsonNode.Parse(File.ReadAllText(TokenFile))?["refreshToken"]?.GetValue<string>() : null; }
+            try { return File.Exists(TokenFile) ? JsonNode.Parse(File.ReadAllText(TokenFile)) : null; }
             catch { return null; }
         }
     }
 
-    private void SaveRefreshToken(string token)
+    private string? RefreshToken => TokenJson?["refreshToken"]?.GetValue<string>();
+
+    /// <summary>Scopes the user granted at login (older logins lack 'streaming').</summary>
+    private string GrantedScope => TokenJson?["scope"]?.GetValue<string>() ?? "";
+
+    /// <summary>True when the login allows playing inside the browser (Web Playback SDK).</summary>
+    public bool CanStream => GrantedScope.Split(' ').Contains("streaming");
+
+    private void SaveToken(string? refreshToken, string? scope)
     {
+        var current = TokenJson as JsonObject;
+        var rt = refreshToken ?? current?["refreshToken"]?.GetValue<string>();
+        if (rt == null) return;
         Directory.CreateDirectory(Path.GetDirectoryName(TokenFile)!);
-        File.WriteAllText(TokenFile, new JsonObject { ["refreshToken"] = token, ["savedAt"] = DateTime.UtcNow.ToString("o") }.ToJsonString());
+        File.WriteAllText(TokenFile, new JsonObject
+        {
+            ["refreshToken"] = rt,
+            ["scope"] = scope ?? current?["scope"]?.GetValue<string>(),
+            ["savedAt"] = DateTime.UtcNow.ToString("o"),
+        }.ToJsonString());
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
@@ -113,7 +130,9 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
         var json = JsonNode.Parse(text)!;
         _accessToken = json["access_token"]!.GetValue<string>();
         _expires = DateTime.UtcNow.AddSeconds(json["expires_in"]!.GetValue<int>() - 60);
-        if (json["refresh_token"]?.GetValue<string>() is { Length: > 0 } rt) SaveRefreshToken(rt);
+        var newRefresh = json["refresh_token"]?.GetValue<string>() is { Length: > 0 } rt ? rt : null;
+        var scope = json["scope"]?.GetValue<string>();
+        if (newRefresh != null || (scope != null && scope != GrantedScope)) SaveToken(newRefresh, scope);
         _me = null;
         return json;
     }
@@ -131,6 +150,13 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
             return res == null ? null : _accessToken;
         }
         finally { _lock.Release(); }
+    }
+
+    /// <summary>Short-lived access token for the in-browser player (Web Playback SDK).</summary>
+    public async Task<(string Token, int ExpiresIn)> PlayerTokenAsync()
+    {
+        var token = await TokenAsync() ?? throw new SpotifyException(HttpStatusCode.Unauthorized, "Spotify is niet gekoppeld");
+        return (token, (int)Math.Max(60, (_expires - DateTime.UtcNow).TotalSeconds));
     }
 
     // ── API helper ────────────────────────────────────────────────────────────
@@ -171,7 +197,7 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
                 var me = await SendAsync(HttpMethod.Get, "me");
                 _me = (me?["display_name"]?.GetValue<string>() ?? me?["id"]?.GetValue<string>(), me?["product"]?.GetValue<string>());
             }
-            return new(true, true, RedirectUri, _me.Value.Name, _me.Value.Product, null);
+            return new(true, true, RedirectUri, _me.Value.Name, _me.Value.Product, null, CanStream);
         }
         catch (SpotifyException ex) when (ex.Status == HttpStatusCode.Unauthorized)
         {
