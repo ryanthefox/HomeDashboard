@@ -11,6 +11,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Panel, Press, Segmented, Skeleton, EmptyState, spring } from '@/components/ui/motion'
 import { Dialog } from '@/components/ui/Dialog'
 import { ArtBackdrop } from '../home/MiniMusic'
+import { useContainerSize } from '../home/shared'
 import { ThisDeviceRow } from './ThisDevice'
 import { useBrowserPlayer } from '@/lib/spotifyPlayer'
 
@@ -161,6 +162,10 @@ function NowPlaying({ pb, onError, onDevices, deviceId }: {
   const [seeking, setSeeking] = useState<number | null>(null)
   const [vol, setVol] = useState<number | null>(null)
   const volTimer = useRef<number | undefined>(undefined)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const { h: boxH, w: boxW } = useContainerSize(boxRef)
+  // Album art takes whatever height is left after title, progress, controls and device row (~290px)
+  const art = boxH ? Math.round(Math.max(72, Math.min(300, boxH - 290, boxW - 40))) : 240
 
   // Smooth progress between polls
   useEffect(() => { setProgress(pb?.progressMs ?? 0) }, [pb?.progressMs, track?.id])
@@ -185,14 +190,14 @@ function NowPlaying({ pb, onError, onDevices, deviceId }: {
   const DevIcon = deviceIcon(pb?.device?.type ?? 'speaker')
 
   return (
-    <Panel className="relative flex flex-col overflow-hidden">
+    <Panel className="relative flex min-h-0 flex-col overflow-hidden">
       <ArtBackdrop art={track?.image ?? undefined} trackKey={track?.id ?? 'none'} intensity={0.5} />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--c-solid)] opacity-70" />
 
-      <div className="relative flex flex-1 flex-col items-center gap-5 px-5 pb-6 pt-6 sm:px-8">
-        <motion.div className="relative aspect-square w-full max-w-[300px] overflow-hidden rounded-[24px] bg-card4"
+      <div ref={boxRef} className="relative flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-5 py-5 scrollbar-hide sm:px-8 [&>*:first-child]:mt-auto [&>*:last-child]:mb-auto">
+        <motion.div className="relative shrink-0 overflow-hidden rounded-[24px] bg-card4"
           animate={{ scale: playing ? 1 : 0.94 }} transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-          style={{ boxShadow: '0 30px 60px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06)' }}>
+          style={{ width: art, height: art, boxShadow: '0 30px 60px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06)' }}>
           <AnimatePresence initial={false}>
             {track?.image ? (
               <motion.img key={track.id} src={track.image} alt="" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
@@ -345,6 +350,7 @@ export function SpotifyView() {
   const [error, setError] = useState<string | null>(null)
   const [pendingItem, setPendingItem] = useState<SpotifyItem | null>(null)
   const [relink, setRelink] = useState(false)
+  useEffect(() => { if (!error) return; const t = setTimeout(() => setError(null), 6000); return () => clearTimeout(t) }, [error])
   const playback = pb && !pb.idle ? pb : undefined
 
   useEffect(() => { if (playback?.device?.id) setDeviceId(playback.device.id) }, [playback?.device?.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -381,7 +387,7 @@ export function SpotifyView() {
   if (relink) return <SpotifyConnect status={status} onCancel={() => setRelink(false)} />
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto scrollbar-hide lg:overflow-hidden">
       {status.product && status.product !== 'premium' && (
         <p className="flex items-center gap-2 rounded-2xl bg-amber-400/10 px-4 py-2.5 text-xs text-amber-300">
           <AlertTriangle className="h-4 w-4 shrink-0" /> Je account is geen Spotify Premium: Spotify staat afspelen en bedienen vanuit andere apps dan alleen met Premium toe.
@@ -401,11 +407,11 @@ export function SpotifyView() {
           </motion.p>
         )}
       </AnimatePresence>
-      <div className="grid grid-cols-1 gap-4 lg:h-[calc(100vh-15rem)] lg:min-h-[520px] lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid shrink-0 grid-cols-1 gap-4 lg:min-h-0 lg:flex-1 lg:shrink lg:grid-cols-[minmax(0,1fr)_400px]">
         <NowPlaying pb={playback} onError={setError} onDevices={() => setPickerOpen(true)} deviceId={deviceId || null} />
         <Library pb={playback} onPlay={item => void playItem(item)} />
       </div>
-      <div className="flex items-center justify-end gap-3 px-1 text-xs text-fg3">
+      <div className="flex shrink-0 items-center justify-end gap-3 px-1 text-xs text-fg3">
         {status.user && <span>Ingelogd als {status.user}</span>}
         <button onClick={() => void logout()} className="flex items-center gap-1 hover:text-red-400"><LogOut className="h-3 w-3" />Ontkoppelen</button>
       </div>

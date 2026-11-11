@@ -171,7 +171,12 @@ public sealed class SpotifyService(IHttpClientFactory http, IConfiguration confi
         else if (method != HttpMethod.Get) req.Content = new StringContent("", Encoding.UTF8, "application/json");
         using var res = await http.CreateClient().SendAsync(req);
         var text = await res.Content.ReadAsStringAsync();
-        if (res.IsSuccessStatusCode) return string.IsNullOrWhiteSpace(text) ? null : JsonNode.Parse(text);
+        if (res.IsSuccessStatusCode)
+        {
+            // Player commands answer 200/204 with an empty or non-JSON body (e.g. a snapshot id) — that's still a success.
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            try { return JsonNode.Parse(text); } catch (JsonException) { return null; }
+        }
 
         string msg = res.StatusCode switch
         {

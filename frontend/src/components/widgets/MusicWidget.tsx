@@ -144,12 +144,12 @@ export function MusicWidget() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-3">
       <Segmented layoutId="music-source" value={source} onChange={setSource} className="self-start" items={[
         { id: 'pc', label: <span className="flex items-center gap-1.5"><Monitor className="h-4 w-4" />Deze pc</span> },
         { id: 'spotify', label: <span className="flex items-center gap-1.5"><Music2 className="h-4 w-4" />Spotify</span> },
       ]} />
-      {source === 'spotify' ? <SpotifyView /> : <LocalMusic />}
+      <div className="min-h-0 flex-1">{source === 'spotify' ? <SpotifyView /> : <LocalMusic />}</div>
     </div>
   )
 }
