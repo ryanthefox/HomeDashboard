@@ -9,5 +9,8 @@ public record PlexItem(
     string? ShowTitle,
     int?    Season,
     int?    Episode,
-    string? Summary
+    string? Summary,
+    long    ViewOffset,  // ms watched so far (0 when not started)
+    long    Duration,    // ms
+    long    AddedAt      // unix seconds
 );

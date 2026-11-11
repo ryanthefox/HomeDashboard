@@ -28,6 +28,13 @@ public class PlexController(PlexService service) : ControllerBase
         catch { return Ok(Array.Empty<object>()); }
     }
 
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var stats = await service.GetStatsAsync();
+        return stats == null ? NoContent() : Ok(stats);
+    }
+
     [HttpGet("thumb")]
     [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Client)]
     public async Task<IActionResult> GetThumb([FromQuery] string key)

@@ -209,6 +209,20 @@ export const plexApi = {
   getOnDeck:   () => json<PlexItem[]>(`${BASE}/plex/ondeck`),
   getRecent:   () => json<PlexItem[]>(`${BASE}/plex/recent`),
   getSessions: () => json<PlexSession[]>(`${BASE}/plex/sessions`),
+  getStats:    async (): Promise<PlexStats | null> => {
+    const res = await fetch(`${BASE}/plex/stats`)
+    if (res.status === 204) return null
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+    return res.json() as Promise<PlexStats>
+  },
+}
+export interface PlexStats {
+  machineId: string | null
+  serverName: string | null
+  movies: number
+  shows: number
+  episodes: number
+  addedThisWeek: number
 }
 export interface PlexItem {
   key: string
@@ -220,9 +234,13 @@ export interface PlexItem {
   season: number | null
   episode: number | null
   summary: string | null
+  viewOffset: number  // ms
+  duration: number    // ms
+  addedAt: number     // unix seconds
 }
 export interface PlexSession {
   key: string
+  sessionId: string
   title: string
   type: string
   thumbUrl: string | null
@@ -231,7 +249,12 @@ export interface PlexSession {
   episode: number | null
   user: string | null
   playerName: string | null
+  platform: string | null
   state: string
   viewOffset: number
   duration: number
+  decision: 'directplay' | 'directstream' | 'transcode'
+  quality: string | null
+  local: boolean
+  bandwidth: number | null  // kbps
 }

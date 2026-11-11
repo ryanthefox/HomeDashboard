@@ -19,7 +19,11 @@ public sealed class PlexService
     private List<PlexSession>? _sessionsCache;
     private DateTime            _sessionsExpiry = DateTime.MinValue;
 
+    private PlexStats?          _statsCache;
+    private DateTime            _statsExpiry = DateTime.MinValue;
+
     private static readonly TimeSpan CacheTtl     = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan StatsCacheTtl = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan SessionCacheTtl = TimeSpan.FromSeconds(5);
 
     public PlexService(IHttpClientFactory http, IConfiguration config, ILogger<PlexService> log)
@@ -99,13 +103,46 @@ public sealed class PlexService
                 ? $"/api/plex/thumb?key={Uri.EscapeDataString(thumbPath)}"
                 : null;
 
-            var user       = item.TryGetProperty("User",   out var u) && u.TryGetProperty("title", out var ut) ? ut.GetString() : null;
-            var playerName = item.TryGetProperty("Player", out var pl) && pl.TryGetProperty("title", out var pt) ? pt.GetString() : null;
-            var state      = item.TryGetProperty("Player", out var pl2) && pl2.TryGetProperty("state", out var st) ? (st.GetString() ?? "playing") : "playing";
+            var user = item.TryGetProperty("User", out var u) ? ChildStr(u, "title") : null;
+
+            string? playerName = null, platform = null;
+            var state = "playing";
+            var local = true;
+            if (item.TryGetProperty("Player", out var pl))
+            {
+                playerName = ChildStr(pl, "title");
+                platform   = ChildStr(pl, "product") ?? ChildStr(pl, "platform");
+                state      = ChildStr(pl, "state") ?? "playing";
+                if (pl.TryGetProperty("local", out var lo) && (lo.ValueKind == JsonValueKind.False || lo.ValueKind == JsonValueKind.True))
+                    local = lo.GetBoolean();
+            }
+
+            int? bandwidth = null;
+            var sessionId = Str("sessionKey");
+            if (item.TryGetProperty("Session", out var se))
+            {
+                sessionId = ChildStr(se, "id") ?? sessionId;
+                if (se.TryGetProperty("bandwidth", out var bw) && bw.ValueKind == JsonValueKind.Number) bandwidth = bw.GetInt32();
+                if (ChildStr(se, "location") is { } loc) local = loc == "lan";
+            }
+
+            // Transcode decision: TranscodeSession only exists when the server converts the stream
+            var decision = "directplay";
+            if (item.TryGetProperty("TranscodeSession", out var ts))
+            {
+                var video = ChildStr(ts, "videoDecision");
+                var audio = ChildStr(ts, "audioDecision");
+                decision = video == "transcode" || audio == "transcode" ? "transcode" : "directstream";
+            }
+
+            string? quality = null;
+            if (item.TryGetProperty("Media", out var media) && media.ValueKind == JsonValueKind.Array && media.GetArrayLength() > 0)
+                quality = FormatResolution(ChildStr(media[0], "videoResolution"));
 
             var gp = Str("grandparentTitle");
             result.Add(new PlexSession(
                 Key:        Str("ratingKey"),
+                SessionId:  string.IsNullOrEmpty(sessionId) ? Str("ratingKey") : sessionId,
                 Title:      Str("title"),
                 Type:       Str("type"),
                 ThumbUrl:   thumbUrl,
@@ -114,13 +151,102 @@ public sealed class PlexService
                 Episode:    Int("index"),
                 User:       user,
                 PlayerName: playerName,
+                Platform:   platform,
                 State:      state,
                 ViewOffset: Lng("viewOffset"),
-                Duration:   Lng("duration")
+                Duration:   Lng("duration"),
+                Decision:   decision,
+                Quality:    quality,
+                Local:      local,
+                Bandwidth:  bandwidth
             ));
         }
         return result;
     }
+
+    public async Task<PlexStats?> GetStatsAsync()
+    {
+        if (_statsCache != null && DateTime.UtcNow < _statsExpiry)
+            return _statsCache;
+        if (string.IsNullOrEmpty(Token)) return null;
+
+        try
+        {
+            using var root = await GetJsonAsync("/");
+            var rootMc     = root.RootElement.GetProperty("MediaContainer");
+            var machineId  = ChildStr(rootMc, "machineIdentifier");
+            var serverName = ChildStr(rootMc, "friendlyName");
+
+            using var sections = await GetJsonAsync("/library/sections");
+            var weekAgo = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeSeconds();
+            int movies = 0, shows = 0, episodes = 0, added = 0;
+
+            if (sections.RootElement.GetProperty("MediaContainer").TryGetProperty("Directory", out var dirs) &&
+                dirs.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var dir in dirs.EnumerateArray())
+                {
+                    var key  = ChildStr(dir, "key");
+                    var type = ChildStr(dir, "type");
+                    if (string.IsNullOrEmpty(key)) continue;
+
+                    var basePath = $"/library/sections/{Uri.EscapeDataString(key)}/all";
+                    if (type == "movie")
+                    {
+                        movies += await CountAsync(basePath, "");
+                        added  += await CountAsync(basePath, $"addedAt%3E%3E={weekAgo}");
+                    }
+                    else if (type == "show")
+                    {
+                        shows    += await CountAsync(basePath, "");
+                        episodes += await CountAsync(basePath, "type=4");
+                        added    += await CountAsync(basePath, $"type=4&addedAt%3E%3E={weekAgo}");
+                    }
+                }
+            }
+
+            _statsCache  = new PlexStats(machineId, serverName, movies, shows, episodes, added);
+            _statsExpiry = DateTime.UtcNow.Add(StatsCacheTtl);
+            return _statsCache;
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "Plex: failed to fetch library stats");
+            return _statsCache; // keep showing the last known numbers
+        }
+    }
+
+    /// Number of items behind a library query, without downloading them.
+    private async Task<int> CountAsync(string path, string filter)
+    {
+        var query = string.IsNullOrEmpty(filter) ? "" : filter + "&";
+        using var doc = await GetJsonAsync($"{path}?{query}X-Plex-Container-Start=0&X-Plex-Container-Size=0");
+        var mc = doc.RootElement.GetProperty("MediaContainer");
+        if (mc.TryGetProperty("totalSize", out var t) && t.ValueKind == JsonValueKind.Number) return t.GetInt32();
+        if (mc.TryGetProperty("size",      out var s) && s.ValueKind == JsonValueKind.Number) return s.GetInt32();
+        return 0;
+    }
+
+    private async Task<JsonDocument> GetJsonAsync(string pathAndQuery)
+    {
+        var sep  = pathAndQuery.Contains('?') ? '&' : '?';
+        var url  = $"{ServerUrl}{pathAndQuery}{sep}X-Plex-Token={Uri.EscapeDataString(Token)}";
+        var json = await CreateClient().GetStringAsync(url);
+        return JsonDocument.Parse(json);
+    }
+
+    private static string? ChildStr(JsonElement el, string prop) =>
+        el.ValueKind == JsonValueKind.Object && el.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.String
+            ? v.GetString() : null;
+
+    private static string? FormatResolution(string? res) => res?.ToLowerInvariant() switch
+    {
+        null or "" => null,
+        "4k"       => "4K",
+        "sd"       => "SD",
+        var r when char.IsDigit(r[0]) => r + "p",
+        var r      => r.ToUpperInvariant(),
+    };
 
     /// Thumb keys must be server-relative paths like "/library/metadata/123/thumb/456".
     /// Anything else (e.g. "@evil.host/x" or "//host") could redirect the request — and the
@@ -213,6 +339,9 @@ public sealed class PlexService
         var index          = Int("index");
         var summary        = Str("summary");
 
+        long Lng(string prop) =>
+            item.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt64() : 0;
+
         var thumbUrl = !string.IsNullOrEmpty(thumbPath)
             ? $"/api/plex/thumb?key={Uri.EscapeDataString(thumbPath)}"
             : null;
@@ -226,7 +355,10 @@ public sealed class PlexService
             ShowTitle: string.IsNullOrEmpty(grandparent) ? null : grandparent,
             Season:    parentIndex,
             Episode:   index,
-            Summary:   string.IsNullOrEmpty(summary) ? null : summary
+            Summary:    string.IsNullOrEmpty(summary) ? null : summary,
+            ViewOffset: Lng("viewOffset"),
+            Duration:   Lng("duration"),
+            AddedAt:    Lng("addedAt")
         );
     }
 

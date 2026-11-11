@@ -7,13 +7,10 @@
   "10": "Task",
   "11": "HueService",
   "12": "HomeDashboard.Api.Services",
+  "13": "PlexWidget.tsx",
   "17": "HueLight.cs",
   "19": "ControllerBase",
   "26": "MusicService.GetCurrentMediaAsync",
-  "27": "dependencies",
-  "28": "App.tsx",
-  "29": "useSignalR.ts",
-  "30": "vite.config.ts",
-  "31": "CLAUDE.md",
-  "32": "scripts"
+  "27": "SystemWidget.tsx",
+  "31": "CLAUDE.md"
 }

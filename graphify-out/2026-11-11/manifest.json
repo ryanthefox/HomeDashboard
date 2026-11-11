@@ -66,10 +66,10 @@
     "semantic_hash": "8c493639146bab21ed29a75538a9180d"
   },
   "HomeDashboard.Api/HomeDashboard.Api.csproj": {
-    "mtime": 1773941343.2923193,
-    "seen": 1794395115.4604602,
-    "ast_hash": "0b8a131bac74e95407356d8c2026fc46",
-    "semantic_hash": "0b8a131bac74e95407356d8c2026fc46"
+    "mtime": 1794396020.3223002,
+    "seen": 1794396308.6483717,
+    "ast_hash": "d3d5a8945ef4c28918add469dd3a5315",
+    "semantic_hash": ""
   },
   "HomeDashboard.Api/Hubs/DashboardHub.cs": {
     "mtime": 1773872017.9276645,
@@ -150,9 +150,9 @@
     "semantic_hash": "858ed332b3f72ef71d7112355164a330"
   },
   "HomeDashboard.Api/Services/AfvalService.cs": {
-    "mtime": 1794395866.5365186,
-    "seen": 1794395878.4361196,
-    "ast_hash": "ac0d91c8db0ef394111a179d4e089ee8",
+    "mtime": 1794396143.45825,
+    "seen": 1794396308.6483858,
+    "ast_hash": "0d575d323a78d89917944a5e60ecdb07",
     "semantic_hash": ""
   },
   "HomeDashboard.Api/Services/AircoService.cs": {
@@ -228,9 +228,9 @@
     "semantic_hash": "0f82b03f512ddfd40e7fb199473cb0c2"
   },
   "docker-compose.yml": {
-    "mtime": 1794395866.5365186,
-    "seen": 1794395878.4361312,
-    "ast_hash": "177a06f28a66055ad95fbacd9c83e436",
+    "mtime": 1794396020.3223002,
+    "seen": 1794396308.6483977,
+    "ast_hash": "3bbf74cf9b16295b1d736fe16690f473",
     "semantic_hash": ""
   },
   "frontend/package.json": {
