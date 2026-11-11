@@ -41,5 +41,34 @@ services:
       - Pc__BroadcastAddress=${PC_BROADCAST:-255.255.255.255}
       - Pc__MediaUrl=${PC_MEDIA_URL:-}
 
+  # ── HTTPS via DuckDNS (optioneel) ─────────────────────────────────────────────
+  # Aanzetten met COMPOSE_PROFILES=https in .env, plus DUCKDNS_DOMAIN en DUCKDNS_TOKEN.
+  caddy:
+    build: ./caddy
+    profiles: ["https"]
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - DUCKDNS_DOMAIN=${DUCKDNS_DOMAIN:-}
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN:-}
+      - HTTPS_PORT=${HTTPS_PORT:-443}
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+
+  # Houdt je DuckDNS-adres bij als je thuis-IP verandert
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      - SUBDOMAINS=${DUCKDNS_DOMAIN:-}
+      - TOKEN=${DUCKDNS_TOKEN:-}
+      - TZ=Europe/Amsterdam
+      - UPDATE_IP=ipv4
+      - LOG_FILE=false
+
 volumes:
   dashboard-keys:
+  caddy-data:
+  caddy-config:
